@@ -1,3 +1,9 @@
+databases:
+  - name: learnlab-db
+    plan: free
+    databaseName: learnlab
+    user: learnlab
+
 services:
   - type: web
     name: learnlab-api
@@ -14,7 +20,3 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         sync: false
-  - type: pserv
-    name: learnlab-db
-    runtime: postgresql
-    plan: free
