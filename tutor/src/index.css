@@ -2173,3 +2173,37 @@ code {
 
 .public-header-actions { display: flex; align-items: center; gap: 12px; }
 .copy-link-btn { padding: 6px 14px; font-size: 0.8rem; }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.nav-auth-btn {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.auth-modal { max-width: 420px; }
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.auth-tabs button {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.auth-tabs button.active {
+  border-color: var(--accent);
+  color: var(--text);
+  background: rgba(124, 108, 240, 0.1);
+}
+.auth-form { display: flex; flex-direction: column; gap: 4px; }
+.auth-error { color: #f87171; font-size: 0.85rem; margin: 8px 0; }
+.field-hint { font-size: 0.75rem; color: var(--text-muted); font-weight: normal; }

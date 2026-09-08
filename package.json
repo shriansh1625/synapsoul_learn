@@ -1,0 +1,11 @@
+{
+  "name": "learnlab",
+  "private": true,
+  "version": "2.0.0",
+  "scripts": {
+    "start": "node server/index.js",
+    "build": "cd tutor && npm run build",
+    "dev:api": "cd server && npm run dev",
+    "dev:web": "cd tutor && npm run dev"
+  }
+}

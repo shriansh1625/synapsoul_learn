@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { fetchPublicProfile } from './api.js'
 
 export default function PublicProfile({ username, onBack }) {
   const [profile, setProfile] = useState(null)
@@ -17,12 +18,17 @@ export default function PublicProfile({ username, onBack }) {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch(`/api/profile/${username}`)
-        if (!res.ok) throw new Error('Profile not found')
-        const data = await res.json()
+        const data = await fetchPublicProfile(username)
         if (!cancelled) setProfile(data)
-      } catch (e) {
-        if (!cancelled) setError(e.message)
+      } catch {
+        try {
+          const res = await fetch(`/api/profile/${username}`)
+          if (!res.ok) throw new Error('Profile not found')
+          const data = await res.json()
+          if (!cancelled) setProfile(data)
+        } catch (e) {
+          if (!cancelled) setError(e.message)
+        }
       }
     }
     load()

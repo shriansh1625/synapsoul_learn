@@ -5,6 +5,10 @@ import leaderboardData from '../data/leaderboard.json'
 import initialProgress from '../data/progress.json'
 import Landing from './Landing.jsx'
 import PublicProfile from './PublicProfile.jsx'
+import AuthModal from './AuthModal.jsx'
+import {
+  isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register,
+} from './api.js'
 
 function parseRoute() {
   const hash = window.location.hash.slice(1)
@@ -128,6 +132,9 @@ export default function App() {
   const [glossaryFilter, setGlossaryFilter] = useState('')
   const [toasts, setToasts] = useState([])
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showAuth, setShowAuth] = useState(false)
+  const [authUser, setAuthUser] = useState(null)
+  const [liveLeaderboard, setLiveLeaderboard] = useState(null)
   const prevCompletedRef = useRef(new Set(Object.keys(loadProgress().completedModules || {})))
 
   const addToast = useCallback((message, type = 'achievement') => {
@@ -141,35 +148,49 @@ export default function App() {
   useEffect(() => {
     if (showLanding) return
     let cancelled = false
-    async function syncFromCli() {
+
+    async function applyProgress(cliProgress) {
+      if (cancelled || !cliProgress?.version) return
+      const prevKeys = prevCompletedRef.current
+      const newKeys = Object.keys(cliProgress.completedModules || {})
+        .filter(k => !prevKeys.has(k))
+      for (const key of newKeys) {
+        const [skillId] = key.split(':')
+        addToast(`Module complete — ${getSkillTitle(skillId)}`, 'module')
+        const skill = catalog.skills.find(s => s.id === skillId)
+        const done = countSkillModules(cliProgress, skillId)
+        if (skill && done >= (skill.moduleCount || 1)) {
+          addToast(`Skill complete — ${skill.title}!`, 'skill')
+        }
+      }
+      prevCompletedRef.current = new Set(Object.keys(cliProgress.completedModules || {}))
+      setProgress(cliProgress)
+    }
+
+    async function syncProgress() {
       try {
+        if (isLoggedIn()) {
+          const cliProgress = await fetchProgress()
+          await applyProgress(cliProgress)
+          return
+        }
         const res = await fetch('/api/progress')
         if (!res.ok || cancelled) return
-        const cliProgress = await res.json()
-        if (cancelled || !cliProgress?.version) return
-
-        const prevKeys = prevCompletedRef.current
-        const newKeys = Object.keys(cliProgress.completedModules || {})
-          .filter(k => !prevKeys.has(k))
-
-        for (const key of newKeys) {
-          const [skillId] = key.split(':')
-          const skillTitle = getSkillTitle(skillId)
-          addToast(`Module complete — ${skillTitle}`, 'module')
-          const skill = catalog.skills.find(s => s.id === skillId)
-          const done = countSkillModules(cliProgress, skillId)
-          if (skill && done >= (skill.moduleCount || 1)) {
-            addToast(`Skill complete — ${skill.title}!`, 'skill')
-          }
-        }
-        prevCompletedRef.current = new Set(Object.keys(cliProgress.completedModules || {}))
-        setProgress(cliProgress)
-      } catch { /* dev server may be offline */ }
+        await applyProgress(await res.json())
+      } catch { /* offline or API unavailable — local-first fallback */ }
     }
-    syncFromCli()
-    const interval = setInterval(syncFromCli, 8000)
+
+    syncProgress()
+    const interval = setInterval(syncProgress, 8000)
     return () => { cancelled = true; clearInterval(interval) }
   }, [showLanding, addToast])
+
+  useEffect(() => {
+    if (!isLoggedIn()) return
+    fetchLeaderboard()
+      .then(data => setLiveLeaderboard(data.entries || []))
+      .catch(() => {})
+  }, [authUser])
 
   useEffect(() => {
     if (!showLanding && !localStorage.getItem('learnlab-onboarded')) {
@@ -206,7 +227,25 @@ export default function App() {
     if (!localStorage.getItem('learnlab-onboarded')) setShowOnboarding(true)
   }
 
-  function completeOnboarding(profileData) {
+  async function completeOnboarding(profileData) {
+    try {
+      if (profileData.email && profileData.password) {
+        const { token, user } = await register({
+          email: profileData.email,
+          password: profileData.password,
+          name: profileData.name,
+          degree: profileData.degree,
+          bio: profileData.bio,
+          username: profileData.username,
+          college: profileData.college_name || profileData.college,
+          track: profileData.track,
+        })
+        setToken(token)
+        setAuthUser(user)
+      }
+    } catch {
+      addToast('Account saved locally — cloud sync unavailable', 'welcome')
+    }
     setProgress(p => ({
       ...p,
       profile: { ...p.profile, ...profileData },
@@ -214,6 +253,22 @@ export default function App() {
     localStorage.setItem('learnlab-onboarded', '1')
     setShowOnboarding(false)
     addToast('Welcome to LearnLab — paste the universal prompt in Cursor!', 'welcome')
+  }
+
+  function handleAuthSuccess({ token, user }) {
+    setToken(token)
+    setAuthUser(user)
+    setShowAuth(false)
+    addToast(`Signed in as ${user.name || user.email}`, 'welcome')
+    fetchProgress()
+      .then(p => setProgress(p))
+      .catch(() => {})
+  }
+
+  function handleLogout() {
+    setToken(null)
+    setAuthUser(null)
+    addToast('Signed out — progress stays in localStorage', 'welcome')
   }
 
   function goCollege() {
@@ -282,6 +337,12 @@ export default function App() {
           onDismiss={() => { localStorage.setItem('learnlab-onboarded', '1'); setShowOnboarding(false) }}
         />
       )}
+      {showAuth && (
+        <AuthModal
+          onClose={() => setShowAuth(false)}
+          onSuccess={handleAuthSuccess}
+        />
+      )}
       <ToastStack toasts={toasts} />
       <header className="header">
         <div className="header-inner">
@@ -304,8 +365,19 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <div className="track-badge">
-            Track: <strong>{progress.profile?.track || 'node'}</strong>
+          <div className="header-actions">
+            <div className="track-badge">
+              Track: <strong>{progress.profile?.track || 'node'}</strong>
+            </div>
+            {authUser || isLoggedIn() ? (
+              <button type="button" className="btn-secondary nav-auth-btn" onClick={handleLogout}>
+                Sign out
+              </button>
+            ) : (
+              <button type="button" className="btn-secondary nav-auth-btn" onClick={() => setShowAuth(true)}>
+                Sign in
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -334,7 +406,11 @@ export default function App() {
         {view === 'portfolio' && <PortfolioView portfolio={portfolio} />}
         {view === 'profile' && <ProfileView progress={progress} catalog={catalog} />}
         {view === 'leaderboard' && (
-          <LeaderboardView progress={progress} demo={leaderboardData} onProfile={goPublicProfile} />
+          <LeaderboardView
+            progress={progress}
+            demo={liveLeaderboard || leaderboardData}
+            onProfile={goPublicProfile}
+          />
         )}
         {view === 'college' && <CollegeView demo={leaderboardData} />}
         {view === 'dimensions' && (
@@ -885,7 +961,12 @@ function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
   const [name, setName] = useState(progress.profile?.name || '')
   const [degree, setDegree] = useState(progress.profile?.degree || '')
   const [bio, setBio] = useState(progress.profile?.bio || '')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
+  const [college, setCollege] = useState(progress.profile?.college_name || '')
   const [track, setTrack] = useState(progress.profile?.track || 'node')
+  const [submitting, setSubmitting] = useState(false)
   const foundation = catalog.skills.find(s => s.startHere) || catalog.skills[0]
 
   return (
@@ -913,6 +994,22 @@ function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
             <label className="onboard-field">
               Bio
               <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="What you want to build..." rows={3} />
+            </label>
+            <label className="onboard-field">
+              Email <span className="field-hint">(optional — enables cloud sync)</span>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@college.edu" />
+            </label>
+            <label className="onboard-field">
+              Password
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" minLength={6} />
+            </label>
+            <label className="onboard-field">
+              Username
+              <input value={username} onChange={e => setUsername(e.target.value)} placeholder="your-handle" />
+            </label>
+            <label className="onboard-field">
+              College
+              <input value={college} onChange={e => setCollege(e.target.value)} placeholder="Your college name" />
             </label>
             <div className="onboard-actions">
               <button type="button" className="btn-secondary" onClick={onDismiss}>Skip</button>
@@ -961,9 +1058,18 @@ function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
               <button
                 type="button"
                 className="btn-primary btn-gradient"
-                onClick={() => onComplete({ name, degree, bio, track })}
+                disabled={submitting}
+                onClick={async () => {
+                  setSubmitting(true)
+                  await onComplete({
+                    name, degree, bio, track, email, password,
+                    username: username || email.split('@')[0],
+                    college_name: college,
+                  })
+                  setSubmitting(false)
+                }}
               >
-                Finish setup
+                {submitting ? 'Setting up…' : 'Finish setup'}
               </button>
             </div>
           </>
