@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "profile": {
+    "name": "",
+    "level": "beginner",
+    "track": "node",
+    "interests": [],
+    "pretestCompleted": false,
+    "goals": []
+  },
+  "session": null,
+  "completedModules": {},
+  "decisions": {},
+  "scores": {},
+  "studentMemory": {
+    "effective_level": "beginner",
+    "confidence_level": "medium",
+    "learning_style_signals": [],
+    "effective_teaching_approaches": [],
+    "recurring_growth_areas": [],
+    "unknown_concepts_ahead": [],
+    "concepts_mastered": [],
+    "terminology_gaps": [],
+    "concepts_ahead": { "gap": [], "unknown": [] },
+    "dimension_watch": {}
+  },
+  "portfolio": [],
+  "pretest": null
+}

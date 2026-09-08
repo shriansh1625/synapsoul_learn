@@ -1,0 +1,61 @@
+{
+  "id": "vertical-slices",
+  "title": "Vertical Slice Planning",
+  "pack": "launchpad",
+  "duration": "45 min",
+  "concepts": ["vertical-slice", "acceptance-criteria", "scope"],
+  "prerequisites": [],
+  "steps": {
+    "CONTEXT": {
+      "content": "Vague requirements kill projects. A vertical slice is a thin, end-to-end feature that delivers user value. Good planning decomposes big features into slices with clear acceptance criteria.",
+      "analogy": "Building a house floor-by-floor (horizontal) means no one can live in it until it's done. Building room-by-room (vertical) means each room is usable as you go.",
+      "productionNote": "Teams that plan in layers ship nothing for months. Teams that plan in slices ship value every week.",
+      "hints": ["Is 'build the database' a vertical slice? Why or why not?"]
+    },
+    "DECIDE": {
+      "optionA": "Plan by layer: database schema → API → UI, building each completely before moving on.",
+      "optionB": "Plan by vertical slice: thinnest end-to-end feature first, then expand.",
+      "tradeoffs": {
+        "A": "Clean architecture early; no user value until all layers done.",
+        "B": "User value fast; may need refactoring as slices expand."
+      },
+      "hints": ["For a URL shortener, what's the thinnest slice that a user would pay for?"]
+    },
+    "BUILD": {
+      "goal": "Write a decomposition plan for adding 'link analytics' to your URL shortener: 3 vertical slices with acceptance criteria each.",
+      "tracks": {
+        "general": "Produce a written plan (markdown or text) — no code required for this module."
+      },
+      "acceptance": [
+        "3 slices ordered by value/risk",
+        "Each slice has: goal, scope boundaries, dependencies, acceptance criteria",
+        "Slice 1 is deployable independently"
+      ],
+      "hints": ["Slice 1 should be embarrassingly small.", "Acceptance criteria must be testable — not 'works well'."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Another engineer could implement Slice 1 from your plan alone",
+        "Each acceptance criterion is observable/testable",
+        "Dependencies between slices are explicit"
+      ],
+      "hints": ["Hand your plan to someone (or imagine you are) — what's ambiguous?"]
+    },
+    "BREAK": {
+      "scenario": "Mid-build, the PM adds: 'Analytics must also track geographic location of clicks.'",
+      "symptoms": "Your Slice 2 is half-built. The new requirement affects Slice 1's data model.",
+      "hints": ["Which slice does this change affect?", "Do you restart, adapt, or add a new slice?"]
+    },
+    "FIX": {
+      "goal": "Revise your plan to absorb the new requirement without throwing away completed work.",
+      "hints": ["Good plans have explicit scope boundaries — you should know exactly what's affected.", "Adaptation speed matters more than perfect plans."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Layer planning made the scope change expensive — you'd need to redo the data model layer.",
+        "B": "Vertical slices let you add geo-tracking as a new thin slice without rewriting Slice 1."
+      },
+      "evaluationDimensions": ["task_clarity", "adaptation_speed", "engineering_judgment"]
+    }
+  }
+}

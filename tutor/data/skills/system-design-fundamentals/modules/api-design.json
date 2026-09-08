@@ -1,0 +1,64 @@
+{
+  "id": "api-design",
+  "title": "REST API Design",
+  "pack": "practitioner",
+  "duration": "55 min",
+  "concepts": ["rest", "resource-modeling", "versioning"],
+  "prerequisites": ["layered-architecture"],
+  "steps": {
+    "CONTEXT": {
+      "content": "APIs are contracts between services and clients. Good REST design makes resources predictable, errors explicit, and evolution safe.",
+      "analogy": "A REST API is like a library catalog — consistent shelves (resources), clear labels (URLs), and standard checkout rules (HTTP methods).",
+      "productionNote": "Bad API design creates breaking changes that haunt teams for years.",
+      "hints": ["Think about nouns (resources) vs verbs (actions)."]
+    },
+    "DECIDE": {
+      "optionA": "Design the full API schema upfront with OpenAPI before writing handlers.",
+      "optionB": "Build one endpoint at a time, document as you go from real usage.",
+      "tradeoffs": {
+        "A": "Clear contract early; risk of over-design before learning needs.",
+        "B": "Faster feedback; risk of inconsistent patterns across endpoints."
+      },
+      "hints": ["Which approach fits a small team shipping weekly?"]
+    },
+    "BUILD": {
+      "goal": "Add CRUD endpoints for a /links resource with consistent error responses and input validation.",
+      "tracks": {
+        "node": "Express routes with zod or joi validation.",
+        "python": "FastAPI with Pydantic models.",
+        "go": "net/http handlers with struct validation.",
+        "typescript": "Hono or Express with Zod."
+      },
+      "acceptance": [
+        "POST /links creates with 201 and returns the resource",
+        "Invalid body returns 400 with structured error JSON",
+        "GET /links/:id returns 404 for missing IDs"
+      ],
+      "hints": ["Errors should be machine-readable, not just strings.", "Use the same error shape everywhere."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show curl for successful create and read",
+        "Show curl for validation error with JSON body",
+        "Show curl for 404 on missing resource"
+      ],
+      "hints": ["Test the unhappy paths first — they reveal contract gaps."]
+    },
+    "BREAK": {
+      "scenario": "Clients report intermittent 500s on POST /links when sending duplicate slugs.",
+      "symptoms": "Database unique constraint violation surfaces as generic 500.",
+      "hints": ["What HTTP status fits a duplicate resource conflict?", "Map DB errors to API contract."]
+    },
+    "FIX": {
+      "goal": "Return 409 Conflict with a clear message for duplicate slugs. Never leak raw DB errors.",
+      "hints": ["Catch constraint errors at the service layer.", "Log internals; return safe messages to clients."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Your upfront schema likely caught validation gaps before clients did.",
+        "B": "Building incrementally exposed real client needs — but duplicate handling was easy to miss without VERIFY."
+      },
+      "evaluationDimensions": ["tradeoff_reasoning", "production_thinking", "communication_clarity"]
+    }
+  }
+}

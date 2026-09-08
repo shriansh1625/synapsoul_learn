@@ -1,0 +1,68 @@
+{
+  "id": "data-persistence",
+  "title": "Data & Persistence",
+  "pack": "launchpad",
+  "duration": "50 min",
+  "concepts": ["crud", "sql", "persistence"],
+  "prerequisites": ["http-basics"],
+  "steps": {
+    "CONTEXT": {
+      "content": "In-memory data disappears when your server restarts. Production apps need persistence — data that survives crashes, deploys, and scaling events. Databases are the standard solution.",
+      "analogy": "Memory is a whiteboard — fast but erased on restart. A database is a filing cabinet — slower to open, but your data survives.",
+      "productionNote": "Choosing the wrong persistence strategy is one of the most expensive early mistakes in system design.",
+      "hints": ["What data in your current server would be lost on restart?"]
+    },
+    "DECIDE": {
+      "optionA": "Use SQLite — file-based, zero setup, perfect for learning persistence concepts.",
+      "optionB": "Use an in-memory store with a save-to-file mechanism, then migrate to SQLite later.",
+      "tradeoffs": {
+        "A": "Real SQL from day one; file locking edge cases appear later.",
+        "B": "Simpler start; migration step adds complexity and teaches data portability."
+      },
+      "hints": ["Think about what happens when two requests write at the same time."]
+    },
+    "BUILD": {
+      "goal": "Add a links table and implement POST /links (create short URL) and GET /links/:code (redirect to original URL).",
+      "tracks": {
+        "node": "Use better-sqlite3 or sqlite3 npm package.",
+        "python": "Use sqlite3 module or SQLAlchemy with SQLite.",
+        "go": "Use database/sql with mattn/go-sqlite3.",
+        "typescript": "Use bun:sqlite or deno.land/x/sqlite."
+      },
+      "acceptance": [
+        "POST /links with {url} returns a short code",
+        "GET /links/:code redirects (302) to the original URL",
+        "Data persists after server restart"
+      ],
+      "hints": [
+        "Design the table schema before writing routes.",
+        "How will you generate unique short codes?",
+        "Test persistence: create a link, restart server, verify it still works."
+      ]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show curl POST creating a link and returning a code",
+        "Show curl GET with -i showing 302 and Location header",
+        "Restart server and prove the link still works"
+      ],
+      "hints": ["Persistence proof requires a restart — not just a code review."]
+    },
+    "BREAK": {
+      "scenario": "Users report that some links redirect correctly but others return the wrong URL.",
+      "symptoms": "New links work. Old links sometimes redirect to a different URL. No errors in logs.",
+      "hints": ["Is this a read problem or a write problem?", "What happens when two URLs get the same short code?"]
+    },
+    "FIX": {
+      "goal": "Find the data integrity bug and fix it. Explain the root cause.",
+      "hints": ["Check uniqueness constraints on short codes.", "Trace a failing link from code lookup to redirect."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "SQLite's constraints likely helped you spot the uniqueness issue quickly.",
+        "B": "The migration path may have introduced a window where duplicate codes were possible."
+      },
+      "evaluationDimensions": ["tradeoff_reasoning", "root_cause_depth", "production_thinking"]
+    }
+  }
+}

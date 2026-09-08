@@ -1,0 +1,62 @@
+{
+  "id": "incident-reports",
+  "title": "Writing Incident Reports",
+  "pack": "launchpad",
+  "duration": "40 min",
+  "concepts": ["incident-report", "timeline", "root-cause-analysis"],
+  "prerequisites": [],
+  "steps": {
+    "CONTEXT": {
+      "content": "When systems fail in production, the incident report is how teams learn. A good report has a timeline, root cause, impact assessment, and action items — written so someone who wasn't there understands what happened.",
+      "analogy": "An incident report is like a flight recorder analysis — not about blame, but about ensuring it doesn't happen again.",
+      "productionNote": "Companies that write good incident reports improve reliability faster than those that just 'fix and move on.'",
+      "hints": ["Have you ever read a postmortem that taught you something?"]
+    },
+    "DECIDE": {
+      "optionA": "Blameless postmortem: focus on systems and processes, not individuals.",
+      "optionB": "Accountability-focused: identify who made the decision that led to the incident.",
+      "tradeoffs": {
+        "A": "People share honestly; systemic fixes prevent recurrence.",
+        "B": "Clear responsibility; people may hide information to avoid blame."
+      },
+      "hints": ["Which approach leads to better long-term reliability?"]
+    },
+    "BUILD": {
+      "goal": "Write an incident report for the cache invalidation bug from System Design (or invent a realistic scenario). Include: timeline, impact, root cause, action items.",
+      "tracks": {
+        "general": "Write in markdown. 1-2 pages. No code required."
+      },
+      "acceptance": [
+        "Timeline with specific timestamps and events",
+        "Impact section: who was affected, for how long, what degraded",
+        "Root cause: not just the symptom",
+        "At least 3 action items with owners and deadlines"
+      ],
+      "hints": ["Timeline should be factual, not interpretive.", "Action items should prevent recurrence, not just fix the symptom."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "A new team member could understand the incident from your report alone",
+        "Root cause is distinct from the triggering event",
+        "Action items are specific and measurable"
+      ],
+      "hints": ["Read it as if you know nothing about the system."]
+    },
+    "BREAK": {
+      "scenario": "Your manager says the report is 'too long' and asks you to cut it to 3 sentences for the executive summary.",
+      "symptoms": "Full report is good but exec summary loses the root cause and reads like 'we fixed a bug.'",
+      "hints": ["What must an executive know vs an engineer?", "Can you be concise without being vague?"]
+    },
+    "FIX": {
+      "goal": "Write a 3-sentence executive summary that preserves root cause and business impact.",
+      "hints": ["Sentence 1: what happened. Sentence 2: why. Sentence 3: what we're doing about it."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Blameless framing made it easier to document the real decision chain without defensiveness.",
+        "B": "Accountability framing might have shortened the report but at the cost of incomplete root cause."
+      },
+      "evaluationDimensions": ["communication_clarity", "writing_clarity", "root_cause_depth"]
+    }
+  }
+}

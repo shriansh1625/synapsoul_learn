@@ -1,0 +1,13 @@
+{
+  "id": "system-design",
+  "title": "System Design",
+  "tracks": ["node", "python", "go", "typescript"],
+  "packs": [
+    { "id": "launchpad", "label": "Launchpad", "free": true },
+    { "id": "practitioner", "label": "Practitioner", "free": false }
+  ],
+  "modules": [
+    { "id": "caching-strategies", "title": "Caching Strategies", "pack": "launchpad", "duration": "55 min", "concepts": ["cache", "ttl", "cache-invalidation"] },
+    { "id": "load-and-scale", "title": "Load & Scale", "pack": "practitioner", "duration": "65 min", "concepts": ["load-balancing", "horizontal-scaling", "bottlenecks"] }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "id": "graceful-degradation",
+  "title": "Graceful Degradation",
+  "pack": "launchpad",
+  "duration": "45 min",
+  "concepts": ["degradation", "circuit-breaker", "fallbacks"],
+  "prerequisites": ["rollout-safety"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Dependencies fail. Graceful degradation keeps core functionality working when non-critical services are down.",
+      "analogy": "Airplane loses entertainment system — flight continues. Loses engine — different story.",
+      "productionNote": "Users prefer slow partial service over total outage.",
+      "hints": ["What's critical vs nice-to-have in your app?"]
+    },
+    "DECIDE": {
+      "optionA": "Fail fast: return errors immediately when dependencies are unhealthy.",
+      "optionB": "Degrade gracefully: serve cached/stale data or skip optional features.",
+      "tradeoffs": {
+        "A": "Honest errors; worse UX during partial outages.",
+        "B": "Better UX; risk of serving stale or inconsistent data."
+      },
+      "hints": ["When is stale data worse than an error?"]
+    },
+    "BUILD": {
+      "goal": "Add a fallback when a non-critical dependency fails (e.g., analytics, recommendations). Core path still works.",
+      "tracks": {
+        "node": "Try/catch with timeout; return default when dependency times out.",
+        "python": "asyncio.wait_for with fallback response.",
+        "go": "context.WithTimeout and default value.",
+        "typescript": "Promise.race with timeout fallback."
+      },
+      "acceptance": [
+        "Core feature works when dependency is down",
+        "Degraded mode is logged/metric'd",
+        "Response indicates degraded state if appropriate"
+      ],
+      "hints": ["Set timeouts on every outbound call.", "Don't retry forever."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Kill dependency — core path still returns 200",
+        "Logs show degradation event",
+        "Latency stays bounded (no hanging requests)"
+      ],
+      "hints": ["Test with dependency slow, not just down."]
+    },
+    "BREAK": {
+      "scenario": "Fallback cache serves user data from another user's session.",
+      "symptoms": "Privacy incident. Fallback key was too generic.",
+      "hints": ["When does caching become dangerous?", "Scope fallback keys per user."]
+    },
+    "FIX": {
+      "goal": "Fix cache key scoping. Add circuit breaker to stop hammering failed dependency.",
+      "hints": ["Never share fallback data across tenants.", "Open circuit after N failures."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Fail fast avoided stale data bugs but users saw more errors during outages.",
+        "B": "Degradation improved UX until cache scoping caused a privacy issue — scope matters."
+      },
+      "evaluationDimensions": ["failure_thinking", "security_awareness", "production_thinking"]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "debugging-incidents",
+  "title": "Debugging & Incidents",
+  "tracks": ["node", "python", "go", "typescript"],
+  "packs": [
+    { "id": "launchpad", "label": "Launchpad", "free": true }
+  ],
+  "modules": [
+    { "id": "hypothesis-debugging", "title": "Hypothesis-Driven Debugging", "pack": "launchpad", "duration": "50 min", "concepts": ["hypothesis", "bisection", "log-analysis"] },
+    { "id": "incident-triage", "title": "Incident Triage", "pack": "launchpad", "duration": "45 min", "concepts": ["severity", "triage", "communication"] },
+    { "id": "postmortem-writing", "title": "Blameless Postmortems", "pack": "launchpad", "duration": "40 min", "concepts": ["postmortem", "root-cause", "action-items"] }
+  ]
+}

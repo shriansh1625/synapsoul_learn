@@ -1,0 +1,64 @@
+{
+  "id": "auth-basics",
+  "title": "Authentication Basics",
+  "pack": "practitioner",
+  "duration": "60 min",
+  "concepts": ["authentication", "sessions", "jwt"],
+  "prerequisites": ["api-design"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Authentication answers 'who is this user?' Authorization answers 'what can they do?' Production apps need both, with secrets handled safely.",
+      "analogy": "Auth is like a nightclub: ID check at the door (auth), wristband color for VIP areas (authorization).",
+      "productionNote": "Auth bugs are security incidents, not feature bugs.",
+      "hints": ["Never store plaintext passwords."]
+    },
+    "DECIDE": {
+      "optionA": "Session cookies stored server-side with a session store (Redis/DB).",
+      "optionB": "Stateless JWT tokens signed by the server, validated per request.",
+      "tradeoffs": {
+        "A": "Easy revocation; requires session storage and sticky sessions at scale.",
+        "B": "Horizontally scalable; harder to revoke and easy to misuse."
+      },
+      "hints": ["What does 'logout everywhere' require for each approach?"]
+    },
+    "BUILD": {
+      "goal": "Add login endpoint that returns a token or session cookie. Protect one route so unauthenticated requests get 401.",
+      "tracks": {
+        "node": "bcrypt for passwords; jsonwebtoken or express-session.",
+        "python": "passlib + python-jose or Starlette sessions.",
+        "go": "golang.org/x/crypto/bcrypt + jwt-go.",
+        "typescript": "Bun.password + jose for JWT."
+      },
+      "acceptance": [
+        "POST /auth/login with valid credentials returns token/session",
+        "Protected route returns 401 without credentials",
+        "Passwords are hashed, never logged"
+      ],
+      "hints": ["Hash at registration AND verify at login.", "Put auth middleware at the router boundary."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show login success response",
+        "Show 401 on protected route without auth",
+        "Show protected route works with valid token/cookie"
+      ],
+      "hints": ["Try an expired or tampered token — what happens?"]
+    },
+    "BREAK": {
+      "scenario": "Security review finds JWT accepted with algorithm 'none'.",
+      "symptoms": "Forged tokens grant admin access.",
+      "hints": ["Which JWT fields must you validate?", "Never trust client-supplied algorithm headers."]
+    },
+    "FIX": {
+      "goal": "Enforce allowed algorithms, validate signature, and set reasonable expiry.",
+      "hints": ["Use a well-tested library.", "Short-lived access tokens reduce blast radius."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Sessions gave you instant revocation — the JWT 'none' attack wouldn't apply, but session theft would.",
+        "B": "JWT scaled easily — but the algorithm confusion bug shows why stateless auth needs strict validation."
+      },
+      "evaluationDimensions": ["security_awareness", "tradeoff_reasoning", "production_thinking"]
+    }
+  }
+}

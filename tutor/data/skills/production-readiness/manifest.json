@@ -1,0 +1,13 @@
+{
+  "id": "production-readiness",
+  "title": "Production Readiness",
+  "tracks": ["node", "python", "go", "typescript"],
+  "packs": [
+    { "id": "launchpad", "label": "Launchpad", "free": true }
+  ],
+  "modules": [
+    { "id": "observability-basics", "title": "Observability & Health Checks", "pack": "launchpad", "duration": "55 min", "concepts": ["observability", "health-checks", "metrics"] },
+    { "id": "rollout-safety", "title": "Safe Rollouts", "pack": "launchpad", "duration": "50 min", "concepts": ["deployment", "canary", "rollback"] },
+    { "id": "graceful-degradation", "title": "Graceful Degradation", "pack": "launchpad", "duration": "45 min", "concepts": ["degradation", "circuit-breaker", "fallbacks"] }
+  ]
+}

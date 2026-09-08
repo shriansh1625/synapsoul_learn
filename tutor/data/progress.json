@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "profile": {
+    "name": "",
+    "level": "intermediate",
+    "track": "node",
+    "interests": [],
+    "pretestCompleted": true,
+    "goals": []
+  },
+  "session": {
+    "skillId": "system-design-fundamentals",
+    "moduleId": "http-basics",
+    "step": "CONTEXT",
+    "track": "node",
+    "startedAt": "2026-09-08T19:33:57.167Z",
+    "hintsUsed": 2
+  },
+  "completedModules": {},
+  "decisions": {},
+  "scores": {},
+  "studentMemory": {
+    "effective_level": "intermediate",
+    "confidence_level": "medium",
+    "learning_style_signals": [],
+    "effective_teaching_approaches": [],
+    "recurring_growth_areas": [],
+    "unknown_concepts_ahead": [],
+    "concepts_mastered": [],
+    "terminology_gaps": [],
+    "concepts_ahead": {
+      "gap": [],
+      "unknown": []
+    },
+    "dimension_watch": {}
+  },
+  "portfolio": [],
+  "pretest": {
+    "startedAt": "2026-09-08T19:33:57.618Z",
+    "answers": {
+      "1": "A",
+      "2": "A",
+      "3": "A",
+      "4": "A",
+      "5": "A"
+    },
+    "submittedAt": "2026-09-08T19:40:46.846Z",
+    "score": 5,
+    "total": 5
+  },
+  "profile_confirmed": false,
+  "profile_ready": false,
+  "public_profile_ready": false
+}

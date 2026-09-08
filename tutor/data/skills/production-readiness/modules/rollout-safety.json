@@ -1,0 +1,64 @@
+{
+  "id": "rollout-safety",
+  "title": "Safe Rollouts",
+  "pack": "launchpad",
+  "duration": "50 min",
+  "concepts": ["deployment", "canary", "rollback"],
+  "prerequisites": ["observability-basics"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Shipping code is easy. Shipping safely means you can detect problems fast and roll back without drama.",
+      "analogy": "Canary in a coal mine — small exposure detects danger before everyone is affected.",
+      "productionNote": "Deploy frequency matters less than mean time to detect and recover.",
+      "hints": ["What's your rollback button?"]
+    },
+    "DECIDE": {
+      "optionA": "Big-bang deploy: all instances at once with health check gate.",
+      "optionB": "Progressive rollout: 5% → 25% → 100% with metric monitoring between stages.",
+      "tradeoffs": {
+        "A": "Simple tooling; blast radius is entire fleet.",
+        "B": "Limits damage; needs metrics and orchestration."
+      },
+      "hints": ["What metrics would stop a bad rollout?"]
+    },
+    "BUILD": {
+      "goal": "Document a rollout checklist: pre-deploy checks, deploy steps, metrics to watch, rollback procedure.",
+      "tracks": {
+        "node": "Include npm test, health endpoint, error rate threshold.",
+        "python": "Include pytest, /health, latency p99.",
+        "go": "Include go test, /healthz, error rate.",
+        "typescript": "Include bun test, health check, 5xx rate."
+      },
+      "acceptance": [
+        "Pre-deploy checklist (tests, migrations, config)",
+        "Post-deploy metrics with thresholds",
+        "Rollback steps executable in under 5 minutes"
+      ],
+      "hints": ["Rollback should be practiced, not theoretical.", "Automate health checks."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Simulate failed deploy — rollback completes successfully",
+        "Metrics thresholds are numeric, not vague",
+        "Checklist fits on one page"
+      ],
+      "hints": ["Run a game day: deploy bad code on purpose in staging."]
+    },
+    "BREAK": {
+      "scenario": "Deploy succeeds but error rate climbs 10 minutes later — memory leak.",
+      "symptoms": "Health check passed at deploy time. Errors correlate with traffic volume.",
+      "hints": ["Why didn't health check catch this?", "What metric would have?"]
+    },
+    "FIX": {
+      "goal": "Add memory/latency alerts to rollout gate. Update checklist to soak-test before full rollout.",
+      "hints": ["Health at T+0 isn't enough — watch T+15min.", "Canary traffic should be realistic."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Big-bang would have taken down everything before you noticed the leak.",
+        "B": "Progressive rollout limited blast radius — but needed better post-deploy metrics."
+      },
+      "evaluationDimensions": ["production_thinking", "failure_thinking", "observability_coverage"]
+    }
+  }
+}

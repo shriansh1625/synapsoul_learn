@@ -1,0 +1,64 @@
+{
+  "id": "caching-strategies",
+  "title": "Caching Strategies",
+  "pack": "launchpad",
+  "duration": "55 min",
+  "concepts": ["cache", "ttl", "cache-invalidation"],
+  "prerequisites": [],
+  "steps": {
+    "CONTEXT": {
+      "content": "Every database query costs time and money. Caching stores frequently accessed data in fast memory so you don't recompute or re-fetch it. But caches introduce a new problem: stale data.",
+      "analogy": "A cache is like keeping yesterday's newspaper on your desk — fast to read, but it might be outdated.",
+      "productionNote": "Cache invalidation is one of the two hard problems in computer science. Getting it wrong causes subtle bugs that only appear under load.",
+      "hints": ["What data in your URL shortener is read more than written?"]
+    },
+    "DECIDE": {
+      "optionA": "Cache-aside: app checks cache first, falls back to DB, writes to cache on miss.",
+      "optionB": "Write-through: every write goes to cache AND database simultaneously.",
+      "tradeoffs": {
+        "A": "Simpler invalidation; cache miss penalty on first read.",
+        "B": "Always fresh on read; write latency increases, cache and DB can diverge on failure."
+      },
+      "hints": ["Consider read-heavy vs write-heavy patterns for URL lookups."]
+    },
+    "BUILD": {
+      "goal": "Add an in-memory cache to your URL shortener's lookup path. Cache hits should skip the database.",
+      "tracks": {
+        "node": "Use a Map or node-cache. Add cache hit/miss logging.",
+        "python": "Use functools.lru_cache or a dict with TTL.",
+        "go": "Use sync.Map or a simple map with mutex.",
+        "typescript": "Use Map with optional TTL tracking."
+      },
+      "acceptance": [
+        "First lookup hits DB, subsequent lookups hit cache (prove with logs)",
+        "Cache miss falls back to DB correctly",
+        "New links are findable after creation (no stale miss)"
+      ],
+      "hints": ["Log 'cache hit' vs 'cache miss' to prove it's working.", "What happens when a link is updated?"]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show logs proving cache hit on second request",
+        "Show cache miss after creating a new link",
+        "Measure or estimate latency difference"
+      ],
+      "hints": ["Verification needs log output, not just 'it feels faster'."]
+    },
+    "BREAK": {
+      "scenario": "After a deploy, users report old redirect URLs for recently updated links.",
+      "symptoms": "Database has correct URL. Cache serves old URL. Restarting fixes it temporarily.",
+      "hints": ["When does the cache get updated vs the database?", "Is there a TTL? Should there be?"]
+    },
+    "FIX": {
+      "goal": "Fix cache invalidation so updates are reflected immediately.",
+      "hints": ["On write, what should happen to the cache entry?", "Cache-aside pattern: invalidate on write, not just on TTL expiry."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Cache-aside made invalidation your responsibility — the bug was a missing invalidation on write.",
+        "B": "Write-through would have kept cache fresh but the failure mode when cache write fails is its own lesson."
+      },
+      "evaluationDimensions": ["tradeoff_reasoning", "production_thinking", "failure_thinking"]
+    }
+  }
+}

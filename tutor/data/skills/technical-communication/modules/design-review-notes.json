@@ -1,0 +1,59 @@
+{
+  "id": "design-review-notes",
+  "title": "Design Review Facilitation",
+  "pack": "launchpad",
+  "duration": "40 min",
+  "concepts": ["design-review", "feedback", "consensus"],
+  "prerequisites": ["architecture-docs"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Design reviews align teams before code is written. Good review notes capture concerns, decisions, and action items — not endless debate.",
+      "analogy": "Court stenographer: records what was decided, not every argument.",
+      "productionNote": "Teams that skip written outcomes repeat the same discussions.",
+      "hints": ["Goal is decision or explicit follow-up, not perfection."]
+    },
+    "DECIDE": {
+      "optionA": "Async review: written doc, comments, 48h feedback window.",
+      "optionB": "Sync review: 30-min meeting with live diagram walkthrough.",
+      "tradeoffs": {
+        "A": "Inclusive across timezones; slower for contentious decisions.",
+        "B": "Fast alignment; excludes absent stakeholders."
+      },
+      "hints": ["What's the cost of delay vs cost of missing a voice?"]
+    },
+    "BUILD": {
+      "goal": "Prepare a 1-page design review doc for a feature: problem, proposal, alternatives, open questions. Run a mock review and capture notes.",
+      "tracks": { "general": "Use next feature on your app roadmap." },
+      "acceptance": [
+        "Problem statement in 2 sentences",
+        "Proposal with diagram",
+        "Review notes: concerns raised, resolutions, action items"
+      ],
+      "hints": ["Open questions are features, not failures.", "Assign owners to action items."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Someone not in the review can understand the decision",
+        "Every concern is resolved or has an action item",
+        "No 'we'll figure it out later' without owner"
+      ],
+      "hints": ["If notes don't change anything, the review was theater."]
+    },
+    "BREAK": {
+      "scenario": "Senior engineer vetoes approach in review but alternative isn't documented. Team builds original plan anyway.",
+      "symptoms": "Rework in week 3. 'We discussed this' with no paper trail.",
+      "hints": ["How do notes prevent silent disagreement?", "Explicit approve / approve with concerns / reject"]
+    },
+    "FIX": {
+      "goal": "Add decision status to notes. Document veto reason and chosen alternative with sign-off.",
+      "hints": ["Disagree and commit needs written record.", "Link ADR to review notes."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Async doc would have preserved the veto even if meeting wasn't scheduled.",
+        "B": "Sync meeting surfaced concerns fast — but failed without written outcomes."
+      },
+      "evaluationDimensions": ["communication_clarity", "writing_clarity", "tradeoff_reasoning"]
+    }
+  }
+}

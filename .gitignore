@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.local
+*.log
+.DS_Store
+tutor/data/feedback/
+tutor/data/sync/
+dist/

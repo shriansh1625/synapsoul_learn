@@ -1,0 +1,68 @@
+{
+  "id": "layered-architecture",
+  "title": "Layered Architecture",
+  "pack": "launchpad",
+  "duration": "60 min",
+  "concepts": ["separation-of-concerns", "error-handling", "interfaces"],
+  "prerequisites": ["data-persistence"],
+  "steps": {
+    "CONTEXT": {
+      "content": "As apps grow, mixing HTTP handling, business logic, and database access in one file becomes unmaintainable. Layered architecture separates concerns so each piece can be tested, changed, and debugged independently.",
+      "analogy": "A restaurant has distinct roles: waiter (handles requests), chef (business logic), pantry (data storage). You wouldn't want the waiter cooking or the chef taking orders.",
+      "productionNote": "Teams that skip layering early pay 10x in refactoring when the app reaches production scale.",
+      "hints": ["Look at your current code — where are three different concerns mixed together?"]
+    },
+    "DECIDE": {
+      "optionA": "Monolith with clear internal layers: routes → service → repository.",
+      "optionB": "Keep it flat for now but define interfaces so layers can be extracted later.",
+      "tradeoffs": {
+        "A": "More files upfront; easier testing and debugging immediately.",
+        "B": "Faster now; extraction cost grows with codebase size."
+      },
+      "hints": ["Consider how painful the BREAK step will be with each choice."]
+    },
+    "BUILD": {
+      "goal": "Refactor your URL shortener into three layers: handler (HTTP), service (business logic), repository (database).",
+      "tracks": {
+        "node": "Separate into routes/, services/, repositories/ directories.",
+        "python": "Use modules: handlers.py, services.py, repositories.py.",
+        "go": "Package structure: handlers/, services/, repositories/.",
+        "typescript": "src/handlers/, src/services/, src/repositories/."
+      },
+      "acceptance": [
+        "Service layer works without HTTP (testable in isolation)",
+        "Repository handles all SQL — no queries in handlers",
+        "Errors in DB layer return 500, not unhandled crashes"
+      ],
+      "hints": [
+        "Start by identifying what each layer should NOT know about.",
+        "The service should not know about HTTP status codes.",
+        "The handler should not know about SQL."
+      ]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show a test or script calling the service directly (no HTTP)",
+        "Show error handling: DB failure returns 500 with safe message",
+        "Explain which layer owns each piece of logic"
+      ],
+      "hints": ["Can you test business logic without starting the web server?"]
+    },
+    "BREAK": {
+      "scenario": "After deploy, some requests return 500 with 'internal error' but logs show the real error is being swallowed.",
+      "symptoms": "Happy path works. Invalid input returns 400 correctly. Database timeout returns generic 500 with no useful log.",
+      "hints": ["Which layer is responsible for logging?", "Is an error being caught and re-thrown without context?"]
+    },
+    "FIX": {
+      "goal": "Fix error propagation so failures are logged with context but clients see safe messages.",
+      "hints": ["Errors should gain context as they bubble up, not lose it.", "The handler decides what the client sees; inner layers decide what gets logged."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Your layers made the error-swallowing bug easier to locate — you knew exactly which layer should have logged.",
+        "B": "The flat structure made it harder to know where error handling should live, which is why the bug hid."
+      },
+      "evaluationDimensions": ["engineering_judgment", "failure_thinking", "task_clarity", "production_thinking"]
+    }
+  }
+}

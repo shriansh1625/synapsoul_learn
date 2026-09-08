@@ -1,0 +1,59 @@
+{
+  "id": "architecture-docs",
+  "title": "Architecture Documentation",
+  "pack": "launchpad",
+  "duration": "45 min",
+  "concepts": ["adr", "diagrams", "c4"],
+  "prerequisites": ["incident-reports"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Architecture docs explain why the system looks the way it does. ADRs capture decisions; diagrams show structure; both decay without maintenance.",
+      "analogy": "Blueprints plus change orders — without them, every renovation is guesswork.",
+      "productionNote": "New hires and future-you depend on docs written today.",
+      "hints": ["Document decisions, not just current state."]
+    },
+    "DECIDE": {
+      "optionA": "C4 model diagrams: context → container → component.",
+      "optionB": "Narrative doc with one sequence diagram for the critical path.",
+      "tradeoffs": {
+        "A": "Structured and scalable; maintenance overhead.",
+        "B": "Fast to write; may miss boundaries as system grows."
+      },
+      "hints": ["What does your next teammate need on day 1?"]
+    },
+    "BUILD": {
+      "goal": "Write an ADR for one architectural decision in your app. Include context, decision, consequences, and alternatives rejected.",
+      "tracks": { "general": "Document auth choice, database choice, or API style." },
+      "acceptance": [
+        "ADR follows: Status, Context, Decision, Consequences",
+        "At least 2 alternatives considered",
+        "Diagram or ASCII sketch of affected components"
+      ],
+      "hints": ["Consequences include negative tradeoffs you accepted.", "Link ADR from README or docs folder."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Reader unfamiliar with project understands the decision",
+        "Diagram matches actual code structure",
+        "ADR dated and has status (proposed/accepted)"
+      ],
+      "hints": ["Ask a peer: can you find the auth flow from this doc alone?"]
+    },
+    "BREAK": {
+      "scenario": "Code refactored to microservices but docs still show monolith diagram.",
+      "symptoms": "Onboarding confusion. Wrong assumptions in incident response.",
+      "hints": ["When should docs update — with the PR or after?", "Add doc update to PR checklist."]
+    },
+    "FIX": {
+      "goal": "Update diagram and ADR status. Add 'docs updated' to PR template.",
+      "hints": ["Stale docs are worse than none — they lie confidently."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "C4 structure gave clear places to update when architecture changed.",
+        "B": "Narrative was faster to write but harder to patch incrementally after the refactor."
+      },
+      "evaluationDimensions": ["communication_clarity", "writing_clarity", "production_thinking"]
+    }
+  }
+}

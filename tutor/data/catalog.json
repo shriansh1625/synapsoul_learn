@@ -1,0 +1,90 @@
+{
+  "version": 2,
+  "foundationSkill": "system-design-fundamentals",
+  "headlineDimensions": [
+    { "id": "tradeoff_reasoning", "label": "Tradeoff Reasoning" },
+    { "id": "debugging_methodology", "label": "Debugging Methodology" },
+    { "id": "security_awareness", "label": "Security Awareness" },
+    { "id": "production_thinking", "label": "Production Thinking" },
+    { "id": "communication_clarity", "label": "Communication Clarity" }
+  ],
+  "tracks": [
+    { "id": "node", "label": "Node.js", "runtime": "JavaScript" },
+    { "id": "python", "label": "Python", "runtime": "FastAPI" },
+    { "id": "go", "label": "Go", "runtime": "net/http" },
+    { "id": "typescript", "label": "TypeScript", "runtime": "Bun/Deno" }
+  ],
+  "skills": [
+    {
+      "id": "system-design-fundamentals",
+      "title": "System Design Fundamentals",
+      "description": "Design real systems with explicit tradeoffs, failure handling, and scaling constraints. Builds your app foundation.",
+      "icon": "layers",
+      "requiresFoundation": false,
+      "moduleCount": 5,
+      "startHere": true,
+      "color": "#e17055",
+      "growthDimensions": ["tradeoff_reasoning", "production_thinking", "security_awareness"]
+    },
+    {
+      "id": "debugging-incidents",
+      "title": "Debugging & Incident Response",
+      "description": "Debug through evidence, not intuition. Reproduce, isolate, root-cause, fix.",
+      "icon": "search",
+      "requiresFoundation": true,
+      "moduleCount": 3,
+      "color": "#e17055",
+      "growthDimensions": ["debugging_methodology", "hypothesis_quality", "root_cause_depth"]
+    },
+    {
+      "id": "decomposition-planning",
+      "title": "Decomposition & Execution Planning",
+      "description": "Break complex projects into staged execution plans that actually ship.",
+      "icon": "grid",
+      "requiresFoundation": true,
+      "moduleCount": 3,
+      "color": "#fdcb6e",
+      "growthDimensions": ["task_clarity", "adaptation_speed", "engineering_judgment"]
+    },
+    {
+      "id": "production-readiness",
+      "title": "Production Readiness",
+      "description": "Reliability, rollout safety, observability, and operational constraints.",
+      "icon": "shield",
+      "requiresFoundation": true,
+      "moduleCount": 3,
+      "color": "#00b894",
+      "growthDimensions": ["production_thinking", "failure_thinking", "observability_coverage"]
+    },
+    {
+      "id": "ai-augmented-engineering",
+      "title": "AI-Augmented Engineering",
+      "description": "Use AI as leverage without losing engineering judgment or independence.",
+      "icon": "sparkles",
+      "requiresFoundation": true,
+      "moduleCount": 3,
+      "color": "#a29bfe",
+      "growthDimensions": ["review_thoroughness", "engineering_judgment", "adaptation_speed"]
+    },
+    {
+      "id": "technical-communication",
+      "title": "Technical Communication",
+      "description": "Communicate architecture and decisions so teams can execute without ambiguity.",
+      "icon": "pen",
+      "requiresFoundation": true,
+      "moduleCount": 3,
+      "color": "#74b9ff",
+      "growthDimensions": ["communication_clarity", "writing_clarity"]
+    },
+    {
+      "id": "system-design",
+      "title": "System Design (Advanced)",
+      "description": "Caching, load balancing, and designing systems that survive real traffic.",
+      "icon": "layers",
+      "requiresFoundation": true,
+      "moduleCount": 2,
+      "color": "#00b894",
+      "growthDimensions": ["tradeoff_reasoning", "production_thinking", "failure_thinking"]
+    }
+  ]
+}

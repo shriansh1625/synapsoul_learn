@@ -1,0 +1,59 @@
+{
+  "id": "milestone-planning",
+  "title": "Milestone Planning",
+  "pack": "launchpad",
+  "duration": "45 min",
+  "concepts": ["milestones", "dependencies", "estimation"],
+  "prerequisites": ["vertical-slices"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Milestones are checkpoints that prove progress. Good milestones are demoable, testable, and ordered by dependency — not arbitrary dates.",
+      "analogy": "Building a house: foundation before walls before roof. You don't paint before drywall.",
+      "productionNote": "Missed milestones usually mean hidden dependencies, not lazy teams.",
+      "hints": ["Each milestone should answer: what can we demo?"]
+    },
+    "DECIDE": {
+      "optionA": "Time-boxed milestones: ship something every 2 weeks regardless of scope.",
+      "optionB": "Outcome milestones: ship when a user-visible capability is complete.",
+      "tradeoffs": {
+        "A": "Predictable rhythm; risk of shipping half-features.",
+        "B": "Meaningful demos; harder to predict dates."
+      },
+      "hints": ["Which does your stakeholder care about more?"]
+    },
+    "BUILD": {
+      "goal": "Break your app into 4 milestones with dependencies, demo criteria, and rough effort (S/M/L).",
+      "tracks": { "general": "Use your URL shortener or links app as the project." },
+      "acceptance": [
+        "4 milestones with clear demo criteria",
+        "Dependency graph or ordered list",
+        "No milestone depends on a later one"
+      ],
+      "hints": ["Milestone 1 should be thinnest vertical slice.", "Flag external dependencies early."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Peer can explain what demo happens at each milestone",
+        "Critical path identified",
+        "Effort estimates have assumptions listed"
+      ],
+      "hints": ["If you can't demo it, it's not a milestone — it's a task."]
+    },
+    "BREAK": {
+      "scenario": "Milestone 2 slips because auth library integration took 3x longer than estimated.",
+      "symptoms": "Downstream milestones compressed. Team wants to skip tests to catch up.",
+      "hints": ["What tradeoff are you being asked to make?", "Re-plan vs cut scope?"]
+    },
+    "FIX": {
+      "goal": "Revise plan: cut scope, parallelize, or extend timeline. Document the decision and what was descoped.",
+      "hints": ["Never silently drop quality gates.", "Communicate new dates with reasons."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Time boxes kept momentum but may have forced premature demos.",
+        "B": "Outcome milestones stayed meaningful but dates slipped without early warning."
+      },
+      "evaluationDimensions": ["task_clarity", "tradeoff_reasoning", "communication_clarity"]
+    }
+  }
+}

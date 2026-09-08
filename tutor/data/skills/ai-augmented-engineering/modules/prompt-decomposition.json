@@ -1,0 +1,61 @@
+{
+  "id": "prompt-decomposition",
+  "title": "Prompt Decomposition",
+  "pack": "launchpad",
+  "duration": "50 min",
+  "concepts": ["prompt-engineering", "task-decomposition", "review-loops"],
+  "prerequisites": [],
+  "steps": {
+    "CONTEXT": {
+      "content": "AI coding assistants are powerful but dangerous when given vague tasks. Prompt decomposition breaks large requests into specific, verifiable steps — the same skill as engineering planning, applied to AI collaboration.",
+      "analogy": "You wouldn't tell a junior engineer 'build the app.' You'd give them a ticket with context, scope, and acceptance criteria. AI needs the same.",
+      "productionNote": "Senior engineers using AI ship 3x faster. Juniors using AI ship 3x more bugs. The difference is prompt quality.",
+      "hints": ["What's the worst AI-generated code you've seen? What was wrong with the prompt?"]
+    },
+    "DECIDE": {
+      "optionA": "One detailed prompt with full context, constraints, and acceptance criteria.",
+      "optionB": "Chain of small prompts: plan first, then implement step by step with verification between each.",
+      "tradeoffs": {
+        "A": "Faster for simple tasks; AI may miss constraints in complex ones.",
+        "B": "Slower but safer; each step is verifiable before proceeding."
+      },
+      "hints": ["Consider the URL shortener analytics feature from the planning module."]
+    },
+    "BUILD": {
+      "goal": "Write a prompt chain (3-5 prompts) to implement Slice 1 of link analytics using your AI assistant. Include review checkpoints.",
+      "tracks": {
+        "general": "Document the prompts in markdown. Execute at least the first prompt and review the output."
+      },
+      "acceptance": [
+        "Each prompt has: context, scope, constraints, expected output",
+        "Review checkpoint after each prompt defines what to verify",
+        "First prompt's output was reviewed and meets acceptance criteria"
+      ],
+      "hints": ["Prompt 1 should be planning only — no code.", "Review means reading the output, not just running it."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show the prompt chain document",
+        "Show the output of Prompt 1 and your review notes",
+        "Identify one thing the AI got wrong and how your prompt could prevent it"
+      ],
+      "hints": ["Finding AI mistakes is a skill — it's your job as the engineer."]
+    },
+    "BREAK": {
+      "scenario": "The AI implemented analytics but used an in-memory store. Your app uses SQLite. Tests pass but data won't persist.",
+      "symptoms": "Code works in dev. Analytics disappear on restart. AI didn't know about your persistence layer.",
+      "hints": ["What context was missing from the prompt?", "This is a review failure, not an AI failure."]
+    },
+    "FIX": {
+      "goal": "Revise your prompt chain to include the missing context. Re-run and verify persistence.",
+      "hints": ["Constraints in prompts prevent entire classes of bugs.", "The fix is in the prompt, not just the code."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "A detailed single prompt might have included persistence — if you remembered to mention it.",
+        "B": "The chain approach would have caught this at the planning review step before any code was written."
+      },
+      "evaluationDimensions": ["review_thoroughness", "engineering_judgment", "task_clarity"]
+    }
+  }
+}

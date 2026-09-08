@@ -1,0 +1,42 @@
+[
+  {
+    "username": "adhi-demo",
+    "name": "Adhi R.",
+    "college_name": "Sreenidhi Institute of Science and Technology",
+    "degree": "B.Tech AIML",
+    "readiness_score": 94,
+    "modules_completed": 9,
+    "skills_completed": 6,
+    "headline": "Evidence-backed builder with strong debugging judgment."
+  },
+  {
+    "username": "yashwant-demo",
+    "name": "Yashwant",
+    "college_name": "Lovely Professional University",
+    "degree": "BTech CSE",
+    "readiness_score": 100,
+    "modules_completed": 9,
+    "skills_completed": 6,
+    "headline": "Evidence-backed builder with strong production judgment."
+  },
+  {
+    "username": "priya-demo",
+    "name": "Priya S.",
+    "college_name": "VIT Vellore",
+    "degree": "B.Tech CSE",
+    "readiness_score": 72,
+    "modules_completed": 4,
+    "skills_completed": 1,
+    "headline": "Building app foundation with strong tradeoff reasoning."
+  },
+  {
+    "username": "alex-demo",
+    "name": "Alex K.",
+    "college_name": "MIT",
+    "degree": "MS Computer Science",
+    "readiness_score": 58,
+    "modules_completed": 2,
+    "skills_completed": 0,
+    "headline": "Launchpad in progress — System Design Fundamentals."
+  }
+]

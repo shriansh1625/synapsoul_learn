@@ -1,0 +1,15 @@
+---
+description: LearnLab bootcamp — activate via skill.md in any IDE
+alwaysApply: true
+---
+
+# LearnLab Bootcamp
+
+When the user wants to learn or pasted the universal prompt:
+
+1. Read `skill.md` at project root and follow the instructor protocol.
+2. Run `cd tutor && npm run tutor -- status --json` for session state.
+3. Use CLI for all progression — never invent curriculum.
+4. One step per turn. Never write full BUILD solutions.
+
+Universal prompt: `Read skill.md and follow the instructions`

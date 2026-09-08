@@ -1,0 +1,59 @@
+{
+  "id": "prompt-guardrails",
+  "title": "Prompt Guardrails",
+  "pack": "launchpad",
+  "duration": "40 min",
+  "concepts": ["guardrails", "constraints", "output-validation"],
+  "prerequisites": ["ai-code-review"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Effective AI prompts include constraints: output format, forbidden actions, verification steps, and scope boundaries.",
+      "analogy": "Guardrails on a highway — they don't drive for you, but they stop catastrophic departures.",
+      "productionNote": "Unbounded AI tasks in CI or codegen pipelines are incident factories.",
+      "hints": ["What should the AI never do?"]
+    },
+    "DECIDE": {
+      "optionA": "Single detailed prompt with all constraints inline.",
+      "optionB": "System prompt (rules) + task prompt (work) separated.",
+      "tradeoffs": {
+        "A": "Portable; hard to maintain as rules grow.",
+        "B": "Reusable rules; requires discipline to keep in sync."
+      },
+      "hints": ["Which constraints apply to every task vs this task only?"]
+    },
+    "BUILD": {
+      "goal": "Write a reusable prompt template for your stack with: role, constraints, output format, and self-check steps.",
+      "tracks": { "general": "Template for 'implement feature X in my app' tasks." },
+      "acceptance": [
+        "Explicit forbidden actions (e.g., no secrets, no deleting tests)",
+        "Required output format (files changed, test commands run)",
+        "Self-check questions AI must answer before finishing"
+      ],
+      "hints": ["Include 'show your work' requirements.", "Require running tests, not assuming they pass."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Template prevents at least one bad behavior you saw before",
+        "Output format is parseable by you or CI",
+        "Self-check catches an intentional bad suggestion in a test run"
+      ],
+      "hints": ["Red-team your own template with a malicious task."]
+    },
+    "BREAK": {
+      "scenario": "AI follows template but invents a dependency that doesn't exist.",
+      "symptoms": "package.json updated with fake package. Build fails in CI.",
+      "hints": ["What guardrail checks dependency existence?", "Add verification step."]
+    },
+    "FIX": {
+      "goal": "Add guardrail: verify packages exist before adding. Add CI check for lockfile consistency.",
+      "hints": ["Automate what humans forget.", "Template is living document — update after incidents."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Inline constraints were complete but duplicated across every prompt.",
+        "B": "Separated system prompt made updates easier when the fake-package incident revealed a gap."
+      },
+      "evaluationDimensions": ["engineering_judgment", "review_thoroughness", "production_thinking"]
+    }
+  }
+}

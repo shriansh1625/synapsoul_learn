@@ -1,0 +1,13 @@
+{
+  "id": "technical-communication",
+  "title": "Technical Communication",
+  "tracks": ["general"],
+  "packs": [
+    { "id": "launchpad", "label": "Launchpad", "free": true }
+  ],
+  "modules": [
+    { "id": "incident-reports", "title": "Writing Incident Reports", "pack": "launchpad", "duration": "40 min", "concepts": ["incident-report", "timeline", "root-cause-analysis"] },
+    { "id": "architecture-docs", "title": "Architecture Documentation", "pack": "launchpad", "duration": "45 min", "concepts": ["adr", "diagrams", "c4"] },
+    { "id": "design-review-notes", "title": "Design Review Facilitation", "pack": "launchpad", "duration": "40 min", "concepts": ["design-review", "feedback", "consensus"] }
+  ]
+}

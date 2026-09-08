@@ -1,0 +1,40 @@
+{
+  "modules": [
+    {
+      "id": "module-1",
+      "title": "How the Web Works",
+      "description": "Understand request/response, HTTP, and what happens when you visit a URL.",
+      "duration": "45 min",
+      "steps": ["CONTEXT", "DECIDE", "BUILD", "VERIFY", "BREAK", "FIX", "REFLECT"],
+      "prerequisites": [],
+      "skills": ["HTTP", "Client-Server", "REST basics"]
+    },
+    {
+      "id": "module-2",
+      "title": "Data & Persistence",
+      "description": "Learn why apps need databases and how to read/write data safely.",
+      "duration": "50 min",
+      "steps": ["CONTEXT", "DECIDE", "BUILD", "VERIFY", "BREAK", "FIX", "REFLECT"],
+      "prerequisites": ["module-1"],
+      "skills": ["SQL", "CRUD", "Data modeling"]
+    },
+    {
+      "id": "module-3",
+      "title": "System Design Foundations",
+      "description": "Decompose features into layers, define interfaces, and handle failure.",
+      "duration": "60 min",
+      "steps": ["CONTEXT", "DECIDE", "BUILD", "VERIFY", "BREAK", "FIX", "REFLECT"],
+      "prerequisites": ["module-2"],
+      "skills": ["Layered architecture", "Error handling", "Separation of concerns"]
+    }
+  ],
+  "stepDescriptions": {
+    "CONTEXT": "Understand why this matters",
+    "DECIDE": "Choose between two approaches with reasoning",
+    "BUILD": "Implement with guidance, not answers",
+    "VERIFY": "Prove it works with evidence",
+    "BREAK": "Diagnose an injected failure",
+    "FIX": "Find and fix the root cause",
+    "REFLECT": "Connect decisions to consequences"
+  }
+}

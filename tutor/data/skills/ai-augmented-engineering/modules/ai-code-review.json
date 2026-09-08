@@ -1,0 +1,59 @@
+{
+  "id": "ai-code-review",
+  "title": "AI-Assisted Code Review",
+  "pack": "launchpad",
+  "duration": "45 min",
+  "concepts": ["ai-review", "verification", "hallucination"],
+  "prerequisites": ["prompt-decomposition"],
+  "steps": {
+    "CONTEXT": {
+      "content": "AI can accelerate code review but hallucinates confidently. Your job is to verify every suggestion against the actual code and tests.",
+      "analogy": "AI review is a junior reviewer with infinite confidence — useful drafts, dangerous if trusted blindly.",
+      "productionNote": "Merged AI suggestions without verification have caused production incidents.",
+      "hints": ["Trust but verify — actually, verify then trust."]
+    },
+    "DECIDE": {
+      "optionA": "Ask AI to review the full diff in one prompt.",
+      "optionB": "Review file-by-file with focused prompts per concern (security, perf, style).",
+      "tradeoffs": {
+        "A": "Fast overview; misses depth and hits context limits.",
+        "B": "Thorough; slower and requires you to drive."
+      },
+      "hints": ["What would a senior reviewer focus on first?"]
+    },
+    "BUILD": {
+      "goal": "Run AI review on a recent change. Produce a checklist: accepted suggestions, rejected (with reason), and items you found that AI missed.",
+      "tracks": { "general": "Use your last module's code changes." },
+      "acceptance": [
+        "At least 3 AI suggestions evaluated with accept/reject",
+        "At least 1 issue you found that AI missed",
+        "Each rejection cites specific code evidence"
+      ],
+      "hints": ["Run the tests AI claims are unnecessary.", "Check if suggested imports exist."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Rejected suggestions would have broken tests or behavior",
+        "Accepted suggestions improve code measurably",
+        "Your manual findings are documented"
+      ],
+      "hints": ["AI loves suggesting refactors that change behavior subtly."]
+    },
+    "BREAK": {
+      "scenario": "AI suggests 'fix' that removes error handling 'because it's unreachable'.",
+      "symptoms": "Code compiles. Tests pass. Production edge case now crashes.",
+      "hints": ["Why did tests miss this?", "What question would you ask AI to challenge its reasoning?"]
+    },
+    "FIX": {
+      "goal": "Restore correct error handling. Add a test for the edge case AI dismissed.",
+      "hints": ["When AI says unreachable, ask for a counterexample.", "Tests are your ground truth."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Full-diff review gave breadth but missed the subtle error-handling bug.",
+        "B": "Focused security/edge-case prompts would have caught what the broad review missed."
+      },
+      "evaluationDimensions": ["review_thoroughness", "engineering_judgment", "adaptation_speed"]
+    }
+  }
+}

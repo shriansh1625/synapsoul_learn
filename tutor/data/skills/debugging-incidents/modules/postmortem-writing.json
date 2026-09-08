@@ -1,0 +1,64 @@
+{
+  "id": "postmortem-writing",
+  "title": "Blameless Postmortems",
+  "pack": "launchpad",
+  "duration": "40 min",
+  "concepts": ["postmortem", "root-cause", "action-items"],
+  "prerequisites": ["incident-triage"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Postmortems turn incidents into organizational learning. Blameless means focusing on systems and processes, not punishing individuals.",
+      "analogy": "Aviation crash investigations fix the industry — not just fire one pilot.",
+      "productionNote": "Teams that blame people hide the truth. Teams that learn prevent repeats.",
+      "hints": ["Timeline first, judgments later."]
+    },
+    "DECIDE": {
+      "optionA": "Deep technical RCA: exact code path, deploy diff, database state.",
+      "optionB": "Systems view: what guardrails failed to prevent human error?",
+      "tradeoffs": {
+        "A": "Precise fix; may miss process gaps.",
+        "B": "Broader improvements; may feel vague without technical detail."
+      },
+      "hints": ["Best postmortems do both."]
+    },
+    "BUILD": {
+      "goal": "Draft a postmortem for a simulated outage: timeline, root cause, contributing factors, and 3 action items with owners.",
+      "tracks": {
+        "node": "Use your app's recent BREAK scenario as the incident.",
+        "python": "Use your app's recent BREAK scenario as the incident.",
+        "go": "Use your app's recent BREAK scenario as the incident.",
+        "typescript": "Use your app's recent BREAK scenario as the incident."
+      },
+      "acceptance": [
+        "Timeline with UTC timestamps",
+        "Root cause vs contributing factors separated",
+        "3 action items: detection, prevention, mitigation"
+      ],
+      "hints": ["Action items must be measurable.", "Avoid 'be more careful' — fix the system."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Another reader can reproduce the timeline",
+        "Each action item has an owner and due date",
+        "No blame language ('X was careless')"
+      ],
+      "hints": ["Read it as if you caused the incident — does it feel fair?"]
+    },
+    "BREAK": {
+      "scenario": "Manager wants to name the engineer who merged the bad PR in the postmortem.",
+      "symptoms": "Team stops reporting near-misses.",
+      "hints": ["What's the long-term cost of blame?", "How do you redirect to systemic fixes?"]
+    },
+    "FIX": {
+      "goal": "Revise postmortem to be blameless. Add a process action item (e.g., required reviewer for risky paths).",
+      "hints": ["Focus on what allowed the merge, not who clicked merge."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Technical depth gave engineers confidence the fix is real.",
+        "B": "Systems view surfaced guardrails that pure code RCA would miss."
+      },
+      "evaluationDimensions": ["communication_clarity", "root_cause_depth", "production_thinking"]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "web-fundamentals",
+  "title": "Web Fundamentals",
+  "description": "Build the app foundation: HTTP, APIs, databases, and layered architecture.",
+  "tracks": ["node", "python", "go", "typescript"],
+  "packs": [
+    { "id": "launchpad", "label": "Launchpad", "free": true },
+    { "id": "practitioner", "label": "Practitioner", "free": false }
+  ],
+  "modules": [
+    { "id": "http-basics", "title": "How the Web Works", "pack": "launchpad", "duration": "45 min", "concepts": ["http", "request-response", "status-codes"] },
+    { "id": "data-persistence", "title": "Data & Persistence", "pack": "launchpad", "duration": "50 min", "concepts": ["crud", "sql", "persistence"] },
+    { "id": "layered-architecture", "title": "Layered Architecture", "pack": "launchpad", "duration": "60 min", "concepts": ["separation-of-concerns", "error-handling", "interfaces"] }
+  ],
+  "interludes": ["knight-capital", "github-outage"]
+}

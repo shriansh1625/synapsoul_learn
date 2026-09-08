@@ -1,0 +1,26 @@
+{
+  "name": "ai-tutor",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "bin": {
+    "tutor": "./cli/index.mjs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tutor": "node cli/index.mjs",
+    "tutor:status": "node cli/index.mjs status --json",
+    "tutor:catalog": "node cli/index.mjs catalog --json",
+    "tutor:start": "node cli/index.mjs start --json"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.0"
+  }
+}

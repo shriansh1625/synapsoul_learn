@@ -1,0 +1,59 @@
+{
+  "id": "risk-decomposition",
+  "title": "Risk-Based Decomposition",
+  "pack": "launchpad",
+  "duration": "50 min",
+  "concepts": ["risk", "spikes", "unknowns"],
+  "prerequisites": ["milestone-planning"],
+  "steps": {
+    "CONTEXT": {
+      "content": "Not all tasks are equal. High-risk unknowns should be tackled early via spikes — time-boxed experiments that reduce uncertainty before committing to a plan.",
+      "analogy": "Scouts check the bridge before the army marches across.",
+      "productionNote": "Projects fail when teams schedule risky work last.",
+      "hints": ["Risk = impact × uncertainty."]
+    },
+    "DECIDE": {
+      "optionA": "Spike all unknowns in week 1 before any feature work.",
+      "optionB": "Spike only when a milestone is blocked by an unknown.",
+      "tradeoffs": {
+        "A": "Early clarity; may delay visible progress.",
+        "B": "Faster start; surprises hit later when expensive."
+      },
+      "hints": ["Which unknowns could kill the project if wrong?"]
+    },
+    "BUILD": {
+      "goal": "List top 5 project risks. For the top 2, write a 2-hour spike plan with success/failure criteria.",
+      "tracks": { "general": "Apply to your current app feature roadmap." },
+      "acceptance": [
+        "5 risks ranked by impact × uncertainty",
+        "2 spike plans with time box and exit criteria",
+        "Each spike produces a go/no-go decision"
+      ],
+      "hints": ["Spikes produce learning, not production code.", "Define what you'll do if the spike fails."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Spike success criteria are falsifiable",
+        "Risks map to specific milestones",
+        "Team agrees on spike priority order"
+      ],
+      "hints": ["'Research auth options' is not a spike without exit criteria."]
+    },
+    "BREAK": {
+      "scenario": "Spike reveals the chosen database can't handle required write volume. Milestone plan assumed it could.",
+      "symptoms": "Two weeks of work built on wrong assumption.",
+      "hints": ["What should have been spiked earlier?", "How do you replan without panic?"]
+    },
+    "FIX": {
+      "goal": "Update architecture decision and milestone plan. Add spike for the alternative before building more.",
+      "hints": ["Document the decision in ADR format.", "Communicate impact to stakeholders early."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Week-1 spikes would have caught the database limit before building on it.",
+        "B": "Just-in-time spikes saved upfront time but cost a replan when the risk materialized."
+      },
+      "evaluationDimensions": ["engineering_judgment", "task_clarity", "production_thinking"]
+    }
+  }
+}

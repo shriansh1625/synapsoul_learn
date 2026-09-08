@@ -1,0 +1,13 @@
+{
+  "id": "decomposition-planning",
+  "title": "Decomposition & Planning",
+  "tracks": ["general"],
+  "packs": [
+    { "id": "launchpad", "label": "Launchpad", "free": true }
+  ],
+  "modules": [
+    { "id": "vertical-slices", "title": "Vertical Slice Planning", "pack": "launchpad", "duration": "45 min", "concepts": ["vertical-slice", "acceptance-criteria", "scope"] },
+    { "id": "milestone-planning", "title": "Milestone Planning", "pack": "launchpad", "duration": "45 min", "concepts": ["milestones", "dependencies", "estimation"] },
+    { "id": "risk-decomposition", "title": "Risk-Based Decomposition", "pack": "launchpad", "duration": "50 min", "concepts": ["risk", "spikes", "unknowns"] }
+  ]
+}

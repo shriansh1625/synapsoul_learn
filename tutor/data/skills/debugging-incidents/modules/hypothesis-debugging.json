@@ -1,0 +1,64 @@
+{
+  "id": "hypothesis-debugging",
+  "title": "Hypothesis-Driven Debugging",
+  "pack": "launchpad",
+  "duration": "50 min",
+  "concepts": ["hypothesis", "bisection", "log-analysis"],
+  "prerequisites": [],
+  "steps": {
+    "CONTEXT": {
+      "content": "Production bugs rarely announce themselves. Effective debugging starts with a hypothesis — a specific, testable guess about what's wrong — not random code changes.",
+      "analogy": "A doctor doesn't prescribe antibiotics before examining you. They form a hypothesis, run tests, then treat.",
+      "productionNote": "Teams that debug by guessing ship fixes that break other things. Hypothesis-driven debugging is how senior engineers work.",
+      "hints": ["Think of a bug you've seen — did you guess or hypothesize?"]
+    },
+    "DECIDE": {
+      "optionA": "Start with logs: read everything, look for anomalies, form hypothesis from evidence.",
+      "optionB": "Start with bisection: reproduce the bug, narrow the scope by eliminating half the system at each step.",
+      "tradeoffs": {
+        "A": "Works when logs are good; drowning when logs are noisy.",
+        "B": "Works without good logs; slower when the system is large."
+      },
+      "hints": ["What logging does your URL shortener have right now?"]
+    },
+    "BUILD": {
+      "goal": "Add structured logging to your app: request ID, method, path, duration, status code, and error context.",
+      "tracks": {
+        "node": "Use pino or winston with request ID middleware.",
+        "python": "Use logging module with contextvars for request ID.",
+        "go": "Use log/slog with request ID in context.",
+        "typescript": "Use console structured JSON or pino."
+      },
+      "acceptance": [
+        "Every request has a unique request ID in logs",
+        "Errors include stack trace and request context",
+        "You can grep a single request's full lifecycle"
+      ],
+      "hints": ["Request ID should be generated at the edge and passed through all layers.", "Log at boundaries: entry, exit, error."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Trigger an error and show the log with request ID and context",
+        "Show a successful request's full log trail",
+        "Grep by request ID returns exactly one request's logs"
+      ],
+      "hints": ["Bad logs are worse than no logs — they create false confidence."]
+    },
+    "BREAK": {
+      "scenario": "Intermittent 500 errors — about 5% of requests fail. No pattern in the URL. Happens more under load.",
+      "symptoms": "Error logs show 'connection refused' but only sometimes. Database is running.",
+      "hints": ["Form a hypothesis before touching code.", "What's different about the 5% that fail?"]
+    },
+    "FIX": {
+      "goal": "Use your logs to identify the root cause and fix it. Document your hypothesis chain.",
+      "hints": ["Write down: hypothesis → test → result → next hypothesis.", "Connection refused under load often means pool exhaustion."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Your logs gave you the evidence trail to form and test hypotheses quickly.",
+        "B": "Bisection would have found the failing component even without perfect logs — but slower."
+      },
+      "evaluationDimensions": ["hypothesis_quality", "root_cause_depth", "observability_coverage"]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "incident-triage",
+  "title": "Incident Triage",
+  "pack": "launchpad",
+  "duration": "45 min",
+  "concepts": ["severity", "triage", "communication"],
+  "prerequisites": ["hypothesis-debugging"],
+  "steps": {
+    "CONTEXT": {
+      "content": "When production breaks, the first minutes matter. Triage means assessing impact, assigning severity, and communicating before you fix.",
+      "analogy": "ER triage: stabilize the patient, don't perform surgery in the waiting room.",
+      "productionNote": "Teams that skip triage fix the wrong thing while users burn.",
+      "hints": ["Impact × urgency = priority."]
+    },
+    "DECIDE": {
+      "optionA": "Declare incident immediately and pull everyone into a war room.",
+      "optionB": "Quietly investigate until you understand scope, then declare if needed.",
+      "tradeoffs": {
+        "A": "Fast coordination; alert fatigue if overused.",
+        "B": "Less noise; risk of delayed response on real outages."
+      },
+      "hints": ["What signals mean 'page now' vs 'ticket for Monday'?"]
+    },
+    "BUILD": {
+      "goal": "Write an incident runbook section: severity levels (SEV1-3), who to notify, and first 3 diagnostic commands for your app.",
+      "tracks": {
+        "node": "Document curl health checks and log grep patterns.",
+        "python": "Same — adapt to your stack.",
+        "go": "Same — adapt to your stack.",
+        "typescript": "Same — adapt to your stack."
+      },
+      "acceptance": [
+        "Three severity levels with clear criteria",
+        "Notification list per severity",
+        "Three copy-paste diagnostic commands"
+      ],
+      "hints": ["SEV1 = user-visible data loss or full outage.", "Runbook should work when you're panicking."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Peer can classify a sample outage using your runbook",
+        "Diagnostic commands run without modification",
+        "Notification path is realistic for your team size"
+      ],
+      "hints": ["If only you understand it, it's not a runbook."]
+    },
+    "BREAK": {
+      "scenario": "Pager fires at 2am. Error rate is 2% — only affects free-tier users. Marketing launch in 6 hours.",
+      "symptoms": "Logs show timeouts on one dependency. Core paid users unaffected.",
+      "hints": ["What severity is this?", "What's the minimum fix before launch?"]
+    },
+    "FIX": {
+      "goal": "Classify severity, document immediate mitigation (feature flag, circuit breaker, or rollback), and draft a one-line status update.",
+      "hints": ["Communicate what you know and what you don't.", "Mitigate before root-causing when SEV1."]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Early war room would have aligned comms — but might have over-escalated a 2% free-tier issue.",
+        "B": "Quiet investigation saved noise — but delayed status page update if it was actually SEV1."
+      },
+      "evaluationDimensions": ["debugging_methodology", "communication_clarity", "production_thinking"]
+    }
+  }
+}

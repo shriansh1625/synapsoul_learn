@@ -1,0 +1,37 @@
+{
+  "username": "adhi-demo",
+  "name": "Adhi R.",
+  "degree": "B.Tech AIML",
+  "college_name": "Sreenidhi Institute of Science and Technology",
+  "bio": "Evidence-backed builder focused on production-ready system design and debugging.",
+  "track": "node",
+  "readiness_score": 94,
+  "headline": "Evidence-backed builder with strong debugging judgment.",
+  "hiring_summary": "Evidence-backed builder with strong production judgment.",
+  "modules_completed": 9,
+  "skills_completed": 6,
+  "headline_dimensions": [
+    { "id": "tradeoff_reasoning", "label": "Tradeoff Reasoning", "score": 4.6, "max": 5 },
+    { "id": "debugging_methodology", "label": "Debugging Methodology", "score": 4.2, "max": 5 },
+    { "id": "security_awareness", "label": "Security Awareness", "score": 4.5, "max": 5 },
+    { "id": "production_thinking", "label": "Production Thinking", "score": 4.4, "max": 5 },
+    { "id": "communication_clarity", "label": "Communication Clarity", "score": 4.8, "max": 5 }
+  ],
+  "portfolio": [
+    {
+      "artifact": "Input validation middleware",
+      "student_action": "Identified open redirect vulnerability unprompted and proposed domain allowlisting as mitigation.",
+      "proof": "Module 03, Security Awareness (4.5/5)"
+    },
+    {
+      "artifact": "Async write path",
+      "student_action": "Chose async writes for latency but added idempotency keys to prevent duplicate side effects under retry storms.",
+      "proof": "Module 04, Tradeoff Reasoning (4.6/5)"
+    }
+  ],
+  "badges": [
+    { "id": "system-design-fundamentals", "title": "System Design Fundamentals" },
+    { "id": "debugging-incidents", "title": "Debugging & Incident Response" }
+  ],
+  "updated_at": "2026-09-08T00:00:00.000Z"
+}

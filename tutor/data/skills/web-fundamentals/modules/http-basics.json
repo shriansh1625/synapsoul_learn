@@ -1,0 +1,76 @@
+{
+  "id": "http-basics",
+  "title": "How the Web Works",
+  "pack": "launchpad",
+  "duration": "45 min",
+  "concepts": ["http", "request-response", "status-codes"],
+  "prerequisites": [],
+  "steps": {
+    "CONTEXT": {
+      "content": "Every web app is a conversation between a client (browser, mobile app, another server) and a server. HTTP is the language they speak. When you visit a URL, your browser sends a request; the server processes it and sends back a response with a status code and body.",
+      "analogy": "HTTP is like ordering at a restaurant: you place an order (request), the kitchen prepares it (server processing), and the waiter brings it back (response) — or tells you they're out of stock (404).",
+      "productionNote": "Every API you build, every bug you debug, every performance issue starts with understanding this request/response cycle.",
+      "hints": ["Think about what information travels in each direction.", "What happens if the kitchen never responds?"]
+    },
+    "DECIDE": {
+      "optionA": "Learn HTTP conceptually first — study methods, status codes, headers — then build a server.",
+      "optionB": "Build a minimal server immediately and learn HTTP by inspecting what it sends and receives.",
+      "tradeoffs": {
+        "A": "Stronger mental model before coding; slower initial progress.",
+        "B": "Faster hands-on start; may miss concepts until you hit bugs."
+      },
+      "hints": ["Neither is wrong — what matters is your reasoning.", "Consider how you learn best."]
+    },
+    "BUILD": {
+      "goal": "Create a minimal HTTP server that responds to GET / with 'Hello, World!' and logs each request's method and path.",
+      "tracks": {
+        "node": "Use Node.js http module or Express. Listen on port 3000.",
+        "python": "Use Python's http.server or FastAPI. Listen on port 8000.",
+        "go": "Use net/http package. Listen on :8080.",
+        "typescript": "Use Bun.serve or Deno.serve. Listen on port 3000."
+      },
+      "acceptance": [
+        "Server starts without errors",
+        "curl http://localhost:<port>/ returns 'Hello, World!'",
+        "Server logs show method and path for each request"
+      ],
+      "hints": [
+        "Start with the smallest possible server — one route, one response.",
+        "The issue is usually in how you're binding the port or handling the request object.",
+        "Check: are you sending a response for every request? Unanswered requests hang."
+      ]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show curl output with HTTP 200 status",
+        "Show server log output for at least 2 different paths",
+        "Explain what happens when you curl a path that doesn't exist"
+      ],
+      "hints": ["Run the acceptance criteria yourself before claiming done.", "'It works' without output is not verification."]
+    },
+    "BREAK": {
+      "scenario": "Something has changed in the deployment. Run your verification again.",
+      "symptoms": "GET / now returns 404. GET /health still works. Logs show requests arriving at / but routing elsewhere.",
+      "hints": [
+        "Form a hypothesis before checking anything.",
+        "What's the fastest command to test your hypothesis?",
+        "Compare what worked before with what the code does now."
+      ]
+    },
+    "FIX": {
+      "goal": "Identify and fix the routing bug. Explain why it happened.",
+      "hints": [
+        "Trace the request from arrival to response.",
+        "Did a route pattern change? Is there an ordering issue?",
+        "The bug is in routing — not in HTTP itself."
+      ]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "You understood the HTTP contract first. When the routing bug appeared, you likely checked status codes and knew 404 meant 'route not found' — not a server crash.",
+        "B": "You learned by building. The routing bug taught you that HTTP status codes are part of the contract — 404 vs 500 tell very different stories to clients."
+      },
+      "evaluationDimensions": ["tradeoff_reasoning", "task_clarity", "production_thinking", "communication_clarity"]
+    }
+  }
+}

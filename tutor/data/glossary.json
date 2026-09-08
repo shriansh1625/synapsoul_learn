@@ -1,0 +1,64 @@
+{
+  "terms": [
+    {
+      "id": "http",
+      "term": "HTTP",
+      "definition": "HyperText Transfer Protocol — the language browsers and servers use to request and deliver web pages and API data.",
+      "example": "When you visit a URL, your browser sends an HTTP GET request; the server responds with status 200 and the page HTML."
+    },
+    {
+      "id": "rest",
+      "term": "REST",
+      "definition": "Representational State Transfer — an API style that uses HTTP methods (GET, POST, PUT, DELETE) on resources identified by URLs.",
+      "example": "GET /users/42 returns user 42. POST /users creates a new user."
+    },
+    {
+      "id": "crud",
+      "term": "CRUD",
+      "definition": "Create, Read, Update, Delete — the four basic operations on persistent data.",
+      "example": "A blog API supports CRUD on posts: POST to create, GET to read, PUT to update, DELETE to remove."
+    },
+    {
+      "id": "n-plus-one",
+      "term": "N+1 Query",
+      "definition": "A performance bug where fetching N items triggers N additional database queries instead of one batched query.",
+      "example": "Loading 100 users then querying each user's posts individually = 1 + 100 queries."
+    },
+    {
+      "id": "vertical-slice",
+      "term": "Vertical Slice",
+      "definition": "A thin end-to-end feature cut through all layers (UI → API → DB) that delivers user value on its own.",
+      "example": "'User can reset password' is a vertical slice; 'build the database layer' is not."
+    },
+    {
+      "id": "acceptance-criteria",
+      "term": "Acceptance Criteria",
+      "definition": "Observable conditions that must be true for a feature to be considered done.",
+      "example": "Given a valid email, when user clicks reset, then they receive a link within 60 seconds."
+    },
+    {
+      "id": "root-cause",
+      "term": "Root Cause",
+      "definition": "The underlying reason a failure occurred — not the symptom, but the condition that made the symptom possible.",
+      "example": "Symptom: 500 errors. Root cause: missing null check when user has no profile photo."
+    },
+    {
+      "id": "observability",
+      "term": "Observability",
+      "definition": "The ability to understand a system's internal state from its external outputs: logs, metrics, and traces.",
+      "example": "A spike in 500s plus error logs showing 'connection refused' points to a database outage."
+    },
+    {
+      "id": "cache",
+      "term": "Cache",
+      "definition": "A fast storage layer that keeps copies of frequently accessed data to avoid expensive recomputation or remote fetches.",
+      "example": "Redis caches user sessions so every request doesn't hit the database."
+    },
+    {
+      "id": "idempotency",
+      "term": "Idempotency",
+      "definition": "An operation that produces the same result no matter how many times it's executed.",
+      "example": "DELETE /items/5 is idempotent — calling it twice still leaves item 5 deleted."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "id": "observability-basics",
+  "title": "Observability & Health Checks",
+  "pack": "launchpad",
+  "duration": "55 min",
+  "concepts": ["observability", "health-checks", "metrics"],
+  "prerequisites": [],
+  "steps": {
+    "CONTEXT": {
+      "content": "You can't operate what you can't see. Production readiness starts with observability: logs, metrics, and health checks that tell you when something is wrong before users report it.",
+      "analogy": "A car dashboard shows speed, fuel, and warning lights — you don't open the hood while driving to check the engine.",
+      "productionNote": "Teams without health checks discover outages from Twitter, not monitoring.",
+      "hints": ["What would you want to know if your server stopped responding at 3am?"]
+    },
+    "DECIDE": {
+      "optionA": "Add /health endpoint that checks DB connectivity and returns structured JSON status.",
+      "optionB": "Add process-level metrics only (memory, uptime) without dependency checks.",
+      "tradeoffs": {
+        "A": "Catches dependency failures; health check itself can cause load.",
+        "B": "Lightweight; misses DB/network failures until users hit errors."
+      },
+      "hints": ["What does 'healthy' mean for your URL shortener?"]
+    },
+    "BUILD": {
+      "goal": "Implement GET /health returning { status, uptime, db: ok|fail } with dependency checks.",
+      "tracks": {
+        "node": "Add health route with DB ping. Log structured JSON on each request.",
+        "python": "FastAPI /health with sqlalchemy connection check.",
+        "go": "http.HandleFunc /health with db.Ping().",
+        "typescript": "Bun.serve health handler with sqlite check."
+      },
+      "acceptance": [
+        "/health returns 200 with status ok when DB is up",
+        "/health returns 503 when DB is unreachable",
+        "Response includes uptime and timestamp"
+      ],
+      "hints": ["Health checks should be fast — under 100ms.", "Don't put secrets in health response."]
+    },
+    "VERIFY": {
+      "criteria": [
+        "Show curl /health when healthy",
+        "Show curl /health when DB is stopped (503)",
+        "Explain what an orchestrator would do with these responses"
+      ],
+      "hints": ["Kubernetes uses health checks to restart failing pods."]
+    },
+    "BREAK": {
+      "scenario": "Deploy passes health checks but users report 500s on /links.",
+      "symptoms": "/health returns ok. /links fails. Logs show intermittent DB timeouts.",
+      "hints": ["Is /health testing the same code path as /links?", "Liveness vs readiness — what's the difference?"]
+    },
+    "FIX": {
+      "goal": "Split liveness and readiness, or deepen health check to catch the real failure mode.",
+      "hints": ["Liveness: is process alive? Readiness: can it serve traffic?"]
+    },
+    "REFLECT": {
+      "decisionCallbacks": {
+        "A": "Dependency checks in /health would have caught the DB issue — if readiness used the same path as real traffic.",
+        "B": "Process metrics looked fine while the app couldn't serve — proving uptime ≠ healthy."
+      },
+      "evaluationDimensions": ["production_thinking", "failure_thinking", "observability_coverage"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "knight-capital",
+    "skillId": "system-design-fundamentals",
+    "afterModule": "http-basics",
+    "title": "Knight Capital, 2012",
+    "story": "Knight Capital deployed new trading software to 8 servers but only updated 7. The 8th server ran old code that accidentally bought $7 billion in stock in 45 minutes. The company lost $440 million and nearly went bankrupt — all because of a deployment that wasn't verified end-to-end.",
+    "connection": "Your VERIFY step isn't bureaucracy. Knight Capital proves what happens when you ship without proof.",
+    "question": "What specific check in your HTTP server module would have caught a partial deployment like this?"
+  },
+  {
+    "id": "github-outage",
+    "skillId": "system-design-fundamentals",
+    "afterModule": "data-persistence",
+    "title": "GitHub's 2018 Database Incident",
+    "story": "A routine maintenance operation triggered a cascading failure. GitHub's orchestration system couldn't distinguish 'node is down for maintenance' from 'node is down because it's broken.' Automated failover made things worse. Recovery took 24 hours.",
+    "connection": "Data persistence isn't just about storing bytes — it's about understanding what happens when storage fails mid-operation.",
+    "question": "In your links table build, what happens if the database write succeeds but the response never reaches the client?"
+  }
+]

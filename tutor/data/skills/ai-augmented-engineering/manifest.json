@@ -1,0 +1,13 @@
+{
+  "id": "ai-augmented-engineering",
+  "title": "AI-Augmented Engineering",
+  "tracks": ["general"],
+  "packs": [
+    { "id": "launchpad", "label": "Launchpad", "free": true }
+  ],
+  "modules": [
+    { "id": "prompt-decomposition", "title": "Prompt Decomposition", "pack": "launchpad", "duration": "50 min", "concepts": ["prompt-engineering", "task-decomposition", "review-loops"] },
+    { "id": "ai-code-review", "title": "AI-Assisted Code Review", "pack": "launchpad", "duration": "45 min", "concepts": ["ai-review", "verification", "hallucination"] },
+    { "id": "prompt-guardrails", "title": "Prompt Guardrails", "pack": "launchpad", "duration": "40 min", "concepts": ["guardrails", "constraints", "output-validation"] }
+  ]
+}
