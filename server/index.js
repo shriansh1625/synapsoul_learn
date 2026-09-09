@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js'
 import progressRoutes from './routes/progress.js'
 import profileRoutes from './routes/profile.js'
 import leaderboardRoutes from './routes/leaderboard.js'
+import brainRoutes from './routes/brain.js'
 
 dotenv.config()
 
@@ -49,6 +50,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)
+app.use('/api/brain', brainRoutes)
 
 async function start() {
   if (process.env.DATABASE_URL) {

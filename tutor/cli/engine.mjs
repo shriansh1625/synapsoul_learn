@@ -1,6 +1,13 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import {
+  AdaptiveEngine,
+  hydrateFromProgress,
+  buildCurriculum,
+  loadBundledCurriculum,
+  maybeCoachNote,
+} from '../lib/brain/index.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, '..', 'data')
@@ -148,6 +155,58 @@ export function loadModule(skillId, moduleId) {
   return readJson(path)
 }
 
+function loadCurriculum() {
+  try {
+    const catalog = loadCatalog()
+    const manifests = (catalog.skills || []).map(s => {
+      try { return loadSkillManifest(s.id) } catch { return null }
+    }).filter(Boolean)
+    return buildCurriculum(catalog, manifests)
+  } catch {
+    return loadBundledCurriculum()
+  }
+}
+
+function brainFilePath() {
+  return join(DATA_DIR, 'sync', 'brain.json')
+}
+
+function loadBrainState() {
+  try {
+    if (existsSync(brainFilePath())) return readJson(brainFilePath())
+  } catch { /* ignore */ }
+  return null
+}
+
+function saveBrainState(state) {
+  const dir = join(DATA_DIR, 'sync')
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  writeJson(brainFilePath(), state)
+}
+
+export function getBrain(progress = loadProgress()) {
+  const engine = new AdaptiveEngine({
+    curriculum: loadCurriculum(),
+    state: progress.studentMemory?.brain || loadBrainState(),
+  })
+  hydrateFromProgress(engine, progress)
+  return engine
+}
+
+function attachBrain(progress, event, { persist = true } = {}) {
+  const engine = getBrain(progress)
+  if (event) engine.observe(event)
+  const snapshot = engine.snapshot()
+  progress.studentMemory = {
+    ...(progress.studentMemory || {}),
+    brain: engine.state,
+    recurring_growth_areas: (snapshot.struggles || []).map(s => s.id),
+  }
+  saveBrainState(engine.state)
+  if (persist) saveProgress(progress)
+  return snapshot
+}
+
 export function listSkills() {
   const skillsDir = join(DATA_DIR, 'skills')
   return readdirSync(skillsDir, { withFileTypes: true })
@@ -292,6 +351,7 @@ export function cmdStatus(json) {
     completedCount: Object.keys(progress.completedModules).length,
     portfolioCount: progress.portfolio.length,
     student_memory: memory,
+    brain: attachBrain(progress, null, { persist: false }),
     prompt_suggestions: profileRequired
       ? ['tutor profile', 'tutor profile update --name "..." --degree "..." --bio "..."', 'tutor profile confirm']
       : promptSuggestions(progress, catalog),
@@ -327,7 +387,8 @@ export function cmdCatalog(json) {
 export function cmdStart({ skill, track, json }) {
   const progress = loadProgress()
   const catalog = loadCatalog()
-  const skillId = skill || catalog.foundationSkill || 'system-design-fundamentals'
+  const brainSnap = attachBrain(progress)
+  const skillId = skill || brainSnap.recommendedNext?.skillId || catalog.foundationSkill || 'system-design-fundamentals'
   const access = skillAccess(skillId, progress, catalog)
 
   if (!access.unlocked) {
@@ -341,7 +402,11 @@ export function cmdStart({ skill, track, json }) {
 
   const manifest = loadSkillManifest(skillId)
   const selectedTrack = track || progress.profile.track || manifest.tracks?.[0] || 'node'
-  const nextModule = manifest.modules.find(m => !progress.completedModules[`${skillId}:${m.id}`])
+  const recModule = !skill && brainSnap.recommendedNext?.skillId === skillId
+    ? brainSnap.recommendedNext.moduleId
+    : null
+  const nextModule = (recModule && manifest.modules.find(m => m.id === recModule))
+    || manifest.modules.find(m => !progress.completedModules[`${skillId}:${m.id}`])
   const moduleId = nextModule?.id || manifest.modules[0].id
 
   progress.session = {
@@ -353,7 +418,12 @@ export function cmdStart({ skill, track, json }) {
     hintsUsed: 0,
   }
   progress.profile.track = selectedTrack
-  saveProgress(progress)
+  const snapshot = attachBrain(progress, {
+    type: 'session_step',
+    skillId,
+    moduleId,
+    payload: { step: 'CONTEXT', n: 1 },
+  })
 
   const module = loadModule(skillId, moduleId)
   const result = {
@@ -362,6 +432,7 @@ export function cmdStart({ skill, track, json }) {
     onboarding: progress.profile.pretestCompleted ? 'resuming' : 'first_run',
     session: sessionPayload(progress, catalog),
     student_memory: buildStudentMemory(progress, catalog),
+    brain: snapshot,
     prompt_suggestions: promptSuggestions(progress, catalog),
   }
 
@@ -399,7 +470,12 @@ export function cmdNext({ summary, evidence, proofFile, json }) {
   if (!nextStep) return error('module_end', 'Module complete. Submit evaluation via tutor report.', json)
 
   session.step = nextStep
-  saveProgress(progress)
+  const snapshot = attachBrain(progress, {
+    type: 'session_step',
+    skillId: session.skillId,
+    moduleId: session.moduleId,
+    payload: { step: nextStep, n: stepIndex + 1 },
+  })
 
   const interlude = checkInterlude(session.skillId, session.moduleId, nextStep, catalog)
   const result = {
@@ -409,6 +485,7 @@ export function cmdNext({ summary, evidence, proofFile, json }) {
     session: sessionPayload(progress, catalog),
     interlude,
     student_memory: buildStudentMemory(progress, catalog),
+    brain: snapshot,
     prompt_suggestions: promptSuggestions(progress, catalog),
   }
   return json ? result : `Advanced to ${nextStep}`
@@ -427,7 +504,12 @@ export function cmdDecide({ choice, reasoning, json }) {
   progress.decisions[key] = choice
   session.step = 'BUILD'
   session.decideReasoning = reasoning
-  saveProgress(progress)
+  const snapshot = attachBrain(progress, {
+    type: 'decide',
+    skillId: session.skillId,
+    moduleId: session.moduleId,
+    payload: { choice, reasoning },
+  })
 
   const result = {
     status: 'decision_recorded',
@@ -435,12 +517,13 @@ export function cmdDecide({ choice, reasoning, json }) {
     decision: { choice, reasoning },
     session: sessionPayload(progress, catalog),
     student_memory: buildStudentMemory(progress, catalog),
+    brain: snapshot,
     prompt_suggestions: promptSuggestions(progress, catalog),
   }
   return json ? result : `Decision ${choice} recorded.`
 }
 
-export function cmdHint({ json }) {
+export async function cmdHint({ json }) {
   const progress = loadProgress()
   const catalog = loadCatalog()
   const session = progress.session
@@ -450,16 +533,29 @@ export function cmdHint({ json }) {
   const stepContent = module.steps[session.step]
   const hints = stepContent?.hints || []
   session.hintsUsed = (session.hintsUsed || 0) + 1
-  saveProgress(progress)
-
   const hintIndex = Math.min(session.hintsUsed - 1, hints.length - 1)
   const hint = hints[hintIndex] || 'Re-read the step goal. What is the smallest test you could run to learn one thing?'
+
+  const snapshot = attachBrain(progress, {
+    type: 'hint',
+    skillId: session.skillId,
+    moduleId: session.moduleId,
+    payload: { n: session.hintsUsed, step: session.step },
+  })
+  const coach = await maybeCoachNote({
+    event: { type: 'hint' },
+    moduleTitle: module.title,
+    hintText: hint,
+    why: snapshot.why,
+  })
 
   const result = {
     status: 'hint',
     message: hint,
     hintsUsed: session.hintsUsed,
     scorePenalty: 'Hints reduce independent performance scores.',
+    coach,
+    brain: snapshot,
     session: sessionPayload(progress, catalog),
     prompt_suggestions: promptSuggestions(progress, catalog),
   }
@@ -567,6 +663,18 @@ export function cmdReport({ reportJson, json }) {
 
   saveProgress(progress)
 
+  const snapshot = attachBrain(progress, {
+    type: 'module_complete',
+    skillId: session.skillId,
+    moduleId: session.moduleId,
+    payload: {
+      score: data.overall,
+      overall: data.overall,
+      hintsUsed: session.hintsUsed || 0,
+      dimensions: data.dimensions,
+    },
+  })
+
   const result = {
     status: packCompleted ? 'pack_completed' : nextModuleId ? 'module_completed' : 'skill_completed',
     message: packCompleted ? 'Launchpad pack completed!' : 'Module evaluation accepted.',
@@ -576,6 +684,7 @@ export function cmdReport({ reportJson, json }) {
     nextModule: nextModuleId ? loadModule(session.skillId, nextModuleId).title : null,
     portfolioCount: progress.portfolio.length,
     student_memory: buildStudentMemory(progress, catalog),
+    brain: snapshot,
     prompt_suggestions: nextModuleId
       ? [`tutor status`, `Continue with next module in ${session.skillId}`]
       : ['tutor catalog', 'tutor start --skill <next-skill>'],
@@ -793,6 +902,7 @@ export function cmdSync({ publish, json }) {
     synced_at: new Date().toISOString(),
     progress,
     public_profile: buildPublicProfile(progress, catalog),
+    brain: attachBrain(progress),
   }
   const syncPath = join(syncDir, 'latest.json')
   writeJson(syncPath, exportData)
@@ -887,7 +997,10 @@ export function cmdPretestSubmit({ answers, json }) {
     effective_level: progress.profile.level,
     confidence_level: correct >= 3 ? 'medium' : 'low',
   }
-  saveProgress(progress)
+  const snapshot = attachBrain(progress, {
+    type: 'pretest',
+    payload: { ...progress.pretest, level: progress.profile.level },
+  })
 
   const result = {
     status: 'pretest_complete',
@@ -896,6 +1009,7 @@ export function cmdPretestSubmit({ answers, json }) {
     total: 5,
     level: progress.profile.level,
     answers: parsed,
+    brain: snapshot,
     prompt_suggestions: [
       'tutor profile update --name "..." --degree "..." --bio "..."',
       'tutor start --skill system-design-fundamentals',

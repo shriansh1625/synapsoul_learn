@@ -6,6 +6,8 @@ import initialProgress from '../data/progress.json'
 import Landing from './Landing.jsx'
 import PublicProfile from './PublicProfile.jsx'
 import AuthModal from './AuthModal.jsx'
+import { BrainPanel } from './BrainPanel.jsx'
+import { useBrain } from './brain/useBrain.js'
 import {
   isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, canSyncProgress,
 } from './api.js'
@@ -137,6 +139,7 @@ export default function App() {
   const [liveLeaderboard, setLiveLeaderboard] = useState(null)
   const prevCompletedRef = useRef(new Set(Object.keys(loadProgress().completedModules || {})))
   const syncFailuresRef = useRef(0)
+  const { snapshot: brainSnapshot, observe: observeBrainEvent } = useBrain(progress, authUser)
 
   const addToast = useCallback((message, type = 'achievement') => {
     const id = Date.now() + Math.random()
@@ -258,6 +261,10 @@ export default function App() {
       ...p,
       profile: { ...p.profile, ...profileData },
     }))
+    observeBrainEvent({
+      type: 'onboarding',
+      payload: { track: profileData.track, level: profileData.level || progress.profile?.level || 'beginner' },
+    })
     localStorage.setItem('learnlab-onboarded', '1')
     setShowOnboarding(false)
     addToast('Welcome to LearnLab — paste the universal prompt in Cursor!', 'welcome')
@@ -332,7 +339,9 @@ export default function App() {
 
   const dimensionScores = computeDimensionAverages(progress.scores || {})
   const bootcampComplete = isBootcampComplete(progress)
-  const recommendedSkill = getRecommendedSkill(progress, dimensionScores)
+  const recommendedSkill = brainSnapshot?.recommendedNext
+    ? catalog.skills.find(s => s.id === brainSnapshot.recommendedNext.skillId) || getRecommendedSkill(progress, dimensionScores)
+    : getRecommendedSkill(progress, dimensionScores)
 
   return (
     <div className="app">
@@ -403,6 +412,7 @@ export default function App() {
             portfolioCount={portfolio.length}
             dimensionScores={dimensionScores}
             recommendedSkill={recommendedSkill}
+            brainSnapshot={brainSnapshot}
           />
         )}
         {view === 'skills' && (
@@ -447,13 +457,14 @@ export default function App() {
   )
 }
 
-function DashboardView({ progress, session, completedCount, totalModules, portfolioCount, dimensionScores, recommendedSkill }) {
+function DashboardView({ progress, session, completedCount, totalModules, portfolioCount, dimensionScores, recommendedSkill, brainSnapshot }) {
   const stepIndex = session ? STEPS.indexOf(session.step) : -1
   const topDimensions = Object.entries(dimensionScores)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
   const skillTitle = session?.skillId ? getSkillTitle(session.skillId) : null
   const moduleLabel = session?.moduleId?.replace(/-/g, ' ') || ''
+  const rec = brainSnapshot?.recommendedNext
 
   return (
     <>
@@ -492,7 +503,9 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
         </div>
       </section>
 
-      {recommendedSkill && (
+      <BrainPanel snapshot={brainSnapshot} />
+
+      {recommendedSkill && !rec && (
         <section className="card elevated recommend-card">
           <div className="card-badge">Recommended next</div>
           <h2 className="display-xs">{recommendedSkill.title}</h2>

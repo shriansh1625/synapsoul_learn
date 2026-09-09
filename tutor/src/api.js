@@ -66,3 +66,15 @@ export function fetchLeaderboard() {
 export function fetchPublicProfile(username) {
   return apiFetch(`/api/profile/${username}`)
 }
+
+export function fetchBrain() {
+  return apiFetch('/api/brain')
+}
+
+export function putBrain(state) {
+  return apiFetch('/api/brain', { method: 'PUT', body: JSON.stringify({ state }) })
+}
+
+export function observeBrain(event) {
+  return apiFetch('/api/brain/observe', { method: 'POST', body: JSON.stringify(event) })
+}

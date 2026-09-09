@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../db/pool.js'
 import { auth } from '../middleware/auth.js'
+import { AdaptiveEngine } from '../lib/brain/index.js'
 
 const router = Router()
 
@@ -98,6 +99,38 @@ router.post('/module-complete', auth, async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [uid, skillId, moduleId, artifact, student_action, technical_detail, proof, ability, confidence]
     )
+  }
+
+  try {
+    const mem = await pool.query('SELECT memory FROM student_memory WHERE user_id = $1', [uid])
+    const memory = mem.rows[0]?.memory || {}
+    const engine = new AdaptiveEngine({ state: memory.brain })
+    if (decision?.choice) {
+      engine.observe({
+        type: 'decide',
+        skillId,
+        moduleId,
+        payload: { choice: decision.choice, reasoning: decision.reasoning || '' },
+      })
+    }
+    engine.observe({
+      type: 'module_complete',
+      skillId,
+      moduleId,
+      payload: {
+        score: score ?? scoreData?.overall,
+        overall: scoreData?.overall,
+        hintsUsed: scoreData?.hintsUsed || 0,
+      },
+    })
+    memory.brain = engine.state
+    await pool.query(
+      `INSERT INTO student_memory (user_id, memory) VALUES ($1, $2::jsonb)
+       ON CONFLICT (user_id) DO UPDATE SET memory = $2::jsonb`,
+      [uid, JSON.stringify(memory)]
+    )
+  } catch {
+    /* brain is best-effort */
   }
 
   res.json({ ok: true })

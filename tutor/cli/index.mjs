@@ -70,7 +70,7 @@ async function main() {
       })
       break
     case 'hint':
-      result = cmdHint({ json })
+      result = await cmdHint({ json })
       break
     case 'ref':
       result = cmdRef({ topic: args[args.indexOf('ref') + 1], json })
