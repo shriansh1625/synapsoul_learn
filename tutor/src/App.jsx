@@ -7,7 +7,7 @@ import Landing from './Landing.jsx'
 import PublicProfile from './PublicProfile.jsx'
 import AuthModal from './AuthModal.jsx'
 import {
-  isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, apiEnabled,
+  isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, canSyncProgress,
 } from './api.js'
 
 function parseRoute() {
@@ -136,6 +136,7 @@ export default function App() {
   const [authUser, setAuthUser] = useState(null)
   const [liveLeaderboard, setLiveLeaderboard] = useState(null)
   const prevCompletedRef = useRef(new Set(Object.keys(loadProgress().completedModules || {})))
+  const syncFailuresRef = useRef(0)
 
   const addToast = useCallback((message, type = 'achievement') => {
     const id = Date.now() + Math.random()
@@ -168,18 +169,22 @@ export default function App() {
     }
 
     async function syncProgress() {
+      if (!canSyncProgress()) return
+      if (syncFailuresRef.current >= 3) return
       try {
-        if (!isLoggedIn() && !apiEnabled()) return
         const cliProgress = await fetchProgress()
         if (cancelled) return
+        syncFailuresRef.current = 0
         await applyProgress(cliProgress)
-      } catch { /* offline or API unavailable — local-first fallback */ }
+      } catch {
+        syncFailuresRef.current += 1
+      }
     }
 
     syncProgress()
     const interval = setInterval(syncProgress, 8000)
     return () => { cancelled = true; clearInterval(interval) }
-  }, [showLanding, addToast])
+  }, [showLanding, addToast, authUser])
 
   useEffect(() => {
     if (!isLoggedIn()) return
@@ -223,25 +228,32 @@ export default function App() {
     if (!localStorage.getItem('learnlab-onboarded')) setShowOnboarding(true)
   }
 
-  async function completeOnboarding(profileData) {
+  function saveProfilePartial(partial) {
+    setProgress(p => ({ ...p, profile: { ...p.profile, ...partial } }))
+  }
+
+  async function tryRegisterOnboarding(data) {
+    if (!data.email || !data.password) return
     try {
-      if (profileData.email && profileData.password) {
-        const { token, user } = await register({
-          email: profileData.email,
-          password: profileData.password,
-          name: profileData.name,
-          degree: profileData.degree,
-          bio: profileData.bio,
-          username: profileData.username,
-          college: profileData.college_name || profileData.college,
-          track: profileData.track,
-        })
-        setToken(token)
-        setAuthUser(user)
-      }
+      const { token, user } = await register({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        degree: data.degree,
+        bio: data.bio,
+        username: data.username,
+        college: data.college_name || data.college,
+        track: data.track,
+      })
+      setToken(token)
+      setAuthUser(user)
+      syncFailuresRef.current = 0
     } catch {
       addToast('Account saved locally — cloud sync unavailable', 'welcome')
     }
+  }
+
+  async function completeOnboarding(profileData) {
     setProgress(p => ({
       ...p,
       profile: { ...p.profile, ...profileData },
@@ -329,6 +341,8 @@ export default function App() {
         <OnboardingWizard
           progress={progress}
           catalog={catalog}
+          onSaveProfile={saveProfilePartial}
+          onTryRegister={tryRegisterOnboarding}
           onComplete={completeOnboarding}
           onDismiss={() => { localStorage.setItem('learnlab-onboarded', '1'); setShowOnboarding(false) }}
         />
@@ -952,7 +966,7 @@ function ToastStack({ toasts }) {
   )
 }
 
-function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
+function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onComplete, onDismiss }) {
   const [step, setStep] = useState(1)
   const [name, setName] = useState(progress.profile?.name || '')
   const [degree, setDegree] = useState(progress.profile?.degree || '')
@@ -964,6 +978,29 @@ function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
   const [track, setTrack] = useState(progress.profile?.track || 'node')
   const [submitting, setSubmitting] = useState(false)
   const foundation = catalog.skills.find(s => s.startHere) || catalog.skills[0]
+
+  async function handleStep1Next() {
+    const profilePartial = {
+      name,
+      degree,
+      bio,
+      email: email || undefined,
+      username: username || (email ? email.split('@')[0] : undefined),
+      college_name: college,
+    }
+    onSaveProfile(profilePartial)
+    if (email && password) {
+      setSubmitting(true)
+      await onTryRegister({
+        ...profilePartial,
+        password,
+        college,
+        track,
+      })
+      setSubmitting(false)
+    }
+    setStep(2)
+  }
 
   return (
     <div className="onboarding-overlay">
@@ -1048,8 +1085,13 @@ function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
           {step === 1 && (
             <>
               <button type="button" className="btn-secondary" onClick={onDismiss}>Skip</button>
-              <button type="button" className="btn-primary" disabled={!name || !degree || !bio} onClick={() => setStep(2)}>
-                Next →
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={!name || !degree || !bio || submitting}
+                onClick={handleStep1Next}
+              >
+                {submitting ? 'Saving…' : 'Next →'}
               </button>
             </>
           )}

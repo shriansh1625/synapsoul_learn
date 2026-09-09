@@ -11,9 +11,37 @@ dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3001
-const FRONTEND = process.env.FRONTEND_URL || 'http://localhost:5173'
 
-app.use(cors({ origin: [FRONTEND, 'http://localhost:5173'], credentials: true }))
+const LOCAL_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+
+function normalizeOrigin(origin) {
+  return origin?.replace(/\/$/, '') || ''
+}
+
+function parseFrontendOrigins() {
+  return (process.env.FRONTEND_URL || '')
+    .split(',')
+    .map(s => normalizeOrigin(s.trim()))
+    .filter(Boolean)
+}
+
+function isAllowedOrigin(origin) {
+  const normalized = normalizeOrigin(origin)
+  if (LOCAL_ORIGINS.includes(normalized)) return true
+  if (parseFrontendOrigins().includes(normalized)) return true
+  // Vercel production + preview deployments (trailing slash normalized above)
+  if (/^https:\/\/tutor-alpha-sandy[\w-]*\.vercel\.app$/.test(normalized)) return true
+  if (/^https:\/\/[\w-]+\.vercel\.app$/.test(normalized)) return true
+  return false
+}
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || isAllowedOrigin(origin)) callback(null, origin || true)
+    else callback(null, false)
+  },
+  credentials: true,
+}))
 app.use(express.json())
 
 app.get('/api/health', (_, res) => res.json({ status: 'ok' }))

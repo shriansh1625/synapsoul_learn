@@ -18,6 +18,10 @@ export function apiEnabled() {
   return !!API_BASE || import.meta.env.DEV
 }
 
+export function canSyncProgress() {
+  return apiEnabled() && isLoggedIn()
+}
+
 async function apiFetch(path, options = {}) {
   if (import.meta.env.PROD && !API_BASE) {
     throw new Error('Cloud API not configured. Set VITE_API_URL on Vercel.')
