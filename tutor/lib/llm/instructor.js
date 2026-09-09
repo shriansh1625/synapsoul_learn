@@ -29,8 +29,11 @@ export const OUTPUT_SCHEMAS = {
   decide: { type: 'json', fields: ['probe', 'tradeoffReminder'] },
 }
 
-export function buildInstructorMessages({ mode, userContext, structured = false }) {
+export function buildInstructorMessages({ mode, userContext, structured = false, learningBlock = '' }) {
   const system = getSystemPrompt()
+  const learningSection = learningBlock
+    ? `\n\n## Project learning (few-shot + distilled patterns)\n${learningBlock}`
+    : ''
   const modeInstructions = {
     coach: 'Respond with a short coach note (2-4 sentences). Plain text only.',
     hint: structured
@@ -45,7 +48,7 @@ export function buildInstructorMessages({ mode, userContext, structured = false 
   }
 
   return [
-    { role: 'system', content: `${system}\n\n## Current task\n${modeInstructions[mode] || modeInstructions.coach}` },
+    { role: 'system', content: `${system}${learningSection}\n\n## Current task\n${modeInstructions[mode] || modeInstructions.coach}` },
     { role: 'user', content: userContext },
   ]
 }

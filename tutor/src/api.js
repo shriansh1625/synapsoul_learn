@@ -94,3 +94,14 @@ export function fetchLlmReflect(body) {
 export function fetchLlmStatus() {
   return apiFetch('/api/llm/status')
 }
+
+export function reactToInteraction(interactionId, reaction) {
+  return apiFetch('/api/learning/react', {
+    method: 'POST',
+    body: JSON.stringify({ interactionId, reaction }),
+  })
+}
+
+export function fetchLearningStats() {
+  return apiFetch('/api/learning/stats')
+}

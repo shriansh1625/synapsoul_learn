@@ -3,6 +3,7 @@ import { pool } from '../db/pool.js'
 import { auth } from '../middleware/auth.js'
 import { AdaptiveEngine, hydrateFromProgress } from '../lib/brain/index.js'
 import { maybeCoachNote } from '../lib/llm/coachService.js'
+import { linkOutcome } from '../lib/learning/implicitSignals.js'
 
 const router = Router()
 
@@ -64,7 +65,9 @@ router.post('/observe', auth, async (req, res) => {
     engine.observe(event)
     memory.brain = engine.state
     await saveMemory(req.user.id, memory)
-    res.json({ ok: true, snapshot: engine.snapshot() })
+    const snapshot = engine.snapshot()
+    linkOutcome({ ...event, skillId: event.skillId, moduleId: event.moduleId }, req.user.id).catch(() => {})
+    res.json({ ok: true, snapshot })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }

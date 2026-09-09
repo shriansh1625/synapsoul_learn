@@ -9,6 +9,7 @@ import {
 } from '../lib/brain/index.js'
 import { maybeCoachNote } from '../lib/llm/coachService.js'
 import { getLearnLabLLM } from '../lib/llm/LearnLabLLM.js'
+import { getExperienceStore } from '../lib/learning/ExperienceStore.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, '..', 'data')
@@ -1159,6 +1160,15 @@ The open engineering bootcamp in your IDE — local-first, evidence-backed.
     prompt_suggestions: ['tutor sync --publish', 'tutor profile update --username "your-handle"'],
   }
   return json ? result : markdown
+}
+
+export async function cmdLearningStats({ json }) {
+  const store = getExperienceStore()
+  const stats = await store.getStats()
+  const result = { status: 'learning_stats', ...stats }
+  if (json) return result
+  const rate = stats.successRate != null ? `${Math.round(stats.successRate * 100)}%` : 'n/a'
+  return `LearnLab learning: ${stats.patterns} patterns, ${stats.interactions} interactions, ${stats.reactions} reactions, success rate ${rate}`
 }
 
 function generateHiringSummary(progress, catalog) {

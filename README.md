@@ -146,6 +146,53 @@ CLI: `npm run tutor -- hint` calls LearnLabLLM when `GROQ_API_KEY` (or fallback 
 
 ---
 
+## Self-Learning Instructor
+
+LearnLab does **not** fine-tune Groq's GPT-OSS 120B weights — that requires proprietary training infrastructure. Instead, LearnLab runs a **continuous learning loop** exclusive to this project:
+
+| What learns | How |
+|-------------|-----|
+| **Every LLM call** | Logged to `llm_interactions` (coach, hint, reflect, decide) with full context |
+| **Explicit reactions** | 👍 / 👎 on coach notes → `llm_reactions` |
+| **Implicit signals** | Module completed within 24h, VERIFY pass, session continued, fewer hints → auto-scored |
+| **Few-shot bank** | High-scoring responses promoted and retrieved for similar future prompts |
+| **Distilled patterns** | Every 10 reactions, Groq meta-prompt summarizes what worked → `llm_learned_patterns` |
+
+### Learning loop
+
+```
+Student session → LearnLabLLM (inject patterns + few-shots) → response + interaction_id
+       ↓
+👍/👎 or brain event (verify, module_complete) → score interaction
+       ↓
+Promote winners → few-shot bank · Groq consolidate → new patterns
+       ↓
+Next student gets better hints/coach notes for this curriculum
+```
+
+### Storage
+
+- **PostgreSQL** — `llm_interactions`, `llm_reactions`, `llm_learned_patterns` (auto-created from `schema.sql`)
+- **Local mirror** — `tutor/data/sync/learning/` (gitignored; CLI + deploy backup)
+
+### API
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/learning/react` | optional JWT | `{ interactionId, reaction: helpful\|not_helpful }` |
+| GET | `/api/learning/stats` | optional JWT | Pattern count, success rate, recent learnings |
+| POST | `/api/learning/consolidate` | JWT | Trigger meta-learning batch (admin/cron) |
+
+CLI: `npm run tutor -- learning stats --json`
+
+### Honest limits
+
+- No foundation weight fine-tuning — learning is **retrieval + prompt injection + pattern distillation**
+- Cold start: needs reactions and outcomes before patterns appear
+- Groq API required for meta-learning consolidation (inference already uses Groq when configured)
+
+---
+
 ## Environment variables
 
 ### Server (`server/.env`)
@@ -192,6 +239,9 @@ CLI: `npm run tutor -- hint` calls LearnLabLLM when `GROQ_API_KEY` (or fallback 
 | POST | `/api/llm/hint` | optional JWT | Hint nudge with curriculum context |
 | POST | `/api/llm/reflect` | optional JWT | REFLECT question |
 | GET | `/api/llm/status` | — | LLM overlay status |
+| POST | `/api/learning/react` | optional JWT | Rate an instructor interaction |
+| GET | `/api/learning/stats` | optional JWT | Self-learning stats |
+| POST | `/api/learning/consolidate` | JWT | Trigger pattern distillation |
 
 ---
 
@@ -211,6 +261,7 @@ npm run tutor -- pretest submit --answers "1A,2A,3A,4A,5A"
 npm run tutor -- leaderboard
 npm run tutor -- sync --publish
 npm run tutor -- feedback --summary "..."
+npm run tutor -- learning stats --json
 ```
 
 ---
@@ -242,6 +293,7 @@ tutor/
   cli/                ← Session engine
   lib/llm/            ← LearnLab Instructor LLM (persona, context, providers)
   lib/brain/          ← BKT + SM-2 adaptive engine
+  lib/learning/       ← Self-learning experience store + retrieval
   data/skills/        ← Curriculum (JSON modules)
   src/                ← Landing + dashboard + auth
 server/lib/llm/       ← API mirror of tutor/lib/llm

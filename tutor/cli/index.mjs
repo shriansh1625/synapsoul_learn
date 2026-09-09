@@ -19,6 +19,7 @@ import {
   cmdShare,
   cmdStatusAll,
   cmdSync,
+  cmdLearningStats,
 } from './engine.mjs'
 
 const args = process.argv.slice(2)
@@ -112,6 +113,11 @@ async function main() {
     case 'share':
       result = cmdShare({ json })
       break
+    case 'learning':
+      result = args[1] === 'stats'
+        ? await cmdLearningStats({ json })
+        : { status: 'error', message: 'Usage: tutor learning stats [--json]' }
+      break
     default:
       console.log(`LearnLab Tutor CLI
 
@@ -132,6 +138,7 @@ Commands:
   tutor pretest submit --answers "1A,2A,3A,4A,5A"
   tutor score [--json]
   tutor share [--json]
+  tutor learning stats [--json]
 
 Universal IDE prompt:
   Read skill.md and follow the instructions`)

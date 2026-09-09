@@ -69,7 +69,7 @@ router.post('/coach', auth, async (req, res) => {
   try {
     const brainSnapshot = await loadBrainSnapshot(req.user.id)
     const { profile } = await loadProgressContext(req.user.id, req.body)
-    const result = await llm.coach(mergeContext(req.body, { brainSnapshot, profile }))
+    const result = await llm.coach(mergeContext(req.body, { brainSnapshot, profile, userId: req.user.id }))
     res.json(result)
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -84,7 +84,7 @@ router.post('/hint', optionalAuth, async (req, res) => {
       const { profile } = await loadProgressContext(req.user.id, req.body)
       extras.profile = profile
     }
-    const result = await llm.hint(mergeContext(req.body, extras))
+    const result = await llm.hint(mergeContext(req.body, { ...extras, userId: req.user?.id }))
     res.json(result)
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -100,7 +100,7 @@ router.post('/reflect', optionalAuth, async (req, res) => {
       extras.profile = profile
       if (!req.body.decision && decision) extras.decision = decision
     }
-    const result = await llm.reflect(mergeContext(req.body, extras))
+    const result = await llm.reflect(mergeContext(req.body, { ...extras, userId: req.user?.id }))
     res.json(result)
   } catch (e) {
     res.status(500).json({ error: e.message })

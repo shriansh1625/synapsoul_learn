@@ -2288,7 +2288,53 @@ code {
   gap: 12px;
   margin-bottom: 10px;
 }
+.brain-coach-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .brain-coach-note { font-size: 0.95rem; line-height: 1.5; color: var(--text); }
+.learning-indicator {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.learning-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: learning-pulse 2s ease-in-out infinite;
+}
+@keyframes learning-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+.reaction-btns { display: flex; gap: 4px; }
+.reaction-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  transition: border-color var(--transition), background var(--transition);
+}
+.reaction-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+.reaction-btn.active { border-color: var(--success); background: rgba(45, 212, 168, 0.12); }
+.reaction-btn:disabled { opacity: 0.6; cursor: default; }
+.reaction-thanks {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--success);
+}
 .coach-source {
   font-size: 0.7rem;
   text-transform: uppercase;

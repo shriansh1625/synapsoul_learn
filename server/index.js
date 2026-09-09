@@ -8,6 +8,7 @@ import profileRoutes from './routes/profile.js'
 import leaderboardRoutes from './routes/leaderboard.js'
 import brainRoutes from './routes/brain.js'
 import llmRoutes from './routes/llm.js'
+import learningRoutes from './routes/learning.js'
 
 dotenv.config()
 
@@ -53,6 +54,7 @@ app.use('/api/profile', profileRoutes)
 app.use('/api/leaderboard', leaderboardRoutes)
 app.use('/api/brain', brainRoutes)
 app.use('/api/llm', llmRoutes)
+app.use('/api/learning', learningRoutes)
 
 async function start() {
   if (process.env.DATABASE_URL) {

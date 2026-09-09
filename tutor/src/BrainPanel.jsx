@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { canSyncProgress, fetchCoachNote } from './api.js'
+import { canSyncProgress, fetchCoachNote, fetchLearningStats, reactToInteraction } from './api.js'
 
 export function BrainPanel({ snapshot, session, profile }) {
   if (!snapshot?.recommendedNext && !snapshot?.mastery?.length) return null
@@ -12,6 +12,9 @@ export function BrainPanel({ snapshot, session, profile }) {
 
   const [coach, setCoach] = useState(null)
   const [coachLoading, setCoachLoading] = useState(false)
+  const [learningStats, setLearningStats] = useState(null)
+  const [reactionSent, setReactionSent] = useState(null)
+  const [reacting, setReacting] = useState(false)
 
   useEffect(() => {
     if (!canSyncProgress() || !snapshot) return
@@ -40,6 +43,29 @@ export function BrainPanel({ snapshot, session, profile }) {
     profile?.track,
   ])
 
+  useEffect(() => {
+    if (!canSyncProgress()) return
+    fetchLearningStats()
+      .then(setLearningStats)
+      .catch(() => setLearningStats(null))
+  }, [coach?.interactionId, reactionSent])
+
+  async function handleReaction(reaction) {
+    if (!coach?.interactionId || reacting) return
+    setReacting(true)
+    try {
+      await reactToInteraction(coach.interactionId, reaction)
+      setReactionSent(reaction)
+    } catch {
+      setReactionSent(null)
+    } finally {
+      setReacting(false)
+    }
+  }
+
+  const patternCount = learningStats?.patterns ?? 0
+  const lastInsight = learningStats?.recentPatterns?.slice(-1)[0]
+
   return (
     <section className="brain-panel">
       <div className="brain-panel-head">
@@ -49,22 +75,60 @@ export function BrainPanel({ snapshot, session, profile }) {
           Bayesian knowledge tracing + spaced repetition · {snapshot.eventCount || 0} learning events
           {snapshot.preferredPace ? ` · ${snapshot.preferredPace} pace` : ''}
         </p>
+        {canSyncProgress() && learningStats && (
+          <p className="learning-indicator" title="LearnLab improves from reactions and outcomes">
+            <span className="learning-dot" />
+            LearnLab is learning · {patternCount} pattern{patternCount !== 1 ? 's' : ''}
+            {lastInsight ? ` · "${lastInsight.slice(0, 60)}${lastInsight.length > 60 ? '…' : ''}"` : ''}
+          </p>
+        )}
       </div>
 
       {(coach?.note || coachLoading) && (
         <div className="card elevated brain-coach">
           <div className="brain-coach-head">
             <span className="card-badge">Instructor note</span>
-            {coach?.source && (
-              <span className={`coach-source coach-source-${coach.source}`}>
-                {coach.source === 'llm' ? 'LearnLab LLM' : 'heuristic'}
-              </span>
-            )}
+            <div className="brain-coach-actions">
+              {coach?.source && (
+                <span className={`coach-source coach-source-${coach.source}`}>
+                  {coach.source === 'llm' ? 'LearnLab LLM' : 'heuristic'}
+                </span>
+              )}
+              {coach?.interactionId && canSyncProgress() && (
+                <div className="reaction-btns">
+                  <button
+                    type="button"
+                    className={`reaction-btn ${reactionSent === 'helpful' ? 'active' : ''}`}
+                    disabled={reacting || !!reactionSent}
+                    onClick={() => handleReaction('helpful')}
+                    title="Helpful"
+                    aria-label="Mark coach note as helpful"
+                  >
+                    👍
+                  </button>
+                  <button
+                    type="button"
+                    className={`reaction-btn ${reactionSent === 'not_helpful' ? 'active' : ''}`}
+                    disabled={reacting || !!reactionSent}
+                    onClick={() => handleReaction('not_helpful')}
+                    title="Not helpful"
+                    aria-label="Mark coach note as not helpful"
+                  >
+                    👎
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           {coachLoading ? (
             <p className="brain-empty">Loading coach note…</p>
           ) : (
-            <p className="brain-coach-note">{coach.note}</p>
+            <>
+              <p className="brain-coach-note">{coach.note}</p>
+              {reactionSent === 'helpful' && (
+                <p className="reaction-thanks">Thanks — LearnLab will use this to improve future hints.</p>
+              )}
+            </>
           )}
         </div>
       )}

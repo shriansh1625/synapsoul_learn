@@ -1,0 +1,6 @@
+export { ExperienceStore, getExperienceStore } from './ExperienceStore.js'
+export { LearningEngine, getLearningEngine, getActiveProvider, getActiveModel } from './LearningEngine.js'
+export { getFewShots, formatFewShotsForPrompt } from './retrieval.js'
+export { getPatternsForSkill, formatPatternsForPrompt } from './patterns.js'
+export { linkOutcome, scoreFewerHints } from './implicitSignals.js'
+export { LEARNING_DIR } from './localStore.js'

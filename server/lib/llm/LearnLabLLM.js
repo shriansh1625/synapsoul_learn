@@ -7,10 +7,14 @@ import {
   heuristicReflectQuestion,
   heuristicDecideProbe,
 } from './heuristics.js'
+import { getFewShots, formatFewShotsForPrompt } from '../learning/retrieval.js'
+import { getExperienceStore } from '../learning/ExperienceStore.js'
+import { getActiveProvider, getActiveModel } from '../learning/LearningEngine.js'
 
 export class LearnLabLLM {
-  constructor({ timeoutMs = 4000 } = {}) {
+  constructor({ timeoutMs = 4000, pool = null } = {}) {
     this.timeoutMs = timeoutMs
+    this.store = getExperienceStore(pool)
   }
 
   enabled() {
@@ -20,9 +24,23 @@ export class LearnLabLLM {
   async _call(mode, context, { structured = false, fallback } = {}) {
     const userContext = buildPromptContext(context)
     const heuristic = fallback()
+    const learningBlock = formatFewShotsForPrompt(await getFewShots(context, mode))
 
     if (!this.enabled()) {
-      return { source: 'heuristic', note: heuristic, mode }
+      const interactionId = await this.store.logInteraction({
+        userId: context.userId || null,
+        type: mode,
+        skillId: context.skillId,
+        moduleId: context.moduleId,
+        step: context.step,
+        context,
+        promptText: userContext,
+        responseText: heuristic,
+        provider: 'heuristic',
+        model: null,
+        source: 'heuristic',
+      })
+      return { source: 'heuristic', note: heuristic, mode, interactionId }
     }
 
     try {
@@ -30,7 +48,9 @@ export class LearnLabLLM {
         mode,
         userContext,
         structured,
+        learningBlock,
       })
+      const promptText = messages.map(m => m.content).join('\n')
       const text = await complete({
         messages,
         maxTokens: structured ? 280 : 160,
@@ -40,13 +60,39 @@ export class LearnLabLLM {
       })
       const parsed = parseStructured(mode, text)
       if (parsed?.note) {
-        return { source: 'llm', mode, ...parsed }
+        const interactionId = await this.store.logInteraction({
+          userId: context.userId || null,
+          type: mode,
+          skillId: context.skillId,
+          moduleId: context.moduleId,
+          step: context.step,
+          context,
+          promptText,
+          responseText: parsed.note,
+          provider: getActiveProvider(),
+          model: getActiveModel(),
+          source: 'llm',
+        })
+        return { source: 'llm', mode, interactionId, ...parsed }
       }
     } catch {
       /* fall through */
     }
 
-    return { source: 'heuristic', note: heuristic, mode }
+    const interactionId = await this.store.logInteraction({
+      userId: context.userId || null,
+      type: mode,
+      skillId: context.skillId,
+      moduleId: context.moduleId,
+      step: context.step,
+      context,
+      promptText: userContext,
+      responseText: heuristic,
+      provider: 'heuristic',
+      model: null,
+      source: 'heuristic_fallback',
+    })
+    return { source: 'heuristic', note: heuristic, mode, interactionId }
   }
 
   async coach(context = {}, options = {}) {
