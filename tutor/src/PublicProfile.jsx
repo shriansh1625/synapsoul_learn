@@ -20,15 +20,8 @@ export default function PublicProfile({ username, onBack }) {
       try {
         const data = await fetchPublicProfile(username)
         if (!cancelled) setProfile(data)
-      } catch {
-        try {
-          const res = await fetch(`/api/profile/${username}`)
-          if (!res.ok) throw new Error('Profile not found')
-          const data = await res.json()
-          if (!cancelled) setProfile(data)
-        } catch (e) {
-          if (!cancelled) setError(e.message)
-        }
+      } catch (e) {
+        if (!cancelled) setError(e.message || 'Profile not found')
       }
     }
     load()

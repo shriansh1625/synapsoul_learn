@@ -31,7 +31,7 @@ function localApiFallback(req, res, next) {
   next()
 }
 
-function tutorDataPlugin() {
+function tutorDataPlugin(env) {
   return {
     name: 'tutor-data',
     configureServer(server) {
@@ -43,7 +43,10 @@ function tutorDataPlugin() {
       })
     },
     configurePreviewServer(server) {
-      server.middlewares.use(localApiFallback)
+      server.middlewares.use((req, res, next) => {
+        if (env.VITE_API_URL) return next()
+        return localApiFallback(req, res, next)
+      })
     },
   }
 }
@@ -53,7 +56,7 @@ export default defineConfig(({ mode }) => {
   const apiTarget = env.VITE_API_URL || 'http://localhost:3001'
 
   return {
-    plugins: [react(), tutorDataPlugin()],
+    plugins: [react(), tutorDataPlugin(env)],
     server: {
       port: 5173,
       proxy: env.VITE_API_URL ? undefined : {

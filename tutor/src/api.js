@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || ''
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const TOKEN_KEY = 'learnlab-token'
 
 export function getToken() {
@@ -19,6 +19,9 @@ export function apiEnabled() {
 }
 
 async function apiFetch(path, options = {}) {
+  if (import.meta.env.PROD && !API_BASE) {
+    throw new Error('Cloud API not configured. Set VITE_API_URL on Vercel.')
+  }
   const headers = { 'Content-Type': 'application/json', ...options.headers }
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`

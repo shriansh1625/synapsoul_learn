@@ -7,7 +7,7 @@ import Landing from './Landing.jsx'
 import PublicProfile from './PublicProfile.jsx'
 import AuthModal from './AuthModal.jsx'
 import {
-  isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register,
+  isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, apiEnabled,
 } from './api.js'
 
 function parseRoute() {
@@ -169,14 +169,10 @@ export default function App() {
 
     async function syncProgress() {
       try {
-        if (isLoggedIn()) {
-          const cliProgress = await fetchProgress()
-          await applyProgress(cliProgress)
-          return
-        }
-        const res = await fetch('/api/progress')
-        if (!res.ok || cancelled) return
-        await applyProgress(await res.json())
+        if (!isLoggedIn() && !apiEnabled()) return
+        const cliProgress = await fetchProgress()
+        if (cancelled) return
+        await applyProgress(cliProgress)
       } catch { /* offline or API unavailable — local-first fallback */ }
     }
 
@@ -978,82 +974,93 @@ function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
           ))}
         </div>
 
-        {step === 1 && (
-          <>
-            <p className="section-eyebrow">Step 1 of 3</p>
-            <h2 className="display-xs">Your <em>profile</em></h2>
-            <p className="section-sub">This unlocks your bootcamp and public hiring profile.</p>
-            <label className="onboard-field">
-              Name
-              <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
-            </label>
-            <label className="onboard-field">
-              Degree
-              <input value={degree} onChange={e => setDegree(e.target.value)} placeholder="B.Tech CSE" />
-            </label>
-            <label className="onboard-field">
-              Bio
-              <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="What you want to build..." rows={3} />
-            </label>
-            <label className="onboard-field">
-              Email <span className="field-hint">(optional — enables cloud sync)</span>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@college.edu" />
-            </label>
-            <label className="onboard-field">
-              Password
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" minLength={6} />
-            </label>
-            <label className="onboard-field">
-              Username
-              <input value={username} onChange={e => setUsername(e.target.value)} placeholder="your-handle" />
-            </label>
-            <label className="onboard-field">
-              College
-              <input value={college} onChange={e => setCollege(e.target.value)} placeholder="Your college name" />
-            </label>
-            <div className="onboard-actions">
+        <div className="onboarding-wizard-body">
+          {step === 1 && (
+            <>
+              <p className="section-eyebrow">Step 1 of 3</p>
+              <h2 className="display-xs">Your <em>profile</em></h2>
+              <p className="section-sub">This unlocks your bootcamp and public hiring profile.</p>
+              <label className="onboard-field">
+                Name
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
+              </label>
+              <label className="onboard-field">
+                Degree
+                <input value={degree} onChange={e => setDegree(e.target.value)} placeholder="B.Tech CSE" />
+              </label>
+              <label className="onboard-field">
+                Bio
+                <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="What you want to build..." rows={3} />
+              </label>
+              <label className="onboard-field">
+                Email <span className="field-hint">(optional — enables cloud sync)</span>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@college.edu" />
+              </label>
+              <label className="onboard-field">
+                Password
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" minLength={6} />
+              </label>
+              <label className="onboard-field">
+                Username
+                <input value={username} onChange={e => setUsername(e.target.value)} placeholder="your-handle" />
+              </label>
+              <label className="onboard-field">
+                College
+                <input value={college} onChange={e => setCollege(e.target.value)} placeholder="Your college name" />
+              </label>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <p className="section-eyebrow">Step 2 of 3</p>
+              <h2 className="display-xs">Pick your <em>track</em></h2>
+              <p className="section-sub">Same concepts — your preferred runtime.</p>
+              <div className="track-picker">
+                {catalog.tracks.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={`track-option ${track === t.id ? 'selected' : ''}`}
+                    onClick={() => setTrack(t.id)}
+                  >
+                    <strong>{t.label}</strong>
+                    <span>{t.runtime}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <p className="section-eyebrow">Step 3 of 3</p>
+              <h2 className="display-xs">Start your <em>first module</em></h2>
+              <p className="section-sub">Run this in terminal, then say &quot;Continue my lesson&quot; in Cursor.</p>
+              <code className="cli-block">
+                npm run tutor -- start --skill {foundation?.id} --track {track}
+              </code>
+            </>
+          )}
+        </div>
+
+        <div className="onboard-actions">
+          {step === 1 && (
+            <>
               <button type="button" className="btn-secondary" onClick={onDismiss}>Skip</button>
               <button type="button" className="btn-primary" disabled={!name || !degree || !bio} onClick={() => setStep(2)}>
                 Next →
               </button>
-            </div>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <p className="section-eyebrow">Step 2 of 3</p>
-            <h2 className="display-xs">Pick your <em>track</em></h2>
-            <p className="section-sub">Same concepts — your preferred runtime.</p>
-            <div className="track-picker">
-              {catalog.tracks.map(t => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={`track-option ${track === t.id ? 'selected' : ''}`}
-                  onClick={() => setTrack(t.id)}
-                >
-                  <strong>{t.label}</strong>
-                  <span>{t.runtime}</span>
-                </button>
-              ))}
-            </div>
-            <div className="onboard-actions">
+            </>
+          )}
+          {step === 2 && (
+            <>
               <button type="button" className="btn-secondary" onClick={() => setStep(1)}>← Back</button>
               <button type="button" className="btn-primary" onClick={() => setStep(3)}>Next →</button>
-            </div>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <p className="section-eyebrow">Step 3 of 3</p>
-            <h2 className="display-xs">Start your <em>first module</em></h2>
-            <p className="section-sub">Run this in terminal, then say &quot;Continue my lesson&quot; in Cursor.</p>
-            <code className="cli-block">
-              npm run tutor -- start --skill {foundation?.id} --track {track}
-            </code>
-            <div className="onboard-actions">
+            </>
+          )}
+          {step === 3 && (
+            <>
               <button type="button" className="btn-secondary" onClick={() => setStep(2)}>← Back</button>
               <button
                 type="button"
@@ -1071,9 +1078,9 @@ function OnboardingWizard({ progress, catalog, onComplete, onDismiss }) {
               >
                 {submitting ? 'Setting up…' : 'Finish setup'}
               </button>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
