@@ -2280,6 +2280,34 @@ code {
   color: var(--text-muted);
 }
 .brain-meta-row strong { color: var(--text); }
+.brain-coach { margin-bottom: 20px; border-color: rgba(99, 102, 241, 0.25); }
+.brain-coach-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.brain-coach-note { font-size: 0.95rem; line-height: 1.5; color: var(--text); }
+.coach-source {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.coach-source-llm { color: var(--accent-bright); }
+.session-actions { margin-top: 16px; }
+.hint-btn { font-size: 0.85rem; }
+.hint-result {
+  margin-top: 14px;
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+}
+.hint-result p { margin: 0 0 8px; }
+.hint-result p:last-child { margin-bottom: 0; }
 
 @media (max-width: 768px) {
   .brain-grid { grid-template-columns: 1fr; }

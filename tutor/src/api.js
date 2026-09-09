@@ -78,3 +78,19 @@ export function putBrain(state) {
 export function observeBrain(event) {
   return apiFetch('/api/brain/observe', { method: 'POST', body: JSON.stringify(event) })
 }
+
+export function fetchCoachNote(body) {
+  return apiFetch('/api/llm/coach', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export function fetchLlmHint(body) {
+  return apiFetch('/api/llm/hint', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export function fetchLlmReflect(body) {
+  return apiFetch('/api/llm/reflect', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export function fetchLlmStatus() {
+  return apiFetch('/api/llm/status')
+}

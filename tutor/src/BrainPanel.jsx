@@ -1,4 +1,7 @@
-export function BrainPanel({ snapshot }) {
+import { useEffect, useState } from 'react'
+import { canSyncProgress, fetchCoachNote } from './api.js'
+
+export function BrainPanel({ snapshot, session, profile }) {
   if (!snapshot?.recommendedNext && !snapshot?.mastery?.length) return null
 
   const rec = snapshot.recommendedNext
@@ -6,6 +9,36 @@ export function BrainPanel({ snapshot }) {
   const signals = snapshot.recentSignals || []
   const mastery = snapshot.mastery || []
   const hintPct = Math.round((snapshot.hintDependency || 0) * 100)
+
+  const [coach, setCoach] = useState(null)
+  const [coachLoading, setCoachLoading] = useState(false)
+
+  useEffect(() => {
+    if (!canSyncProgress() || !snapshot) return
+    let cancelled = false
+    setCoachLoading(true)
+    fetchCoachNote({
+      event: session ? { type: 'session_step' } : { type: 'session' },
+      skillId: session?.skillId,
+      moduleId: session?.moduleId,
+      step: session?.step,
+      track: session?.track || profile?.track,
+      why: snapshot.why,
+      brainSnapshot: snapshot,
+      profile,
+    })
+      .then(data => { if (!cancelled) setCoach(data) })
+      .catch(() => { if (!cancelled) setCoach(null) })
+      .finally(() => { if (!cancelled) setCoachLoading(false) })
+    return () => { cancelled = true }
+  }, [
+    snapshot?.updatedAt,
+    snapshot?.eventCount,
+    session?.skillId,
+    session?.moduleId,
+    session?.step,
+    profile?.track,
+  ])
 
   return (
     <section className="brain-panel">
@@ -17,6 +50,24 @@ export function BrainPanel({ snapshot }) {
           {snapshot.preferredPace ? ` · ${snapshot.preferredPace} pace` : ''}
         </p>
       </div>
+
+      {(coach?.note || coachLoading) && (
+        <div className="card elevated brain-coach">
+          <div className="brain-coach-head">
+            <span className="card-badge">Instructor note</span>
+            {coach?.source && (
+              <span className={`coach-source coach-source-${coach.source}`}>
+                {coach.source === 'llm' ? 'LearnLab LLM' : 'heuristic'}
+              </span>
+            )}
+          </div>
+          {coachLoading ? (
+            <p className="brain-empty">Loading coach note…</p>
+          ) : (
+            <p className="brain-coach-note">{coach.note}</p>
+          )}
+        </div>
+      )}
 
       {rec && (
         <div className="card elevated brain-next">

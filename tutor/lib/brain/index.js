@@ -17,5 +17,5 @@ export {
   mergeStates,
   refreshDerivedMemory,
 } from './memory.js'
-export { heuristicCoachNote, maybeCoachNote } from './coach.js'
+export { heuristicCoachNote } from './coach.js'
 export { AdaptiveEngine, hydrateFromProgress, createEngine } from './AdaptiveEngine.js'

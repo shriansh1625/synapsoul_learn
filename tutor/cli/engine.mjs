@@ -6,8 +6,9 @@ import {
   hydrateFromProgress,
   buildCurriculum,
   loadBundledCurriculum,
-  maybeCoachNote,
 } from '../lib/brain/index.js'
+import { maybeCoachNote } from '../lib/llm/coachService.js'
+import { getLearnLabLLM } from '../lib/llm/LearnLabLLM.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, '..', 'data')
@@ -542,16 +543,35 @@ export async function cmdHint({ json }) {
     moduleId: session.moduleId,
     payload: { n: session.hintsUsed, step: session.step },
   })
+  const llm = getLearnLabLLM()
+  const llmHint = await llm.hint({
+    event: { type: 'hint' },
+    skillId: session.skillId,
+    moduleId: session.moduleId,
+    step: session.step,
+    track: session.track || progress.profile?.track,
+    moduleTitle: module.title,
+    hintText: hint,
+    hintsUsed: session.hintsUsed,
+    why: snapshot.why,
+    brainSnapshot: snapshot,
+    profile: progress.profile,
+    moduleJson: module,
+    stepContent,
+  })
   const coach = await maybeCoachNote({
     event: { type: 'hint' },
     moduleTitle: module.title,
     hintText: hint,
     why: snapshot.why,
+    brainSnapshot: snapshot,
   })
 
   const result = {
     status: 'hint',
     message: hint,
+    nudge: llmHint.nudge,
+    llm: llmHint,
     hintsUsed: session.hintsUsed,
     scorePenalty: 'Hints reduce independent performance scores.',
     coach,

@@ -10,7 +10,9 @@ import { BrainPanel } from './BrainPanel.jsx'
 import { useBrain } from './brain/useBrain.js'
 import {
   isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, canSyncProgress,
+  fetchLlmHint, apiEnabled,
 } from './api.js'
+import { loadModuleJson } from './curriculumModules.js'
 
 function parseRoute() {
   const hash = window.location.hash.slice(1)
@@ -465,6 +467,48 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
   const skillTitle = session?.skillId ? getSkillTitle(session.skillId) : null
   const moduleLabel = session?.moduleId?.replace(/-/g, ' ') || ''
   const rec = brainSnapshot?.recommendedNext
+  const profile = progress?.profile
+  const [hintState, setHintState] = useState(null)
+  const [hintLoading, setHintLoading] = useState(false)
+
+  const requestHint = useCallback(async () => {
+    if (!session) return
+    setHintLoading(true)
+    try {
+      const moduleJson = await loadModuleJson(session.skillId, session.moduleId)
+      const stepContent = moduleJson?.steps?.[session.step]
+      const hints = stepContent?.hints || []
+      const hintsUsed = (session.hintsUsed || 0) + 1
+      const hintIndex = Math.min(hintsUsed - 1, hints.length - 1)
+      const hintText = hints[hintIndex] || 'Re-read the step goal. What is the smallest test you could run?'
+
+      if (apiEnabled()) {
+        const data = await fetchLlmHint({
+          skillId: session.skillId,
+          moduleId: session.moduleId,
+          step: session.step,
+          track: session.track || profile?.track,
+          hintsUsed,
+          hintText,
+          stepContent,
+          why: brainSnapshot?.why,
+          brainSnapshot,
+          profile,
+        })
+        setHintState({
+          curriculum: hintText,
+          nudge: data.nudge || data.note,
+          source: data.source,
+        })
+      } else {
+        setHintState({ curriculum: hintText, nudge: hintText, source: 'curriculum' })
+      }
+    } catch {
+      setHintState({ curriculum: null, nudge: 'Could not load hint. Run `npm run tutor -- hint` in terminal.', source: 'error' })
+    } finally {
+      setHintLoading(false)
+    }
+  }, [session, profile, brainSnapshot])
 
   return (
     <>
@@ -503,7 +547,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
         </div>
       </section>
 
-      <BrainPanel snapshot={brainSnapshot} />
+      <BrainPanel snapshot={brainSnapshot} session={session} profile={profile} />
 
       {recommendedSkill && !rec && (
         <section className="card elevated recommend-card">
@@ -548,6 +592,19 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
               </div>
             ))}
           </div>
+          <div className="session-actions">
+            <button type="button" className="btn hint-btn" onClick={requestHint} disabled={hintLoading}>
+              {hintLoading ? 'Loading hint…' : 'Get hint'}
+            </button>
+          </div>
+          {hintState && (
+            <div className="hint-result card">
+              {hintState.curriculum && <p><strong>Curriculum:</strong> {hintState.curriculum}</p>}
+              {hintState.nudge && hintState.nudge !== hintState.curriculum && (
+                <p><strong>Nudge{hintState.source === 'llm' ? ' (LearnLab LLM)' : ''}:</strong> {hintState.nudge}</p>
+              )}
+            </div>
+          )}
           <p className="cursor-hint">
             In Cursor chat: <code>"Continue my lesson"</code> · Step: <strong>{session.step}</strong>
             {session.hintsUsed > 0 && <span className="hint-penalty"> · {session.hintsUsed} hint(s) used</span>}

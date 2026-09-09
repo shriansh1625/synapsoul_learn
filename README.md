@@ -109,6 +109,43 @@ Works with **Render Postgres** or **Supabase** — both use standard `DATABASE_U
 
 ---
 
+## LearnLab Instructor LLM
+
+LearnLab does **not** ship a fine-tuned foundation model. Instead it includes a **project-exclusive instructor layer** — persona, guardrails, and context assembly wired to your curriculum and adaptive brain.
+
+### What makes it exclusive to LearnLab
+
+| Piece | Role |
+|-------|------|
+| **Persona** | Fixed system prompt (`tutor/lib/llm/prompts/instructor.system.md`) — LearnLab branding, local-first, evidence portfolio |
+| **Guardrails** | Never writes full BUILD solutions; one step at a time; CONTEXT→DECIDE→BUILD→VERIFY→BREAK→FIX→REFLECT |
+| **Context** | Pulls skill/module/step excerpts from `tutor/data/skills`, brain snapshot (BKT/SM-2), and student profile |
+| **Overlay** | LLM enhances coach notes and hints; deterministic brain algorithms always run first |
+
+### Architecture
+
+```
+tutor/lib/llm/          ← CLI + shared logic
+server/lib/llm/         ← API mirror (keep in sync)
+  LearnLabLLM.js        ← single entry: coach(), hint(), reflect(), decide()
+  instructor.js         ← persona + guardrails
+  context.js            ← curriculum + brain + profile assembly
+  providers/groq.js       ← Groq default (openai/gpt-oss-120b)
+```
+
+### API
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/llm/coach` | JWT | Brain-aware coach note for dashboard |
+| POST | `/api/llm/hint` | optional JWT | Curriculum hint + LLM nudge |
+| POST | `/api/llm/reflect` | optional JWT | Reflective question for REFLECT step |
+| GET | `/api/llm/status` | — | Whether LLM overlay is enabled |
+
+CLI: `npm run tutor -- hint` calls LearnLabLLM when `GROQ_API_KEY` (or fallback keys) is set locally.
+
+---
+
 ## Environment variables
 
 ### Server (`server/.env`)
@@ -119,7 +156,8 @@ Works with **Render Postgres** or **Supabase** — both use standard `DATABASE_U
 | `JWT_SECRET` | Yes | Random string for signing tokens |
 | `FRONTEND_URL` | Yes (prod) | Vercel URL for CORS |
 | `PORT` | No | Default `3001`; Render sets automatically |
-| `GROQ_API_KEY` | No | Groq API key — enables LLM coach notes (preferred when set) |
+| `LEARNLAB_LLM_ENABLED` | No | Set `false` to disable LLM overlay (heuristics only) |
+| `GROQ_API_KEY` | No | Groq API key — enables LearnLab Instructor LLM (preferred when set) |
 | `GROQ_MODEL` | No | Groq model ID; default `openai/gpt-oss-120b` |
 | `OPENAI_API_KEY` | No | OpenAI key — used if Groq is not configured |
 | `ANTHROPIC_API_KEY` | No | Anthropic key — used if Groq and OpenAI are not configured |
@@ -148,6 +186,12 @@ Works with **Render Postgres** or **Supabase** — both use standard `DATABASE_U
 | GET | `/api/leaderboard` | — | Top users by readiness |
 | GET | `/api/profile/:username` | — | Public profile |
 | GET | `/api/health` | — | Health check |
+| GET | `/api/brain` | JWT | Adaptive brain state |
+| POST | `/api/brain/coach` | JWT | Coach note (legacy; prefer `/api/llm/coach`) |
+| POST | `/api/llm/coach` | JWT | LearnLab Instructor coach note |
+| POST | `/api/llm/hint` | optional JWT | Hint nudge with curriculum context |
+| POST | `/api/llm/reflect` | optional JWT | REFLECT question |
+| GET | `/api/llm/status` | — | LLM overlay status |
 
 ---
 
@@ -196,8 +240,11 @@ server/               ← Express API + PostgreSQL
   routes/             ← auth, progress, profile, leaderboard
 tutor/
   cli/                ← Session engine
+  lib/llm/            ← LearnLab Instructor LLM (persona, context, providers)
+  lib/brain/          ← BKT + SM-2 adaptive engine
   data/skills/        ← Curriculum (JSON modules)
   src/                ← Landing + dashboard + auth
+server/lib/llm/       ← API mirror of tutor/lib/llm
 ```
 
 ---

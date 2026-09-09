@@ -1,7 +1,8 @@
 import { Router } from 'express'
 import { pool } from '../db/pool.js'
 import { auth } from '../middleware/auth.js'
-import { AdaptiveEngine, hydrateFromProgress, maybeCoachNote } from '../lib/brain/index.js'
+import { AdaptiveEngine, hydrateFromProgress } from '../lib/brain/index.js'
+import { maybeCoachNote } from '../lib/llm/coachService.js'
 
 const router = Router()
 
@@ -71,7 +72,14 @@ router.post('/observe', auth, async (req, res) => {
 
 router.post('/coach', auth, async (req, res) => {
   try {
-    const note = await maybeCoachNote(req.body || {})
+    const memory = await loadMemory(req.user.id)
+    const engine = engineFrom(memory)
+    const snapshot = engine.snapshot()
+    const note = await maybeCoachNote({
+      ...(req.body || {}),
+      brainSnapshot: snapshot,
+      why: req.body?.why || snapshot.why,
+    })
     res.json(note)
   } catch (e) {
     res.status(500).json({ error: e.message })
