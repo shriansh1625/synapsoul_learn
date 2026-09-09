@@ -38,12 +38,15 @@ export function heuristicCoachNote({ event, moduleTitle, why, struggle, hintText
   return why || `Stay on ${title}. Prove the next step with output, not a claim that it works.`
 }
 
+const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-120b'
+
 export async function maybeCoachNote(context = {}, { apiKey, timeoutMs = 2500 } = {}) {
   const note = heuristicCoachNote(context)
+  const groq = envKey('GROQ_API_KEY')
   const openai = apiKey || envKey('OPENAI_API_KEY')
   const anthropic = envKey('ANTHROPIC_API_KEY')
 
-  if (!openai && !anthropic) {
+  if (!groq && !openai && !anthropic) {
     return { source: 'heuristic', note }
   }
 
@@ -58,15 +61,38 @@ export async function maybeCoachNote(context = {}, { apiKey, timeoutMs = 2500 } 
       'Give a next-action nudge.',
     ].filter(Boolean).join('\n')
 
-    const text = openai
-      ? await callOpenAI(openai, prompt, timeoutMs)
-      : await callAnthropic(anthropic, prompt, timeoutMs)
+    const text = groq
+      ? await callGroq(groq, prompt, timeoutMs)
+      : openai
+        ? await callOpenAI(openai, prompt, timeoutMs)
+        : await callAnthropic(anthropic, prompt, timeoutMs)
 
     if (text) return { source: 'llm', note: text }
   } catch {
     /* fall through */
   }
   return { source: 'heuristic', note }
+}
+
+async function callGroq(key, prompt, timeoutMs) {
+  const model = envKey('GROQ_MODEL') || DEFAULT_GROQ_MODEL
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: 'LearnLab coach. No spoilers. Two sentences.' },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 120,
+      temperature: 0.4,
+    }),
+    signal: AbortSignal.timeout(timeoutMs),
+  })
+  if (!res.ok) throw new Error('groq')
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content?.trim() || ''
 }
 
 async function callOpenAI(key, prompt, timeoutMs) {

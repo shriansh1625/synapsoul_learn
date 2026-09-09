@@ -71,9 +71,7 @@ router.post('/observe', auth, async (req, res) => {
 
 router.post('/coach', auth, async (req, res) => {
   try {
-    const note = await maybeCoachNote(req.body || {}, {
-      apiKey: process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY,
-    })
+    const note = await maybeCoachNote(req.body || {})
     res.json(note)
   } catch (e) {
     res.status(500).json({ error: e.message })

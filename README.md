@@ -119,6 +119,10 @@ Works with **Render Postgres** or **Supabase** — both use standard `DATABASE_U
 | `JWT_SECRET` | Yes | Random string for signing tokens |
 | `FRONTEND_URL` | Yes (prod) | Vercel URL for CORS |
 | `PORT` | No | Default `3001`; Render sets automatically |
+| `GROQ_API_KEY` | No | Groq API key — enables LLM coach notes (preferred when set) |
+| `GROQ_MODEL` | No | Groq model ID; default `openai/gpt-oss-120b` |
+| `OPENAI_API_KEY` | No | OpenAI key — used if Groq is not configured |
+| `ANTHROPIC_API_KEY` | No | Anthropic key — used if Groq and OpenAI are not configured |
 
 ### Frontend (Vercel)
 
