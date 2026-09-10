@@ -575,7 +575,6 @@ export default function App() {
           <div className="logo">
             <img className="logo-mark" src="/brand/synapsoul-mark.png" alt="SynapSoul" width="32" height="32" />
             <span className="logo-text">SynapSoul</span>
-            <span className="version">v2</span>
           </div>
           <button
             type="button"
@@ -608,9 +607,17 @@ export default function App() {
               Track: <strong>{progress.profile?.track || 'node'}</strong>
             </div>
             {authUser || isLoggedIn() ? (
-              <button type="button" className="btn-secondary nav-auth-btn" onClick={handleLogout}>
-                Sign out
-              </button>
+              <>
+                <span
+                  className="header-avatar"
+                  title={progress.profile?.name || authUser?.name || 'Account'}
+                >
+                  {(progress.profile?.name || authUser?.name || 'S').trim().charAt(0).toUpperCase()}
+                </span>
+                <button type="button" className="btn-secondary nav-auth-btn" onClick={handleLogout}>
+                  Sign out
+                </button>
+              </>
             ) : (
               <button type="button" className="btn-secondary nav-auth-btn" onClick={() => setShowAuth(true)}>
                 Sign in
