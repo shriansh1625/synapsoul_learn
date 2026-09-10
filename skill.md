@@ -22,7 +22,7 @@ Then install the CLI (no git clone, no zip):
 - Unix: `curl -fsSL https://synapsoullearn.runs-on.dev/install | sh`
 - Windows PowerShell: `irm https://synapsoullearn.runs-on.dev/install.ps1 | iex`
 
-Then: `synapsoul login` → `synapsoul start`
+Then: `synapsoul register` or `synapsoul login` (email / GitHub / website) → `synapsoul start`
 
 ---
 

@@ -116,9 +116,13 @@ if ! on_path; then
 fi
 
 echo
-echo "Installed. Next:"
-echo "  synapsoul login"
+echo "Installed. FIRST: register or login (do not start lessons until the CLI has a JWT)."
+echo "  synapsoul register --email you@college.edu --password YOUR_PASSWORD --name \"Your Name\""
+echo "  synapsoul login --email you@college.edu --password YOUR_PASSWORD"
+echo "  synapsoul login --github"
+echo "Or register at $SITE then synapsoul login --email …"
+echo
+echo "Then:"
 echo "  synapsoul start"
 echo
 echo "Protocol: ${SITE%/}/skill.md"
-echo "Sign in at $SITE so progress returns to $API"

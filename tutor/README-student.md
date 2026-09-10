@@ -28,7 +28,7 @@ Windows PowerShell:
 irm https://synapsoullearn.runs-on.dev/install.ps1 | iex
 ```
 
-3. `synapsoul login` then `synapsoul start`
+3. `synapsoul register` or `synapsoul login` (email / GitHub / website), then `synapsoul start`
 
 4. Sign in at https://synapsoullearn.runs-on.dev/ so progress returns to the cohort.
 

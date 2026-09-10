@@ -9,7 +9,7 @@ When the user wants to learn or pasted the universal prompt:
 
 1. Follow https://synapsoullearn.runs-on.dev/skill.md — do not git clone, do not unzip a kit as the main path.
 2. Install the CLI if needed: Unix `curl -fsSL https://synapsoullearn.runs-on.dev/install | sh` · Windows `irm https://synapsoullearn.runs-on.dev/install.ps1 | iex`
-3. Run `synapsoul login` if needed, then `synapsoul status --json`. If no session, `synapsoul start --json`. Do not teach CONTEXT from memory.
+3. Run `synapsoul register` or `synapsoul login` (email / GitHub / website) if needed, then `synapsoul status --json`. If no session, `synapsoul start --json`. Do not teach until the CLI has a JWT. Do not invent CONTEXT from memory.
 4. Default API is https://learnerslab.onrender.com. Student should sign in at https://synapsoullearn.runs-on.dev/ so website last_seen returns to the cohort. Website login is not CLI.
 5. Use CLI for all progression — never invent curriculum.
 6. One step per turn. Never write full BUILD solutions.

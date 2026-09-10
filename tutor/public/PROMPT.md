@@ -29,10 +29,12 @@ irm https://synapsoullearn.runs-on.dev/install.ps1 | iex
 Then:
 
 ```bash
-synapsoul login
+synapsoul register --email you@college.edu --password YOUR_PASSWORD --name "Your Name"
+synapsoul login --email you@college.edu --password YOUR_PASSWORD --json
+synapsoul login --github
 synapsoul start --json
 ```
 
-The instructor must run those CLI commands **before teaching**. Never invent CONTEXT from memory. Signing in on the website is not the CLI.
+The instructor must register or log in **before teaching**. Never invent CONTEXT from memory. Signing in on the website is not the CLI.
 
 Sign in at https://synapsoullearn.runs-on.dev/ so website last_seen returns to the cohort API.

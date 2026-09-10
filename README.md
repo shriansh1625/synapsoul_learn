@@ -31,7 +31,9 @@ irm https://synapsoullearn.runs-on.dev/install.ps1 | iex
 ```
 
 ```bash
-synapsoul login
+synapsoul register --email you@example.com --password your-password --name "Your Name"
+synapsoul login --email you@example.com --password your-password --json
+synapsoul login --github
 synapsoul start
 ```
 
@@ -77,15 +79,16 @@ Then paste the universal prompt from the landing page into your IDE.
 
 1. Open https://synapsoullearn.runs-on.dev/ and copy the one-liner.
 2. Paste it in Cursor, Claude Code, VS Code Copilot, or Codex.
-3. The instructor installs the SynapSoul CLI (`curl` or `irm | iex`) and runs `synapsoul login` then `synapsoul start`.
+3. The instructor installs the SynapSoul CLI (`curl` or `irm | iex`) and runs `synapsoul register` or `synapsoul login` then `synapsoul start`.
 4. Create an account or sign in on the site (email or GitHub) so progress returns to https://learnerslab.onrender.com.
 
 ```powershell
+synapsoul register --email you@example.com --password your-password --name "Your Name" --json
 synapsoul login --email you@example.com --password your-password --json
 synapsoul sync --json
 ```
 
-The website is the source of truth for the cohort. Do not paste JWTs into chat.
+The website is the source of truth for the cohort. Prefer email/password or `login --github`. Use `--token` only if GitHub poll times out.
 
 People who never sign in are not silently tracked. Public hiring profiles stay opt-in public.
 
@@ -201,6 +204,8 @@ Schema auto-applies on first API boot via `server/db/schema.sql`.
 | `student_memory` | Adaptive tutor memory (JSON) |
 | `admin_otps` | Hashed Gmail OTP codes for the single admin (never plaintext) |
 | `admin_sessions` | OTP-verified admin sessions (hashed token, 12h) |
+| `cli_events` | Honest LMS telemetry from the student CLI (start/next/hint/decide/complete/sync) |
+| `cli_auth_pending` | Short-lived nonce→JWT for `synapsoul login --github` (5 minutes, consumed on poll) |
 
 Works with **Render Postgres** or **Supabase** — both use standard `DATABASE_URL`.
 
@@ -348,7 +353,11 @@ Public hiring profiles can show a GitHub button and let builders sign in or conn
 
 7. Redeploy the API. Sign-in shows **Continue with GitHub**. The in-app Profile page shows **Connect GitHub**.
 
-If those env vars are missing, GitHub buttons stay visible in a setup state. They do not return HTTP 501.
+CLI GitHub login (`synapsoul login --github`) uses this **same** Render callback. After GitHub, the API stores a 5-minute nonce→JWT and the CLI polls `GET /api/auth/cli-poll?nonce=`. The site `/auth/callback?cli=1` also shows a pasteable token.
+
+**Do not add a second GitHub callback** such as `http://127.0.0.1:8765/callback`. GitHub OAuth Apps typically allow one Authorization callback URL. Keep it as `https://learnerslab.onrender.com/api/auth/github/callback`.
+
+If those env vars are missing, GitHub buttons stay visible in a setup state. They do not return HTTP 501. The CLI prints `Use the website: https://synapsoullearn.runs-on.dev`.
 
 ### LinkedIn (optional)
 
