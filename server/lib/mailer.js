@@ -2,7 +2,14 @@ import nodemailer from 'nodemailer'
 import { LOCKED_ADMIN_EMAIL } from './adminConstants.js'
 
 const SMTP_TIMEOUT_MS = 10_000
+const RESEND_TIMEOUT_MS = 15_000
 const GMAIL_HOST = 'smtp.gmail.com'
+const RESEND_API_URL = 'https://api.resend.com/emails'
+const DEFAULT_RESEND_FROM = 'LearnLab <onboarding@resend.dev>'
+
+export const RESEND_NOT_CONFIGURED_MESSAGE =
+  'RESEND_API_KEY is missing on Render learnlab-api. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+
 export const GMAIL_NOT_CONFIGURED_MESSAGE =
   'GMAIL_APP_PASSWORD is missing on Render learnlab-api (learnerslab.onrender.com). Vercel env vars are not used. Use a 16-character App Password with no spaces.'
 
@@ -31,9 +38,33 @@ export function gmailConfigured() {
   return Boolean(gmailAppPassword())
 }
 
-function gmailNotConfiguredError() {
-  const err = new Error(GMAIL_NOT_CONFIGURED_MESSAGE)
-  err.code = 'GMAIL_NOT_CONFIGURED'
+export function resendApiKey() {
+  return sanitizeGmailAppPassword(process.env.RESEND_API_KEY)
+}
+
+export function resendConfigured() {
+  return Boolean(resendApiKey())
+}
+
+export function resendFrom() {
+  const raw = String(process.env.RESEND_FROM || '')
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .replace(/^['"`]+|['"`]+$/g, '')
+  return raw || DEFAULT_RESEND_FROM
+}
+
+export function smtpFallbackAllowed() {
+  return gmailConfigured() && process.env.RENDER !== 'true'
+}
+
+export function mailerConfigured() {
+  return resendConfigured() || smtpFallbackAllowed()
+}
+
+function resendNotConfiguredError() {
+  const err = new Error(RESEND_NOT_CONFIGURED_MESSAGE)
+  err.code = 'MAILER_NOT_CONFIGURED'
   err.status = 503
   return err
 }
@@ -99,15 +130,15 @@ export function isConnectionError(err) {
 
 export function publicSmtpErrorMessage(err) {
   if (isAuthError(err)) {
-    return 'Gmail rejected the login (SMTP 535). Set a 16-character App Password on Render learnlab-api — no spaces. Not Vercel.'
+    return 'Gmail rejected the SMTP login. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
   }
   if (isTimeoutError(err)) {
-    return 'Gmail SMTP timed out on smtp.gmail.com:587. Set GMAIL_APP_PASSWORD on Render learnlab-api, or outbound SMTP may be blocked.'
+    return 'Gmail SMTP timed out. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
   }
   if (isConnectionError(err)) {
-    return 'Could not reach smtp.gmail.com:587. Set GMAIL_USER and GMAIL_APP_PASSWORD on Render learnlab-api, not Vercel.'
+    return 'Could not reach smtp.gmail.com. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
   }
-  return 'Could not send the admin code. Check GMAIL_USER and GMAIL_APP_PASSWORD on Render learnlab-api, not Vercel.'
+  return 'Could not send the admin code over SMTP. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
 }
 
 function sendFailedError(cause) {
@@ -117,14 +148,67 @@ function sendFailedError(cause) {
   return err
 }
 
-export async function sendAdminOtpEmail(code) {
-  if (!gmailConfigured()) throw gmailNotConfiguredError()
+function otpMailBody(code) {
+  return `${code}\n\nThis code expires in 10 minutes.`
+}
 
+async function sendViaResend(code) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), RESEND_TIMEOUT_MS)
+  let res
+  try {
+    res = await fetch(RESEND_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: resendFrom(),
+        to: [LOCKED_ADMIN_EMAIL],
+        subject: 'LearnLab admin code',
+        text: otpMailBody(code),
+      }),
+      signal: controller.signal,
+    })
+  } catch (e) {
+    const err = new Error(
+      'Could not reach Resend over HTTPS. Check RESEND_API_KEY on Render learnlab-api, then redeploy.'
+    )
+    err.code = 'RESEND_SEND_FAILED'
+    err.status = 503
+    err.cause = e
+    throw err
+  } finally {
+    clearTimeout(timer)
+  }
+
+  if (res.ok) return
+
+  let detail = ''
+  try {
+    const payload = await res.json()
+    detail = String(payload?.message || payload?.error || '').trim()
+  } catch {
+    detail = ''
+  }
+
+  const err = new Error(
+    detail
+      ? `Resend could not send the admin code (${res.status}). ${detail} Check RESEND_API_KEY on Render learnlab-api.`
+      : `Resend could not send the admin code (${res.status}). Check RESEND_API_KEY on Render learnlab-api.`
+  )
+  err.code = 'RESEND_SEND_FAILED'
+  err.status = 503
+  throw err
+}
+
+async function sendViaSmtp(code) {
   const mail = {
     from: `LearnLab <${LOCKED_ADMIN_EMAIL}>`,
     to: LOCKED_ADMIN_EMAIL,
     subject: 'LearnLab admin code',
-    text: `${code}\n\nThis code expires in 10 minutes.`,
+    text: otpMailBody(code),
   }
 
   const attempts = [
@@ -140,7 +224,7 @@ export async function sendAdminOtpEmail(code) {
       return
     } catch (e) {
       lastErr = e
-      console.warn('Admin OTP email failed:', {
+      console.warn('Admin OTP SMTP fallback failed:', {
         port: attempt.port,
         code: e?.code || 'SMTP_ERROR',
         responseCode: smtpResponseCode(e) || undefined,
@@ -151,4 +235,16 @@ export async function sendAdminOtpEmail(code) {
   }
 
   throw sendFailedError(lastErr)
+}
+
+export async function sendAdminOtpEmail(code) {
+  if (resendConfigured()) {
+    await sendViaResend(code)
+    return
+  }
+  if (smtpFallbackAllowed()) {
+    await sendViaSmtp(code)
+    return
+  }
+  throw resendNotConfiguredError()
 }

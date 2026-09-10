@@ -77,14 +77,14 @@ function otpRequestErrorMessage(err) {
   const code = err?.code
   const text = String(err?.message || '').trim()
   if (code === 'OTP_RATE_LIMITED') return text || 'Wait 60 seconds before requesting another code.'
-  if (code === 'GMAIL_NOT_CONFIGURED') {
-    return 'GMAIL_APP_PASSWORD is missing on Render learnlab-api. Vercel env vars are not used for Gmail SMTP.'
-  }
-  if (code === 'GMAIL_SEND_FAILED') {
-    return 'Could not send the code. Set GMAIL_APP_PASSWORD on Render learnlab-api (16 characters, no spaces).'
+  if (code === 'MAILER_NOT_CONFIGURED' || code === 'RESEND_SEND_FAILED') {
+    return (
+      text ||
+      'RESEND_API_KEY is missing on Render learnlab-api. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+    )
   }
   if (code === 'TIMEOUT' || /timed out|aborted/i.test(text)) {
-    return 'Sending timed out. Gmail SMTP may be hanging on Render. Set GMAIL_APP_PASSWORD on learnlab-api, or smtp.gmail.com:587 may be blocked.'
+    return 'Sending timed out. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
   }
   if (!text || /failed to fetch|network|could not reach/i.test(text)) {
     return 'Could not reach LearnLab. Check your connection and try again.'
