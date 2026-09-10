@@ -24,7 +24,8 @@ export class LearnLabLLM {
   async _call(mode, context, { structured = false, fallback } = {}) {
     const userContext = buildPromptContext(context)
     const heuristic = fallback()
-    const learningBlock = formatFewShotsForPrompt(await getFewShots(context, mode))
+    const fewShots = await getFewShots(context, mode)
+    const learningBlock = formatFewShotsForPrompt(fewShots)
 
     if (!this.enabled()) {
       const interactionId = await this.store.logInteraction({

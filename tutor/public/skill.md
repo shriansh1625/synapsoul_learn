@@ -147,6 +147,8 @@ Windows PowerShell: the commands are identical (`synapsoul status --json`). Pref
 | `synapsoul hint` | Structural hint for the current step (reduces score) |
 | `synapsoul status --json` | Session, memory, readiness — **source of truth** |
 | `synapsoul sync --json` | Push local session to https://learnerslab.onrender.com when logged in |
+| `synapsoul learn status --json` | SynapSoul Local Learner stats (`~/.synapsoul/learner`) |
+| `synapsoul learn consolidate` | Distill teaching rules (Ollama if `OLLAMA_HOST` set, else heuristics) |
 | `synapsoul profile` | View profile |
 | `synapsoul profile update --name "..." --degree "..." --bio "..."` | Update profile |
 | `synapsoul profile confirm` | Confirm profile and unlock bootcamp |
@@ -216,6 +218,16 @@ CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT
 - **BREAK**: Production incident. Hypothesis before hints.
 - **FIX**: Smallest correct fix, tied back to the DECIDE choice.
 - **REFLECT**: Connect the bug to the decision. Then report if the CLI requires it.
+
+---
+
+## SynapSoul Local Learner (privacy)
+
+The **Local Learner** improves coaching from SynapSoul data only: CLI events, profile, brain snapshot, LLM reactions, decisions, and module scores. Data stays under `~/.synapsoul/learner/` on the student machine. It is **not** IDE-wide surveillance.
+
+Optional offline distillation: install [Ollama](https://ollama.com) separately, set `OLLAMA_HOST` (e.g. `http://127.0.0.1:11434`) and `OLLAMA_MODEL` (e.g. `llama3.2`), then run `synapsoul learn consolidate`. Online instructor calls still use the cloud LLM when configured.
+
+After `synapsoul sync`, an anonymized pattern digest may sync to the cohort API for admin cross-device visibility.
 
 ---
 

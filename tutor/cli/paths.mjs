@@ -75,6 +75,13 @@ export function feedbackDir() {
   return join(dataDir(), 'feedback')
 }
 
+/** SynapSoul Local Learner store (~/.synapsoul/learner). */
+export function learnerDir() {
+  const fromEnv = envFirst('SYNAPSOUL_LEARNER_DIR')
+  if (fromEnv) return fromEnv
+  return join(learnlabHome(), 'learner')
+}
+
 export function ensureDir(dir) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
   return dir

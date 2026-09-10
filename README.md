@@ -47,9 +47,61 @@ Sign in at https://synapsoullearn.runs-on.dev/ so progress returns to the cohort
 - **Hosted protocol + CLI** — `skill.md` and a curl installer; curriculum from the API
 - **6 core skills, 22 modules, 4 tracks** — Node, Python, Go, TypeScript
 - **Adaptive memory** — your instructor remembers sessions and calibrates to your level
+- **SynapSoul Cognitive Graph** — a living map of how this student reasons (BKT per concept, SM-2 reviews, PageRank gaps, ZPD frontier). Not XP. Not a trained ChatGPT.
+- **SynapSoul Local Learner** — local-first coaching memory on your machine (see below)
 - **5-dimension evidence scoring** — proof of how you think, not just what you completed
 - **Local session with cloud sync** — `~/.synapsoul/session.json`; register on the site so progress returns to the cohort API
 - **Custom modules** — extend the curriculum with JSON files
+
+---
+
+## SynapSoul Local Learner (local-first adaptive memory)
+
+**What it is:** A on-device layer that improves coaching over time from **SynapSoul activity only** — CLI commands, profile, brain snapshot (BKT/SM-2, pace, struggles), `cli_events`, LLM interactions/reactions, decisions, scores, and completed modules. It does **not** read your whole IDE, keylogs, or arbitrary project files.
+
+**Where data lives:** `~/.synapsoul/learner/`
+
+| File | Purpose |
+|------|---------|
+| `student_profile_digest.json` | Track, goals, hint-dependency signals |
+| `interaction_chunks.jsonl` | Retrieval chunks for coach/hint context |
+| `learned_patterns_local.json` | Up to 5 distilled teaching rules per student |
+| `meta.json` | Observe/consolidate timestamps |
+| `graph.json` | Cognitive Graph snapshot (concepts, frontier, ledger) |
+
+**Learning loop:** After each tutor CLI command, `LocalLearner.observe()` merges signals. Every 25 observes (and on `synapsoul learn consolidate`), `consolidate()` distills rules — via **Ollama** when configured, otherwise heuristics. Rules are injected into CLI/cloud instructor prompts (RAG + rules block). On `synapsoul sync`, an anonymized digest is posted to `POST /api/learner/sync` and shown in the admin student inspector.
+
+**What learns vs what does not**
+
+| Learns | Does not |
+|--------|----------|
+| Bootcamp CLI timeline, profile, brain state | IDE keystrokes or open files |
+| Helpful/not-helpful LLM reactions | Retraining Groq/OpenAI foundation weights |
+| Hint usage, pace, struggles from brain | “Magic” surveillance of the editor |
+| Optional local Ollama distillation on your machine | Bundled Ollama (install separately) |
+
+**CLI**
+
+```bash
+synapsoul learn status --json
+synapsoul learn consolidate
+```
+
+**Optional local LLM (Ollama):** Install [Ollama](https://ollama.com) yourself, pull a model, then:
+
+```bash
+export OLLAMA_HOST=http://127.0.0.1:11434
+export OLLAMA_MODEL=llama3.2
+synapsoul learn consolidate
+```
+
+When online, cloud coach still uses Groq (or configured provider); Ollama is for offline distillation and hiring-sentence polish — heuristics always work.
+
+## The Cognitive Graph (flagship)
+
+Every DECIDE, VERIFY, BREAK, hint, and scored module updates a graph of **this** student's concepts. Bayesian Knowledge Tracing estimates p(know) per concept. SM-2 schedules reviews. PageRank ranks which weak concepts block the most future modules. The recommended next module is the zone of proximal development — productive struggle, not the easiest click.
+
+Demo on the dashboard: sign in, open **Dashboard**. The full-width **Cognitive Graph** is under the bootcamp hero. Hover a node for p(know), last evidence, and why it is next. Public profiles show a "How they think" summary plus three hiring sentences (heuristic, or Groq if configured). CLI: `synapsoul graph --json` (also included in `synapsoul status --json`).
 
 ---
 

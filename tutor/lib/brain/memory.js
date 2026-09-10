@@ -10,7 +10,15 @@ export function emptyMemory() {
     preferredPace: 'steady',
     preferredTrack: 'node',
     lastErrors: [],
-    decisionPatterns: { A: 0, B: 0, avgReasoningLen: 0, reasoningSamples: 0 },
+    decisionPatterns: {
+      A: 0,
+      B: 0,
+      avgReasoningLen: 0,
+      reasoningSamples: 0,
+      tradeoffHits: 0,
+      codeJumpHits: 0,
+      totalDecides: 0,
+    },
     conceptsMastered: [],
     effectiveLevel: 'beginner',
     confidence: 'medium',
@@ -19,12 +27,15 @@ export function emptyMemory() {
 
 export function createState(overrides = {}) {
   return {
-    version: 1,
+    version: 2,
     updatedAt: null,
     eventCount: 0,
     processedEvidence: [],
     skills: {},
     modules: {},
+    concepts: {},
+    graph: { version: 1, extraEdges: [], ledger: [] },
+    ledger: [],
     memory: emptyMemory(),
     signals: [],
     ...overrides,
@@ -63,11 +74,19 @@ export function rememberError(state, error) {
 export function updateDecisionPattern(state, choice, reasoning) {
   const dp = { ...state.memory.decisionPatterns }
   if (choice === 'A' || choice === 'B') dp[choice] = (dp[choice] || 0) + 1
-  const len = (reasoning || '').trim().length
+  const text = (reasoning || '').trim()
+  const len = text.length
+  dp.totalDecides = (dp.totalDecides || 0) + 1
   if (len) {
     const n = (dp.reasoningSamples || 0) + 1
     dp.avgReasoningLen = Math.round(((dp.avgReasoningLen || 0) * (n - 1) + len) / n)
     dp.reasoningSamples = n
+  }
+  if (/\b(trade-?off|versus|vs\.?|latency|throughput|cost|risk|instead|because|constraint|if we|rather than)\b/i.test(text)) {
+    dp.tradeoffHits = (dp.tradeoffHits || 0) + 1
+  }
+  if (/\b(just (code|implement|write)|i'?ll (code|implement)|start coding|ship it|write the|jump to code)\b/i.test(text) || (len > 0 && len < 40)) {
+    dp.codeJumpHits = (dp.codeJumpHits || 0) + 1
   }
   return { ...state, memory: { ...state.memory, decisionPatterns: dp } }
 }

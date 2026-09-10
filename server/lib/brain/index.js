@@ -21,3 +21,15 @@ export {
 } from './memory.js'
 export { heuristicCoachNote } from './coach.js'
 export { AdaptiveEngine, hydrateFromProgress, createEngine } from './AdaptiveEngine.js'
+export {
+  GRAPH_ALGORITHMS,
+  buildGraphSnapshot,
+  pageRank,
+  decisionFingerprint,
+  heuristicHiringSentences,
+  publicGraphSummary,
+  maybeEnrichHiring,
+  cliEventToBrain,
+  applyGraphEvent,
+  applyConceptEvidence,
+} from './cognitiveGraph.js'

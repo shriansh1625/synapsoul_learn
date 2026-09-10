@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { pool } from '../db/pool.js'
 import { auth } from '../middleware/auth.js'
-import { AdaptiveEngine } from '../lib/brain/index.js'
+import { AdaptiveEngine, cliEventToBrain } from '../lib/brain/index.js'
 import { touchLastSeen } from '../lib/adminAuth.js'
 import { insertCliEvent, mapCliEventRow, normalizeCliEvent, classifyLearnerActivity } from '../lib/cliEvents.js'
 
@@ -295,6 +295,20 @@ router.post('/events', auth, async (req, res) => {
       return res.status(429).json({ error: 'Too many events' })
     }
     const row = await insertCliEvent(req.user.id, parsed)
+    try {
+      const mem = await pool.query('SELECT memory FROM student_memory WHERE user_id = $1', [req.user.id])
+      const memory = mem.rows[0]?.memory || {}
+      const engine = new AdaptiveEngine({ state: memory.brain })
+      engine.observe(cliEventToBrain(parsed))
+      const snap = engine.snapshot()
+      memory.brain = engine.state
+      memory.cognitive_graph = snap.graph
+      await pool.query(
+        `INSERT INTO student_memory (user_id, memory) VALUES ($1, $2::jsonb)
+         ON CONFLICT (user_id) DO UPDATE SET memory = $2::jsonb`,
+        [req.user.id, JSON.stringify(memory)]
+      )
+    } catch { /* graph update is best-effort */ }
     await touchLastSeen(req.user.id)
     res.json({ ok: true, event: mapCliEventRow(row) })
   } catch (e) {

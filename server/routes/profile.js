@@ -10,6 +10,8 @@ import {
   normalizeLinkedInUrl,
   githubProfileUrl,
 } from '../lib/userFields.js'
+import { AdaptiveEngine, publicGraphSummary, maybeEnrichHiring } from '../lib/brain/index.js'
+import { groqComplete } from '../lib/llm/providers/groq.js'
 
 const router = Router()
 
@@ -208,6 +210,20 @@ router.get('/:username', async (req, res) => {
   const skillsCompleted = skill_progress.filter(s => s.completed >= s.total && s.total > 0).length
   const github_username = user.github_username || ''
 
+  let cognitive_graph = null
+  try {
+    const mem = await pool.query('SELECT memory FROM student_memory WHERE user_id = $1', [uid])
+    const engine = new AdaptiveEngine({ state: mem.rows[0]?.memory?.brain })
+    const snap = engine.snapshot()
+    let hiring = snap.graph?.hiring
+    if (process.env.GROQ_API_KEY && snap.graph) {
+      hiring = await maybeEnrichHiring(snap.graph, { groqComplete })
+    }
+    cognitive_graph = publicGraphSummary({ ...snap.graph, hiring })
+  } catch {
+    cognitive_graph = publicGraphSummary(null)
+  }
+
   res.json({
     name: user.name,
     username: user.username,
@@ -239,6 +255,7 @@ router.get('/:username', async (req, res) => {
       title: (SKILL_META.find(s => s.id === r.skill_id)?.title || r.skill_id || '').replace(/-/g, ' '),
       module_label: String(r.module_id || '').replace(/-/g, ' '),
     })),
+    cognitive_graph,
   })
 })
 

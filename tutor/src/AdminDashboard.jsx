@@ -9,6 +9,7 @@ import {
   setAdminOtp,
 } from './api.js'
 import { setPageMeta } from './siteUtils.js'
+import { CognitiveGraph } from './CognitiveGraph.jsx'
 
 function formatWhen(value) {
   if (!value) return 'Never'
@@ -435,6 +436,44 @@ function AdminDashboard({ overview, onHome }) {
                     </li>
                   ))}
                 </ol>
+              )}
+
+              <h3>Learning pattern digest</h3>
+              {detail.learner_digest?.teaching_rules?.length ? (
+                <>
+                  <p className="admin-muted">
+                    Anonymized rules synced from SynapSoul Local Learner (CLI activity — not IDE surveillance).
+                    {detail.learner_digest.synced_at && ` Last sync: ${formatWhen(detail.learner_digest.synced_at)}.`}
+                  </p>
+                  <ol className="admin-timeline">
+                    {detail.learner_digest.teaching_rules.map((rule, i) => (
+                      <li key={i}>{rule}</li>
+                    ))}
+                  </ol>
+                  {detail.learner_digest.signals && (
+                    <p className="admin-muted">
+                      Signals: hint {detail.learner_digest.signals.hint_dependency || '—'},
+                      pace {detail.learner_digest.signals.pace || '—'},
+                      modules {detail.learner_digest.signals.modules_completed ?? '—'}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="admin-muted">
+                  No digest yet. Student runs <code>synapsoul learn consolidate</code> and <code>synapsoul sync</code> while logged in.
+                </p>
+              )}
+
+              <h3>Cognitive Graph</h3>
+              {snapshot?.graph ? (
+                <CognitiveGraph
+                  compact
+                  title="Student graph"
+                  graph={snapshot.graph}
+                  overlayEvents={cliEvents}
+                />
+              ) : (
+                <p className="admin-muted">No graph yet — it appears after the first CLI observe.</p>
               )}
 
               <h3>Brain snapshot</h3>

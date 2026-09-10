@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import catalog from '../data/catalog.json'
 import { fetchPublicProfile, publicProfileUrl } from './api.js'
 import { copyText, setPageMeta, humanizeApiError, slugifyUsername } from './siteUtils.js'
+import { CognitiveGraph } from './CognitiveGraph.jsx'
 
 const EMPTY_BIO = 'Engineering learner in the SynapSoul bootcamp — collecting evidence of how they design, debug, and ship.'
 
@@ -218,6 +219,33 @@ export default function PublicProfile({ username, onBack }) {
           <span className="pp-stat-value">{readiness}</span>
           <span className="pp-stat-label">Readiness / 100</span>
         </div>
+      </section>
+
+      <section className="card pp-section cog-public">
+        <CognitiveGraph
+          compact
+          graph={profile.cognitive_graph ? {
+            ...profile.cognitive_graph,
+            nodes: profile.cognitive_graph.nodes || profile.cognitive_graph.nodes_preview || [],
+            edges: profile.cognitive_graph.edges || [],
+            hiring: {
+              sentences: profile.cognitive_graph.hiring_sentences || [],
+              source: profile.cognitive_graph.hiring_source,
+            },
+          } : {
+            claim: 'The tutor does not just track XP. It maps how you reason.',
+            nodes: [],
+            edges: [],
+            fingerprint: { style: 'unscored', summary: 'Decision style fingerprints from DECIDE traces, not from XP.' },
+            hiring: {
+              sentences: [
+                'No DECIDE traces yet — style fingerprints from A/B choices and reasoning length, not from XP.',
+                'Priors start at p(know)=0.2. The graph fills from DECIDE, VERIFY, BREAK, and scored modules — never from invented activity.',
+                'The frontier is the first Launchpad module: close enough to be reachable, far enough to require a real decision.',
+              ],
+            },
+          }}
+        />
       </section>
 
       <section className="card pp-section">

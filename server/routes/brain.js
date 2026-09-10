@@ -50,9 +50,10 @@ router.put('/', auth, async (req, res) => {
     }
     const memory = await loadMemory(req.user.id)
     memory.brain = incoming
+    const engine = engineFrom(memory)
+    memory.cognitive_graph = engine.snapshot().graph
     await saveMemory(req.user.id, memory)
     await touchLastSeen(req.user.id)
-    const engine = engineFrom(memory)
     res.json({ ok: true, snapshot: engine.snapshot() })
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -66,9 +67,10 @@ router.post('/observe', auth, async (req, res) => {
     const memory = await loadMemory(req.user.id)
     const engine = engineFrom(memory)
     engine.observe(event)
-    memory.brain = engine.state
-    await saveMemory(req.user.id, memory)
     const snapshot = engine.snapshot()
+    memory.brain = engine.state
+    memory.cognitive_graph = snapshot.graph
+    await saveMemory(req.user.id, memory)
     linkOutcome({ ...event, skillId: event.skillId, moduleId: event.moduleId }, req.user.id).catch(() => {})
     res.json({ ok: true, snapshot })
   } catch (e) {

@@ -100,6 +100,8 @@ CREATE TABLE IF NOT EXISTS student_memory (
   memory JSONB DEFAULT '{}'::jsonb
 );
 
+ALTER TABLE student_memory ADD COLUMN IF NOT EXISTS learner_digest JSONB DEFAULT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_portfolio_user ON portfolio(user_id);
 

@@ -209,6 +209,23 @@ export async function pushProgressAndBrain({ apiBase, token, progress, brain }) 
   return { ok: true, api: base }
 }
 
+export async function pushLearnerDigest(digest) {
+  const token = loadSavedToken()
+  const apiBase = getApiBase() || PRODUCTION_API
+  if (!token || !digest) return { ok: false, skipped: 'not_logged_in' }
+  try {
+    await apiFetch(apiBase, '/api/learner/sync', {
+      method: 'POST',
+      token,
+      body: { digest },
+      timeoutMs: 12000,
+    })
+    return { ok: true, api: apiBase }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+}
+
 const CLI_EVENT_TYPES = new Set(['start', 'next', 'hint', 'decide', 'module_complete', 'sync'])
 
 export function isCliLoggedIn() {

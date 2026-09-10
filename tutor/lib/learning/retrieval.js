@@ -1,5 +1,6 @@
 import { readStore } from './localStore.js'
 import { getPatternsForSkill, formatPatternsForPrompt } from './patterns.js'
+import { getLocalLearner, formatLearnerDigestForPrompt } from './LocalLearner.js'
 
 function struggleTags(context) {
   const tags = []
@@ -64,11 +65,16 @@ export async function getFewShots(context = {}, mode = 'coach', limit = 3) {
   const patterns = getPatternsForSkill(skillId, mode)
   const patternBlock = formatPatternsForPrompt(patterns)
 
-  return { examples, patterns, patternBlock }
+  const localBlock = context.learnerDigest
+    ? formatLearnerDigestForPrompt(context.learnerDigest)
+    : getLocalLearner().getContextBlock(context)
+
+  return { examples, patterns, patternBlock, localBlock }
 }
 
-export function formatFewShotsForPrompt({ examples, patternBlock }) {
+export function formatFewShotsForPrompt({ examples, patternBlock, localBlock }) {
   const parts = []
+  if (localBlock) parts.push(localBlock)
   if (patternBlock) parts.push(patternBlock)
   if (examples?.length) {
     const exLines = examples.map((e, i) =>

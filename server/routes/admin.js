@@ -215,7 +215,7 @@ router.get('/students/:id', async (req, res) => {
         'SELECT artifact, student_action, technical_detail, proof, ability, confidence, skill_id, module_id, recorded_at FROM portfolio WHERE user_id = $1 ORDER BY recorded_at DESC',
         [uid]
       ),
-      pool.query('SELECT memory FROM student_memory WHERE user_id = $1', [uid]),
+      pool.query('SELECT memory, learner_digest FROM student_memory WHERE user_id = $1', [uid]),
       pool.query(
         `SELECT type, skill_id, module_id, step, created_at
          FROM llm_interactions WHERE user_id = $1
@@ -244,6 +244,7 @@ router.get('/students/:id', async (req, res) => {
     })
 
     const memoryJson = memory.rows[0]?.memory || {}
+    const learnerDigest = memory.rows[0]?.learner_digest || null
     let brainSnapshot = null
     try {
       const engine = new AdaptiveEngine({ state: memoryJson.brain })
@@ -326,6 +327,7 @@ router.get('/students/:id', async (req, res) => {
         state: memoryJson.brain || null,
         snapshot: brainSnapshot,
       },
+      learner_digest: learnerDigest,
       cli_events: cliEvents,
       events,
     })

@@ -169,6 +169,14 @@ export async function ensureCliAuthPendingTable() {
   return true
 }
 
+export async function ensureLearnerDigestColumn() {
+  if (!process.env.DATABASE_URL) return false
+  await pool.query(
+    'ALTER TABLE student_memory ADD COLUMN IF NOT EXISTS learner_digest JSONB DEFAULT NULL'
+  )
+  return true
+}
+
 export async function ensureCliEventsTable() {
   if (!process.env.DATABASE_URL) return false
   await pool.query(`
@@ -220,6 +228,11 @@ export async function initDb() {
     await ensureCliEventsTable()
   } catch (e) {
     console.warn('CLI events table migration warning:', e.message)
+  }
+  try {
+    await ensureLearnerDigestColumn()
+  } catch (e) {
+    console.warn('Learner digest column migration warning:', e.message)
   }
   try {
     await ensureCliAuthPendingTable()

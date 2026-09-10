@@ -14,6 +14,7 @@ import {
   round2,
 } from './memory.js'
 import { heuristicCoachNote } from './coach.js'
+import { applyConceptEvidence, applyGraphEvent, buildGraphSnapshot } from './cognitiveGraph.js'
 
 function evidenceKey(event) {
   if (event.id) return event.id
@@ -68,13 +69,16 @@ function setSkill(state, skillId, bkt) {
   return { ...state, skills: { ...state.skills, [skillId]: bkt } }
 }
 
-function applyBinary(state, skillId, moduleId, correct, pL0) {
+function applyBinary(state, skillId, moduleId, correct, pL0, curriculum, kind = 'observe') {
   const rec = moduleRecord(state, skillId, moduleId)
   rec.bkt = updateBkt(rec.bkt, correct)
   if (!correct) rec.failures = (rec.failures || 0) + 1
   state = setModule(state, rec)
   const skillBkt = updateBkt(skillRecord(state, skillId, pL0), correct)
   state = setSkill(state, skillId, skillBkt)
+  if (skillId && moduleId && curriculum) {
+    state = applyConceptEvidence(state, curriculum, skillId, moduleId, correct, kind)
+  }
   return { state, rec }
 }
 
@@ -145,6 +149,7 @@ export class AdaptiveEngine {
         })
     }
 
+    this.state = applyGraphEvent(this.state, this.curriculum, event)
     this.state = refreshDerivedMemory(this.state, this.curriculum)
     return this.snapshot()
   }
@@ -186,7 +191,7 @@ export class AdaptiveEngine {
 
   _hint(skillId, moduleId, payload, pL0) {
     if (!skillId || !moduleId) return
-    const applied = applyBinary(this.state, skillId, moduleId, false, pL0)
+    const applied = applyBinary(this.state, skillId, moduleId, false, pL0, this.curriculum, 'hint')
     this.state = applied.state
     const rec = applied.rec
     rec.hints = (rec.hints || 0) + 1
@@ -209,7 +214,7 @@ export class AdaptiveEngine {
     this.state = updateDecisionPattern(this.state, payload.choice, payload.reasoning)
     const substantial = (payload.reasoning || '').trim().length >= 40
     if (skillId && moduleId) {
-      const applied = applyBinary(this.state, skillId, moduleId, substantial, pL0)
+      const applied = applyBinary(this.state, skillId, moduleId, substantial, pL0, this.curriculum, 'decide')
       this.state = applied.state
     }
     this.state = pushSignal(this.state, {
@@ -223,7 +228,7 @@ export class AdaptiveEngine {
   _verify(skillId, moduleId, payload, pL0) {
     if (!skillId || !moduleId) return
     const passed = payload.passed !== false && payload.passed !== 0
-    const applied = applyBinary(this.state, skillId, moduleId, passed, pL0)
+    const applied = applyBinary(this.state, skillId, moduleId, passed, pL0, this.curriculum, 'verify')
     this.state = applied.state
     if (!passed) {
       this.state = rememberError(this.state, { type: 'verify_fail', skillId, moduleId })
@@ -241,7 +246,7 @@ export class AdaptiveEngine {
     const score = payload.score ?? payload.overall
     const hintsUsed = payload.hintsUsed || 0
     const correct = evidenceToCorrect({ score, hintsUsed, passed: payload.passed })
-    const applied = applyBinary(this.state, skillId, moduleId, correct, pL0)
+    const applied = applyBinary(this.state, skillId, moduleId, correct, pL0, this.curriculum, 'complete')
     this.state = applied.state
     const rec = applied.rec
     rec.completions = (rec.completions || 0) + 1
@@ -275,8 +280,17 @@ export class AdaptiveEngine {
       this._verify(skillId, moduleId, payload, pL0)
       return
     }
+    if (step === 'BREAK') {
+      this.state = pushSignal(this.state, {
+        kind: 'step',
+        label: `BREAK · ${moduleTitle(this.curriculum, skillId, moduleId)}`,
+        skillId,
+        moduleId,
+      })
+      return
+    }
     if (step === 'BUILD' || step === 'FIX') {
-      const applied = applyBinary(this.state, skillId, moduleId, true, pL0)
+      const applied = applyBinary(this.state, skillId, moduleId, true, pL0, this.curriculum, 'step')
       this.state = applied.state
     }
     this.state = pushSignal(this.state, {
@@ -433,6 +447,7 @@ export class AdaptiveEngine {
 
   snapshot() {
     const rec = this.recommend()
+    const graph = buildGraphSnapshot(this.state, this.curriculum, rec)
     const mastery = this.curriculum.skills.map(skill => {
       const bkt = this.state.skills[skill.id]
       const prior = 0.2
@@ -486,6 +501,8 @@ export class AdaptiveEngine {
         moduleTitle: rec.recommendedNext?.moduleTitle,
         struggle: this.state.memory.struggles[0]?.title,
       }),
+      graph,
+      fingerprint: graph.fingerprint,
     }
   }
 }

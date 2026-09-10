@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { canSyncProgress, fetchCoachNote, fetchLearningStats, reactToInteraction } from './api.js'
 
 export function BrainPanel({ snapshot, session, profile }) {
-  if (!snapshot?.recommendedNext && !snapshot?.mastery?.length) return null
+  if (!snapshot?.recommendedNext && !snapshot?.mastery?.length && !snapshot?.graph) return null
 
   const rec = snapshot.recommendedNext
   const due = snapshot.dueReviews || []
@@ -72,7 +72,7 @@ export function BrainPanel({ snapshot, session, profile }) {
         <p className="section-eyebrow">SynapSoul Brain</p>
         <h2 className="display-xs">Adaptive <em>engine</em></h2>
         <p className="section-sub">
-          Bayesian knowledge tracing + spaced repetition · {snapshot.eventCount || 0} learning events
+          Knowledge tracing + spaced review + the Cognitive Graph · {snapshot.eventCount || 0} learning events
           {snapshot.preferredPace ? ` · ${snapshot.preferredPace} pace` : ''}
         </p>
         {canSyncProgress() && learningStats && (

@@ -3,6 +3,7 @@ import { createCard, review, isDue } from './sm2.js'
 import { buildCurriculum } from './graph.js'
 import { AdaptiveEngine, hydrateFromProgress, createEngine } from './AdaptiveEngine.js'
 import { loadBundledCurriculum } from './curriculumData.js'
+import { pageRank } from './cognitiveGraph.js'
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg)
@@ -105,6 +106,59 @@ function testGraph() {
   assert(built.modules.length === 1, 'buildCurriculum uses provided manifests')
 }
 
+function testCognitiveGraph() {
+  const engine = createEngine()
+  const empty = engine.snapshot()
+  assert(empty.graph?.nodes?.length > 0, 'graph has curriculum nodes before any XP')
+  assert(empty.graph.hiring.sentences.length === 3, 'hiring always returns 3 sentences')
+  assert(empty.graph.fingerprint.style === 'unscored', 'no DECIDE yet')
+  assert(empty.graph.frontier?.length >= 1, 'empty student still has a ZPD frontier')
+
+  engine.observe({
+    type: 'decide',
+    skillId: 'system-design-fundamentals',
+    moduleId: 'http-basics',
+    payload: {
+      choice: 'A',
+      reasoning: 'I would take the tradeoff vs jumping to code because latency and cost constrain the API contract.',
+    },
+  })
+  engine.observe({
+    type: 'verify',
+    skillId: 'system-design-fundamentals',
+    moduleId: 'http-basics',
+    payload: { passed: true },
+  })
+  engine.observe({
+    type: 'session_step',
+    skillId: 'system-design-fundamentals',
+    moduleId: 'http-basics',
+    payload: { step: 'BREAK' },
+  })
+  engine.observe({
+    type: 'module_complete',
+    skillId: 'system-design-fundamentals',
+    moduleId: 'http-basics',
+    payload: { score: 5, hintsUsed: 0 },
+  })
+
+  const snap = engine.snapshot()
+  const httpConcept = engine.state.concepts?.http
+  assert(httpConcept?.bkt?.pKnow > 0.2, 'concept BKT rises on success')
+  assert(snap.fingerprint.style === 'tradeoff-first' || snap.fingerprint.tradeoffHits >= 1, 'tradeoff fingerprint recorded')
+  assert(snap.graph.ledger.some(e => e.type === 'DECIDE'), 'DECIDE lands on the evidence ledger')
+  assert(snap.graph.ledger.some(e => e.type === 'VERIFY'), 'VERIFY lands on the evidence ledger')
+  assert(snap.graph.ledger.some(e => e.type === 'BREAK'), 'BREAK lands on the evidence ledger')
+  assert(snap.graph.blockers.length >= 1, 'PageRank gap blockers exist')
+  assert(snap.graph.hiring.sentences.length === 3, 'hiring sentences stay at 3 after evidence')
+
+  const ranks = pageRank(
+    ['a', 'b', 'c'],
+    [{ from: 'b', to: 'a', weight: 1 }, { from: 'c', to: 'a', weight: 1 }],
+  )
+  assert(ranks.a > ranks.b, 'PageRank sends mass to the node with inbound links')
+}
+
 const CATALOG_STUB = {
   skills: [{ id: 'x', title: 'X', requiresFoundation: false }],
   manifests: [{ id: 'x', modules: [{ id: 'm1', title: 'M1' }] }],
@@ -118,6 +172,7 @@ function run() {
   testHintsHurt()
   testHydrateIdempotent()
   testGraph()
+  testCognitiveGraph()
   console.log('brain tests passed')
 }
 

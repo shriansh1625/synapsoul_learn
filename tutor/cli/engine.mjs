@@ -6,6 +6,7 @@ import {
   hydrateFromProgress,
   buildCurriculum,
   loadBundledCurriculum,
+  maybeEnrichHiring,
 } from '../lib/brain/index.js'
 import { maybeCoachNote } from '../lib/llm/coachService.js'
 import { getLearnLabLLM } from '../lib/llm/LearnLabLLM.js'
@@ -36,6 +37,8 @@ import {
   feedbackDir,
   CLI_NAME,
 } from './paths.mjs'
+import { writeLearnerJson } from '../lib/learning/learnerStore.js'
+import { ollamaComplete, ollamaConfigured } from '../lib/learning/ollamaClient.js'
 
 const DATA_DIR = dataDir()
 const STEPS = ['CONTEXT', 'DECIDE', 'BUILD', 'VERIFY', 'BREAK', 'FIX', 'REFLECT']
@@ -239,6 +242,9 @@ function attachBrain(progress, event, { persist = true } = {}) {
     recurring_growth_areas: (snapshot.struggles || []).map(s => s.id),
   }
   saveBrainState(engine.state)
+  try {
+    writeLearnerJson('graph', snapshot.graph)
+  } catch { /* local graph is best-effort */ }
   if (persist) saveProgress(progress)
   return snapshot
 }
@@ -368,6 +374,7 @@ export function cmdStatus(json) {
   const badges = computeBadges(progress, catalog)
   const profileRequired = !progress.profile_confirmed && !progress.profile?.confirmed
 
+  const brainSnap = attachBrain(progress, null, { persist: false })
   const result = {
     status: profileRequired ? 'profile_required' : session ? 'active' : 'no_session',
     message: profileRequired
@@ -387,13 +394,58 @@ export function cmdStatus(json) {
     completedCount: Object.keys(progress.completedModules).length,
     portfolioCount: progress.portfolio.length,
     student_memory: memory,
-    brain: attachBrain(progress, null, { persist: false }),
+    brain: brainSnap,
+    graph: brainSnap.graph || null,
+    fingerprint: brainSnap.fingerprint || brainSnap.graph?.fingerprint || null,
     prompt_suggestions: profileRequired
       ? ['synapsoul profile', 'synapsoul profile update --name "..." --degree "..." --bio "..."', 'synapsoul profile confirm']
       : promptSuggestions(progress, catalog),
   }
 
   return json ? result : formatStatus(result)
+}
+
+export async function cmdGraph({ json } = {}) {
+  const progress = loadProgress()
+  const snapshot = attachBrain(progress, null, { persist: true })
+  const graph = snapshot.graph
+  try {
+    if (graph) writeLearnerJson('graph', graph)
+  } catch { /* local graph is best-effort */ }
+
+  if (graph && ollamaConfigured()) {
+    try {
+      const hiring = await maybeEnrichHiring(graph, { ollamaComplete })
+      graph.hiring = hiring
+    } catch { /* heuristic stands */ }
+  }
+
+  const result = {
+    status: 'cognitive_graph',
+    claim: graph?.claim,
+    fingerprint: graph?.fingerprint || null,
+    frontier: graph?.frontier || [],
+    blockers: graph?.blockers || [],
+    hiring: graph?.hiring || null,
+    ledger: (graph?.ledger || []).slice(0, 12),
+    eventCount: graph?.eventCount || 0,
+    graph,
+  }
+  if (json) return result
+  const lines = [
+    'SynapSoul Cognitive Graph',
+    graph?.claim || '',
+    graph?.fingerprint?.summary || '',
+    recLine(graph),
+    ...(graph?.hiring?.sentences || []),
+  ].filter(Boolean)
+  return lines.join('\n')
+}
+
+function recLine(graph) {
+  const rec = graph?.recommendedNext
+  if (!rec) return ''
+  return `Frontier: ${rec.moduleTitle} (${rec.skillTitle}) · p(know)=${rec.pKnow}`
 }
 
 export function cmdCatalog(json) {

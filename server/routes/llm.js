@@ -8,6 +8,19 @@ import { getLearnLabLLM } from '../lib/llm/LearnLabLLM.js'
 const router = Router()
 const llm = getLearnLabLLM()
 
+async function loadLearnerDigest(userId) {
+  if (!userId || !pool) return null
+  try {
+    const { rows } = await pool.query(
+      'SELECT learner_digest FROM student_memory WHERE user_id = $1',
+      [userId]
+    )
+    return rows[0]?.learner_digest || null
+  } catch {
+    return null
+  }
+}
+
 async function loadBrainSnapshot(userId) {
   if (!userId || !pool) return null
   try {
@@ -65,11 +78,24 @@ function mergeContext(body, extras = {}) {
   }
 }
 
+async function loadUserLlmExtras(userId, body = {}) {
+  const [brainSnapshot, ctx, learnerDigest] = await Promise.all([
+    loadBrainSnapshot(userId),
+    loadProgressContext(userId, body),
+    loadLearnerDigest(userId),
+  ])
+  return {
+    brainSnapshot,
+    profile: ctx.profile,
+    decision: ctx.decision,
+    learnerDigest,
+  }
+}
+
 router.post('/coach', auth, async (req, res) => {
   try {
-    const brainSnapshot = await loadBrainSnapshot(req.user.id)
-    const { profile } = await loadProgressContext(req.user.id, req.body)
-    const result = await llm.coach(mergeContext(req.body, { brainSnapshot, profile, userId: req.user.id }))
+    const { brainSnapshot, profile, learnerDigest } = await loadUserLlmExtras(req.user.id, req.body)
+    const result = await llm.coach(mergeContext(req.body, { brainSnapshot, profile, learnerDigest, userId: req.user.id }))
     res.json(result)
   } catch (e) {
     res.status(500).json({ error: e.message })
@@ -80,9 +106,8 @@ router.post('/hint', optionalAuth, async (req, res) => {
   try {
     const extras = {}
     if (req.user?.id) {
-      extras.brainSnapshot = await loadBrainSnapshot(req.user.id)
-      const { profile } = await loadProgressContext(req.user.id, req.body)
-      extras.profile = profile
+      const loaded = await loadUserLlmExtras(req.user.id, req.body)
+      Object.assign(extras, loaded)
     }
     const result = await llm.hint(mergeContext(req.body, { ...extras, userId: req.user?.id }))
     res.json(result)
@@ -95,10 +120,9 @@ router.post('/reflect', optionalAuth, async (req, res) => {
   try {
     const extras = {}
     if (req.user?.id) {
-      extras.brainSnapshot = await loadBrainSnapshot(req.user.id)
-      const { profile, decision } = await loadProgressContext(req.user.id, req.body)
-      extras.profile = profile
-      if (!req.body.decision && decision) extras.decision = decision
+      const loaded = await loadUserLlmExtras(req.user.id, req.body)
+      Object.assign(extras, loaded)
+      if (!req.body.decision && loaded.decision) extras.decision = loaded.decision
     }
     const result = await llm.reflect(mergeContext(req.body, { ...extras, userId: req.user?.id }))
     res.json(result)

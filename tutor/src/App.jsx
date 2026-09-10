@@ -9,6 +9,7 @@ import ProfileView from './ProfileView.jsx'
 import AuthModal from './AuthModal.jsx'
 import AdminGate from './AdminDashboard.jsx'
 import { BrainPanel } from './BrainPanel.jsx'
+import { CognitiveGraph } from './CognitiveGraph.jsx'
 import { useBrain } from './brain/useBrain.js'
 import {
   isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, canSyncProgress,
@@ -751,6 +752,8 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
           </div>
         </div>
       </section>
+
+      {brainSnapshot?.graph && <CognitiveGraph graph={brainSnapshot.graph} />}
 
       <BrainPanel snapshot={brainSnapshot} session={session} profile={profile} />
 

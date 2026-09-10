@@ -22,7 +22,9 @@ import {
   cmdLogin,
   cmdRegister,
   cmdLearningStats,
+  cmdGraph,
 } from './engine.mjs'
+import { cmdLearnStatus, cmdLearnConsolidate, observeAfterCli, observeAfterSync } from './learner.mjs'
 import { ensureCurriculum } from './curriculumApi.mjs'
 import { PRODUCTION_API, PRODUCTION_SITE, CLI_NAME } from './paths.mjs'
 import { isCliLoggedIn } from './cloud.mjs'
@@ -63,6 +65,7 @@ Commands:
   ${CLI_NAME} login --github [--json]
   ${CLI_NAME} login --token <jwt> [--json]
   ${CLI_NAME} status [--json] [--all]
+  ${CLI_NAME} graph [--json]
   ${CLI_NAME} sync [--publish] [--email <email> --password <password>] [--json]
   ${CLI_NAME} catalog [--json]
   ${CLI_NAME} start [--skill <id>] [--track <track>] [--json]
@@ -79,6 +82,8 @@ Commands:
   ${CLI_NAME} score [--json]
   ${CLI_NAME} share [--json]
   ${CLI_NAME} learning stats [--json]
+  ${CLI_NAME} learn status [--json]
+  ${CLI_NAME} learn consolidate
 
 Production:
   API  ${PRODUCTION_API}
@@ -142,6 +147,9 @@ async function main() {
   switch (command) {
     case 'status':
       result = args.includes('--all') ? cmdStatusAll({ json }) : cmdStatus(json)
+      break
+    case 'graph':
+      result = await cmdGraph({ json })
       break
     case 'login':
       result = await cmdLogin({
@@ -237,6 +245,11 @@ async function main() {
         ? await cmdLearningStats({ json })
         : { status: 'error', message: `Usage: ${CLI_NAME} learning stats [--json]` }
       break
+    case 'learn':
+      if (args[1] === 'status') result = await cmdLearnStatus({ json })
+      else if (args[1] === 'consolidate') result = await cmdLearnConsolidate({ json })
+      else result = { status: 'error', message: `Usage: ${CLI_NAME} learn status|consolidate [--json]` }
+      break
     default:
       console.log(helpText())
       process.exit(0)
@@ -244,6 +257,8 @@ async function main() {
 
   if (TUTOR_EVENT_COMMANDS[command]) {
     await emitTutorCliEvent(command, result, sessionBefore)
+    observeAfterCli(command, result, sessionBefore)
+    if (command === 'sync') await observeAfterSync(result)
   }
   result = annotateCliAuth(result)
 

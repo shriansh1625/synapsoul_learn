@@ -234,6 +234,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
           </button>
           <div id="landing-menu" className={`glass-nav-links ${menuOpen ? 'is-open' : ''}`}>
             <button type="button" onClick={() => goSection('why')}>Why SynapSoul</button>
+            <button type="button" onClick={() => goSection('graph')}>Cognitive Graph</button>
             <button type="button" onClick={() => goSection('any-ide')}>Any IDE</button>
             <button type="button" onClick={() => goSection('how')}>How It Works</button>
             <button type="button" onClick={() => goSection('skills')}>Skills</button>
@@ -348,6 +349,20 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
               <p>{prop.desc}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="landing-graph reveal" id="graph">
+        <div className="section-head">
+          <p className="section-eyebrow">The Cognitive Graph</p>
+          <h2 className="display-sm">Not XP. How you <em>reason</em>.</h2>
+        </div>
+        <div className="landing-graph-card">
+          <p>
+            SynapSoul does not rank you by points. It keeps a living graph of the concepts you have evidence for,
+            the decisions you actually made, and the next problem that sits in reach — so the tutor maps how you think,
+            not how much you clicked.
+          </p>
         </div>
       </section>
 

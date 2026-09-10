@@ -9,6 +9,7 @@ import leaderboardRoutes from './routes/leaderboard.js'
 import brainRoutes from './routes/brain.js'
 import llmRoutes from './routes/llm.js'
 import learningRoutes from './routes/learning.js'
+import learnerRoutes from './routes/learner.js'
 import adminRoutes from './routes/admin.js'
 import curriculumRoutes from './routes/curriculum.js'
 
@@ -65,6 +66,7 @@ app.use('/api/leaderboard', leaderboardRoutes)
 app.use('/api/brain', brainRoutes)
 app.use('/api/llm', llmRoutes)
 app.use('/api/learning', learningRoutes)
+app.use('/api/learner', learnerRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/curriculum', curriculumRoutes)
 
