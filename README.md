@@ -5,55 +5,59 @@
 Paste one prompt. Get a tutor that remembers how you learn, adapts to your level, and builds proof of how you think.
 
 **Site:** https://tutor-alpha-sandy.vercel.app/
-**Student kit:** https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
+**Protocol:** https://tutor-alpha-sandy.vercel.app/skill.md
+**API:** https://learnerslab.onrender.com
 
 ## Universal Prompt (any IDE)
 
-Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, **Antigravity**, and any AI editor that can read files and run terminal commands.
+Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, and any AI editor that can read a URL and run terminal commands.
 
-A friend opens https://tutor-alpha-sandy.vercel.app/, downloads the student kit, copies the prompt, pastes it in their IDE, then signs in on the site so progress returns to the cohort API. They never clone GitHub.
-
-The landing **Copy** button uses the full prompt below (also in [PROMPT.md](PROMPT.md)).
+The landing **Copy** button uses this exact line:
 
 ```
-You are the LearnLab engineering instructor. Use LearnLab branding only.
-
-If skill.md is missing from this workspace, download the student kit (do not clone GitHub):
-  https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
-Unzip it and open that folder as the project. Never tell the student to git clone a repository.
-
-1. Read skill.md at the project root and follow the instructor protocol exactly.
-2. Install dependencies and load session state. Windows PowerShell and bash both work:
-     cd tutor
-     npm install
-     node cli/index.mjs status --json
-3. Point CLI sync at production: LEARNLAB_API_URL=https://learnerslab.onrender.com
-4. The student should create an account or sign in at https://tutor-alpha-sandy.vercel.app/
-5. Never write full BUILD solutions. One step at a time.
+Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
 ```
 
-Do **not** put `ADMIN_EMAIL`, Gmail credentials, or admin OTP details in the prompt or on the landing page.
+Then install the CLI (no git clone, no zip as the main path):
+
+```bash
+curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
+```
+
+```bash
+learnlab login
+learnlab start
+```
+
+Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort API. Do **not** put `ADMIN_EMAIL`, Gmail credentials, or admin OTP details in the prompt or on the landing page.
 
 ---
 
 ## Why LearnLab
 
-- **One prompt** — copy from the landing page; download the student kit; works in Cursor, Claude, VS Code Copilot, and other IDEs
+- **One prompt** — copy from the landing page; works in Cursor, Claude, VS Code Copilot, and Codex
+- **Hosted protocol + CLI** — `skill.md` and a curl installer; curriculum from the API
 - **6 core skills, 22 modules, 4 tracks** — Node, Python, Go, TypeScript
 - **Adaptive memory** — your instructor remembers sessions and calibrates to your level
 - **5-dimension evidence scoring** — proof of how you think, not just what you completed
-- **Local-first with cloud sync** — works offline; register on the site so progress returns to the cohort API
+- **Local session with cloud sync** — `~/.learnlab/session.json`; register on the site so progress returns to the cohort API
 - **Custom modules** — extend the curriculum with JSON files
 
 ---
 
-## Quick start (local)
+## Quick start (local owner)
 
 ```bash
 cd tutor
 npm install
 npm run dev          # Landing + dashboard at localhost:5173
-npm run tutor -- start --skill system-design-fundamentals --track node
+node cli/index.mjs start --skill system-design-fundamentals --track node
 ```
 
 Optional API server (PostgreSQL):
@@ -71,20 +75,23 @@ Then paste the universal prompt from the landing page into your IDE.
 
 ## How a friend uses LearnLab
 
-1. Open https://tutor-alpha-sandy.vercel.app/ and download the student kit (`/learnlab-kit.zip`).
-2. Unzip it and open that folder in Cursor, Claude Code, VS Code Copilot, or another AI editor.
-3. Copy the universal prompt from the site and paste it. The agent reads `skill.md`, installs the CLI, and teaches one step at a time.
-4. Create an account or sign in on the site (email or GitHub). Then either stay on the dashboard or run:
+1. Open https://tutor-alpha-sandy.vercel.app/ and copy the one-liner.
+2. Paste it in Cursor, Claude Code, VS Code Copilot, or Codex.
+3. The instructor installs the LearnLab CLI (`curl` or `irm | iex`) and runs `learnlab login` then `learnlab start`.
+4. Create an account or sign in on the site (email or GitHub) so progress returns to https://learnerslab.onrender.com.
 
 ```powershell
-cd tutor
-$env:LEARNLAB_API_URL="https://learnerslab.onrender.com"
-node cli/index.mjs sync --email you@example.com --password your-password --json
+learnlab login --email you@example.com --password your-password --json
+learnlab sync --json
 ```
 
 The website is the source of truth for the cohort. Do not paste JWTs into chat.
 
 People who never sign in are not silently tracked. Public hiring profiles stay opt-in public.
+
+### Optional advanced kit
+
+A zip of CLI + local curriculum remains at `/learnlab-kit.zip` for offline experiments. It is **not** the student path.
 
 ---
 
@@ -132,13 +139,13 @@ If `RESEND_API_KEY` is missing, `/api/admin/otp/request` returns **503** with th
 
 The development repo (`https://github.com/shriansh1625/learnerslab`) holds the full product: API (`server/`), admin dashboard, env examples, Render/Vercel config, and live-test scripts. **Students never need that repo.**
 
-- **Students** download https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip (CLI + curriculum + `skill.md`). They paste the universal prompt. No GitHub access required.
+- **Students** paste one prompt, install the CLI from https://tutor-alpha-sandy.vercel.app/install, and learn against the production API. No GitHub access required.
 - **Vercel** (frontend) and **Render** (API) stay connected to this repo through the **owner's GitHub login**. Making the repository **Private** does not break deploys as long as the owner remains authorized on those services.
-- Do not add students as GitHub collaborators. The kit + website is the student path.
+- Do not add students as GitHub collaborators. The hosted protocol + installer is the student path.
 
-To make the repo private: GitHub → **Settings** → **Change repository visibility** → **Private**. Do this after the student kit is live on Vercel.
+To make the repo private: GitHub → **Settings** → **Change repository visibility** → **Private**.
 
-The zip is built in `tutor` `prebuild` (`scripts/build-student-kit.mjs`) and published at `/learnlab-kit.zip`. `skill.md` is also copied to `/skill.md` so agents can fetch the protocol.
+Hosted files: `/skill.md`, `/install`, `/install.ps1`, `/cli/learnlab-cli.tar.gz`. The optional zip is still built in `tutor` `prebuild` at `/learnlab-kit.zip`.
 
 ---
 

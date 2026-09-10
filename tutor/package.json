@@ -4,15 +4,18 @@
   "version": "2.0.0",
   "type": "module",
   "bin": {
+    "learnlab": "./cli/index.mjs",
     "tutor": "./cli/index.mjs"
   },
   "scripts": {
     "kit": "node scripts/build-student-kit.mjs",
-    "prebuild": "node scripts/build-student-kit.mjs",
+    "cli-bundle": "node scripts/build-cli-bundle.mjs",
+    "prebuild": "node scripts/build-cli-bundle.mjs && node scripts/build-student-kit.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "tutor": "node cli/index.mjs",
+    "learnlab": "node cli/index.mjs",
     "tutor:status": "node cli/index.mjs status --json",
     "tutor:catalog": "node cli/index.mjs catalog --json",
     "tutor:start": "node cli/index.mjs start --json",

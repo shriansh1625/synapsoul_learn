@@ -13,27 +13,29 @@ You are a private engineering tutor. Lesson content comes from `tutor/data/` via
 
 ## Session Bootstrap (every conversation)
 
-1. Run `npm run tutor -- status --json` (or `node tutor/cli/index.mjs status --json`).
+1. Run `learnlab status --json` (owner repo: `node tutor/cli/index.mjs status --json`).
 2. Parse: `status`, `session`, `student_memory`, `prompt_suggestions`.
 3. One-sentence recap. Continue from current step — do not restart unless asked.
 
-If no session: `npm run tutor -- start --skill system-design-fundamentals --track <track> --json`
+If no session: `learnlab start --skill system-design-fundamentals --track <track> --json`
 
 ## CLI Commands
 
 | Command | Purpose |
 |---------|---------|
-| `tutor status --json` | Session state, memory, suggestions |
-| `tutor catalog --json` | All skills, packs, tracks, unlock status |
-| `tutor start --skill <id> [--track node\|python\|go\|typescript]` | Begin or resume |
-| `tutor next --summary "..." --evidence "..."` | Advance step with proof |
-| `tutor decide A\|B --reasoning "..."` | Record DECIDE choice |
-| `tutor hint` | Structural hint (reduces score) |
-| `tutor score --json` | Dimension feedback template — does NOT advance |
-| `tutor ref <topic>` | Glossary lookup |
-| `tutor report '<json>'` | Submit REFLECT evaluation |
+| `learnlab status --json` | Session state, memory, suggestions |
+| `learnlab catalog --json` | All skills, packs, tracks, unlock status |
+| `learnlab start --skill <id> [--track node\|python\|go\|typescript]` | Begin or resume |
+| `learnlab next --summary "..." --evidence "..."` | Advance step with proof |
+| `learnlab decide A\|B --reasoning "..."` | Record DECIDE choice |
+| `learnlab hint` | Structural hint (reduces score) |
+| `learnlab score --json` | Dimension feedback template — does NOT advance |
+| `learnlab ref <topic>` | Glossary lookup |
+| `learnlab report '<json>'` | Submit REFLECT evaluation |
+| `learnlab login` | Authenticate against the production API |
+| `learnlab sync --json` | Push progress when logged in |
 
-Run from `tutor/` directory: `npm run tutor -- <command>`
+Run from `tutor/` directory: `npm run learnlab -- <command>` or `node cli/index.mjs <command>`
 
 ## Strict Tutor Mode
 

@@ -1,19 +1,25 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
+import { spawn } from 'child_process'
+import {
+  PRODUCTION_API,
+  PRODUCTION_SITE,
+  authFile,
+  learnlabHome,
+  defaultApiBase,
+} from './paths.mjs'
+
+export { PRODUCTION_API, PRODUCTION_SITE }
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const DATA_DIR = join(__dirname, '..', 'data')
-const SYNC_DIR = join(DATA_DIR, 'sync')
-const AUTH_PATH = join(SYNC_DIR, 'auth.json')
-
-export const PRODUCTION_API = 'https://learnerslab.onrender.com'
-export const PRODUCTION_SITE = 'https://tutor-alpha-sandy.vercel.app'
+const AUTH_PATH = authFile()
 
 function loadDotEnvFiles() {
   const files = [
     join(__dirname, '..', '.env'),
     join(__dirname, '..', '..', '.env'),
+    join(learnlabHome(), '.env'),
   ]
   for (const file of files) {
     if (!existsSync(file)) continue
@@ -40,7 +46,18 @@ function loadDotEnvFiles() {
 loadDotEnvFiles()
 
 export function getApiBase() {
-  return String(process.env.LEARNLAB_API_URL || process.env.VITE_API_URL || '').replace(/\/$/, '')
+  return defaultApiBase()
+}
+
+export function openSite(url = PRODUCTION_SITE) {
+  const plat = process.platform
+  try {
+    if (plat === 'win32') spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref()
+    else if (plat === 'darwin') spawn('open', [url], { detached: true, stdio: 'ignore' }).unref()
+    else spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }).unref()
+  } catch {
+    /* ignore */
+  }
 }
 
 export function resolveSyncApiBase({ login } = {}) {
@@ -59,7 +76,7 @@ export function loadSavedToken() {
 }
 
 export function saveToken(token, email) {
-  if (!existsSync(SYNC_DIR)) mkdirSync(SYNC_DIR, { recursive: true })
+  mkdirSync(dirname(AUTH_PATH), { recursive: true })
   writeFileSync(
     AUTH_PATH,
     JSON.stringify({ token, email: email || null, saved_at: new Date().toISOString() }, null, 2) + '\n',

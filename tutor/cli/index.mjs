@@ -19,8 +19,11 @@ import {
   cmdShare,
   cmdStatusAll,
   cmdSync,
+  cmdLogin,
   cmdLearningStats,
 } from './engine.mjs'
+import { ensureCurriculum } from './curriculumApi.mjs'
+import { PRODUCTION_API, PRODUCTION_SITE, CLI_NAME } from './paths.mjs'
 
 const args = process.argv.slice(2)
 const json = args.includes('--json')
@@ -39,12 +42,69 @@ function getMultiFlag(name) {
   return values
 }
 
+function helpText() {
+  return `LearnLab CLI
+
+Commands:
+  ${CLI_NAME} login [--email <email> --password <password>] [--json]
+  ${CLI_NAME} status [--json] [--all]
+  ${CLI_NAME} sync [--publish] [--email <email> --password <password>] [--json]
+  ${CLI_NAME} catalog [--json]
+  ${CLI_NAME} start [--skill <id>] [--track <track>] [--json]
+  ${CLI_NAME} next --summary "..." --evidence "..."
+  ${CLI_NAME} decide <A|B> --reasoning "..."
+  ${CLI_NAME} hint | ${CLI_NAME} ref <topic>
+  ${CLI_NAME} report '<json>'
+  ${CLI_NAME} profile | ${CLI_NAME} profile update --name "..." --degree "..." --bio "..."
+  ${CLI_NAME} profile confirm
+  ${CLI_NAME} feedback --summary "..."
+  ${CLI_NAME} leaderboard [--json]
+  ${CLI_NAME} pretest [--json]
+  ${CLI_NAME} pretest submit --answers "1A,2A,3A,4A,5A"
+  ${CLI_NAME} score [--json]
+  ${CLI_NAME} share [--json]
+  ${CLI_NAME} learning stats [--json]
+
+Production:
+  API  ${PRODUCTION_API}
+  Site ${PRODUCTION_SITE}
+  Protocol ${PRODUCTION_SITE}/skill.md
+
+Install (students — no git clone):
+  Unix:    curl -fsSL ${PRODUCTION_SITE}/install | sh
+  Windows: irm ${PRODUCTION_SITE}/install.ps1 | iex
+`
+}
+
 async function main() {
+  if (args.includes('--help') || args.includes('-h') || command === 'help') {
+    console.log(helpText())
+    return
+  }
+  if (args.includes('--version') || command === 'version' || args.includes('-v')) {
+    console.log('learnlab 2.1.0')
+    return
+  }
+
+  await ensureCurriculum().catch(err => {
+    if (command !== 'login' && command !== 'help') {
+      console.error(JSON.stringify({ status: 'error', message: `Curriculum unavailable: ${err.message}` }))
+      process.exit(1)
+    }
+  })
+
   let result
 
   switch (command) {
     case 'status':
       result = args.includes('--all') ? cmdStatusAll({ json }) : cmdStatus(json)
+      break
+    case 'login':
+      result = await cmdLogin({
+        email: getFlag('--email'),
+        password: getFlag('--password'),
+        json,
+      })
       break
     case 'sync':
       result = await cmdSync({
@@ -121,37 +181,10 @@ async function main() {
     case 'learning':
       result = args[1] === 'stats'
         ? await cmdLearningStats({ json })
-        : { status: 'error', message: 'Usage: tutor learning stats [--json]' }
+        : { status: 'error', message: `Usage: ${CLI_NAME} learning stats [--json]` }
       break
     default:
-      console.log(`LearnLab Tutor CLI
-
-Commands:
-  tutor status [--json] [--all]
-  tutor sync [--publish] [--email <email> --password <password>] [--json]
-  tutor catalog [--json]
-  tutor start [--skill <id>] [--track <track>] [--json]
-  tutor next --summary "..." --evidence "..."
-  tutor decide <A|B> --reasoning "..."
-  tutor hint | tutor ref <topic>
-  tutor report '<json>'
-  tutor profile | tutor profile update --name "..." --degree "..." --bio "..."
-  tutor profile confirm
-  tutor feedback --summary "..."
-  tutor leaderboard [--json]
-  tutor pretest [--json]
-  tutor pretest submit --answers "1A,2A,3A,4A,5A"
-  tutor score [--json]
-  tutor share [--json]
-  tutor learning stats [--json]
-
-Cloud sync:
-  Set LEARNLAB_API_URL=https://learnerslab.onrender.com
-  Sign in at https://tutor-alpha-sandy.vercel.app/ then:
-  node cli/index.mjs sync --email you@example.com --password your-password --json
-
-Universal IDE prompt:
-  Copy from https://tutor-alpha-sandy.vercel.app/ (clone repo if skill.md is missing)`)
+      console.log(helpText())
       process.exit(0)
   }
 

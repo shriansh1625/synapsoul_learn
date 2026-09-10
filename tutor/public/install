@@ -1,0 +1,105 @@
+#!/bin/sh
+# LearnLab CLI installer — downloads the student CLI only. Does not clone a repo.
+set -e
+
+ORIGIN="${LEARNLAB_ORIGIN:-https://tutor-alpha-sandy.vercel.app}"
+API="${LEARNLAB_API_URL:-https://learnerslab.onrender.com}"
+SITE="${LEARNLAB_SITE:-https://tutor-alpha-sandy.vercel.app}"
+HOME_DIR="${LEARNLAB_HOME:-$HOME/.learnlab}"
+TARBALL_URL="${ORIGIN%/}/cli/learnlab-cli.tar.gz"
+
+echo "LearnLab installer"
+echo "  CLI home: $HOME_DIR"
+echo "  API:      $API"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "LearnLab needs Node.js 18 or newer."
+  echo "Install it from https://nodejs.org then re-run:"
+  echo "  curl -fsSL ${ORIGIN%/}/install | sh"
+  exit 1
+fi
+
+NODE_MAJOR=$(node -p "process.versions.node.split('.')[0]" 2>/dev/null || echo 0)
+if [ "$NODE_MAJOR" -lt 18 ]; then
+  echo "Node.js 18+ required (found $(node -v))."
+  exit 1
+fi
+
+if ! command -v tar >/dev/null 2>&1; then
+  echo "This installer needs tar."
+  exit 1
+fi
+
+mkdir -p "$HOME_DIR"
+TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t learnlab)
+trap 'rm -rf "$TMPDIR"' EXIT
+
+echo "Downloading CLI from $TARBALL_URL"
+if command -v curl >/dev/null 2>&1; then
+  curl -fsSL "$TARBALL_URL" -o "$TMPDIR/learnlab-cli.tar.gz"
+elif command -v wget >/dev/null 2>&1; then
+  wget -qO "$TMPDIR/learnlab-cli.tar.gz" "$TARBALL_URL"
+else
+  echo "Need curl or wget to download the CLI."
+  exit 1
+fi
+
+# Keep session/auth across reinstalls
+tar -xzf "$TMPDIR/learnlab-cli.tar.gz" -C "$HOME_DIR"
+
+mkdir -p "$HOME_DIR/bin"
+cat > "$HOME_DIR/config.json" <<EOF
+{
+  "standalone": true,
+  "apiUrl": "$API",
+  "siteUrl": "$SITE",
+  "origin": "$ORIGIN",
+  "installedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+}
+EOF
+
+cat > "$HOME_DIR/bin/learnlab" <<'EOF'
+#!/bin/sh
+ROOT="${LEARNLAB_HOME:-$HOME/.learnlab}"
+if [ -z "$LEARNLAB_API_URL" ]; then
+  LEARNLAB_API_URL="https://learnerslab.onrender.com"
+  export LEARNLAB_API_URL
+fi
+exec node "$ROOT/cli/index.mjs" "$@"
+EOF
+chmod +x "$HOME_DIR/bin/learnlab"
+
+LOCAL_BIN="$HOME/.local/bin"
+mkdir -p "$LOCAL_BIN"
+ln -sf "$HOME_DIR/bin/learnlab" "$LOCAL_BIN/learnlab"
+
+on_path() {
+  echo ":$PATH:" | grep -q ":$LOCAL_BIN:"
+}
+
+append_rc() {
+  rc="$1"
+  line='export PATH="$HOME/.local/bin:$PATH"'
+  if [ -f "$rc" ] && grep -qs '.local/bin' "$rc"; then
+    return
+  fi
+  if [ -f "$rc" ] || [ -w "$(dirname "$rc")" ]; then
+    printf '\n# LearnLab CLI\n%s\n' "$line" >> "$rc"
+    echo "Added ~/.local/bin to PATH in $rc"
+  fi
+}
+
+if ! on_path; then
+  append_rc "$HOME/.bashrc"
+  append_rc "$HOME/.zshrc"
+  append_rc "$HOME/.profile"
+  echo "Restart your shell (or run: export PATH=\"\$HOME/.local/bin:\$PATH\") so learnlab is on PATH."
+fi
+
+echo
+echo "Installed. Next:"
+echo "  learnlab login"
+echo "  learnlab start"
+echo
+echo "Protocol: ${SITE%/}/skill.md"
+echo "Sign in at $SITE so progress returns to $API"

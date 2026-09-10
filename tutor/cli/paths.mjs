@@ -1,0 +1,79 @@
+import { homedir } from 'os'
+import { dirname, join } from 'path'
+import { existsSync, readFileSync, mkdirSync } from 'fs'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+export const CLI_ROOT = join(__dirname, '..')
+export const PRODUCTION_API = 'https://learnerslab.onrender.com'
+export const PRODUCTION_SITE = 'https://tutor-alpha-sandy.vercel.app'
+export const CLI_NAME = 'learnlab'
+
+export function learnlabHome() {
+  return process.env.LEARNLAB_HOME || join(homedir(), '.learnlab')
+}
+
+export function isStandalone() {
+  if (process.env.LEARNLAB_STANDALONE === '1') return true
+  const home = learnlabHome().replace(/\\/g, '/').replace(/\/$/, '').toLowerCase()
+  const root = CLI_ROOT.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase()
+  return root === home || root.startsWith(`${home}/`)
+}
+
+export function loadInstallConfig() {
+  const p = join(learnlabHome(), 'config.json')
+  if (!existsSync(p)) return null
+  try {
+    return JSON.parse(readFileSync(p, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+export function dataDir() {
+  if (process.env.LEARNLAB_DATA_DIR) return process.env.LEARNLAB_DATA_DIR
+  return join(CLI_ROOT, 'data')
+}
+
+export function progressFile() {
+  if (isStandalone()) return join(learnlabHome(), 'session.json')
+  return join(dataDir(), 'progress.json')
+}
+
+export function authFile() {
+  if (isStandalone()) return join(learnlabHome(), 'auth.json')
+  return join(dataDir(), 'sync', 'auth.json')
+}
+
+export function syncDirPath() {
+  if (isStandalone()) return join(learnlabHome(), 'sync')
+  return join(dataDir(), 'sync')
+}
+
+export function publicDir() {
+  return join(dataDir(), 'public')
+}
+
+export function feedbackDir() {
+  return join(dataDir(), 'feedback')
+}
+
+export function ensureDir(dir) {
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  return dir
+}
+
+export function defaultApiBase() {
+  const env = String(process.env.LEARNLAB_API_URL || process.env.VITE_API_URL || '').replace(/\/$/, '')
+  if (env) return env
+  const cfg = loadInstallConfig()
+  if (cfg?.apiUrl) return String(cfg.apiUrl).replace(/\/$/, '')
+  if (isStandalone()) return PRODUCTION_API
+  return ''
+}
+
+export function siteUrl() {
+  const cfg = loadInstallConfig()
+  return String(cfg?.siteUrl || PRODUCTION_SITE).replace(/\/$/, '')
+}

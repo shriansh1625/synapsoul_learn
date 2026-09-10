@@ -1332,8 +1332,33 @@ a.btn-primary, a.btn-secondary {
 .prompt-row-stack {
   flex-direction: column;
 }
-.prompt-row-stack .copy-btn {
-  align-self: flex-end;
+.prompt-code.oneline {
+  white-space: nowrap;
+  overflow-x: auto;
+  max-height: none;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.prompt-caret {
+  color: var(--text-dim);
+  user-select: none;
+}
+.prompt-row.oneline-row {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+.prompt-row.oneline-row .prompt-code {
+  flex: 1;
+  min-width: 0;
+}
+.copy-btn-lg {
+  min-width: 120px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 14px 22px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .landing-any-ide {
   padding: 64px 24px 24px;
@@ -2094,7 +2119,10 @@ a.btn-primary, a.btn-secondary {
   .dimension-grid { grid-template-columns: 1fr; }
   .flip-chip { width: calc(50% - 6px); }
   .prompt-row { flex-direction: column; }
-  .copy-btn { width: 100%; }
+  .prompt-row.oneline-row {
+    flex-wrap: wrap;
+  }
+  .copy-btn-lg { width: 100%; }
   .audience-grid, .tier-grid, .transcript-grid { grid-template-columns: 1fr; }
 }
 

@@ -10,6 +10,7 @@ import brainRoutes from './routes/brain.js'
 import llmRoutes from './routes/llm.js'
 import learningRoutes from './routes/learning.js'
 import adminRoutes from './routes/admin.js'
+import curriculumRoutes from './routes/curriculum.js'
 
 dotenv.config()
 
@@ -60,6 +61,7 @@ app.use('/api/brain', brainRoutes)
 app.use('/api/llm', llmRoutes)
 app.use('/api/learning', learningRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/curriculum', curriculumRoutes)
 
 async function start() {
   if (process.env.DATABASE_URL) {

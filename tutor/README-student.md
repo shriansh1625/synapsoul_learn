@@ -1,38 +1,35 @@
-# LearnLab student kit
+# LearnLab student CLI
 
-This folder is everything you need to run the LearnLab tutor in any IDE.
-You do **not** need GitHub access.
+You do **not** need GitHub access. You do **not** unzip this folder as the main path.
 
 **Site:** https://tutor-alpha-sandy.vercel.app/
+**Protocol:** https://tutor-alpha-sandy.vercel.app/skill.md
 **API:** https://learnerslab.onrender.com
-**Kit:** https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
 
-## Setup (any IDE)
+## Primary setup (any IDE)
 
-1. Unzip and **open this folder** in Cursor, Claude Code, VS Code Copilot, Codex, Antigravity, or another AI editor.
-2. Copy the universal prompt from https://tutor-alpha-sandy.vercel.app/ and paste it into the agent chat.
-3. In the terminal:
+1. Paste this in your AI editor:
 
-```powershell
-cd tutor
-npm install
-node cli/index.mjs status --json
+```
+Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
 ```
 
-4. Point the CLI at production:
+2. Install the CLI:
 
-```powershell
-$env:LEARNLAB_API_URL="https://learnerslab.onrender.com"
-```
-
-On bash:
+Unix:
 
 ```bash
-export LEARNLAB_API_URL=https://learnerslab.onrender.com
+curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh
 ```
 
-5. Sign in at https://tutor-alpha-sandy.vercel.app/ so your progress returns to the cohort.
+Windows PowerShell:
 
-If no session yet: `node cli/index.mjs start --json`.
+```powershell
+irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
+```
 
-Do not clone a GitHub repository. This kit is the student workspace.
+3. `learnlab login` then `learnlab start`
+
+4. Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort.
+
+This zip is an **optional** fallback with local curriculum files. Prefer the installer above.

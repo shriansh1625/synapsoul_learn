@@ -1,30 +1,14 @@
 export const KIT_ZIP_PATH = '/learnlab-kit.zip'
 export const KIT_ZIP_URL = 'https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip'
+export const SKILL_MD_URL = 'https://tutor-alpha-sandy.vercel.app/skill.md'
+export const INSTALL_UNIX = 'curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh'
+export const INSTALL_WINDOWS = 'irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex'
 
-export const UNIVERSAL_PROMPT = `You are the LearnLab engineering instructor. Use LearnLab branding only.
-
-If skill.md is missing from this workspace, download the student kit (do not clone GitHub):
-  https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
-Unzip it and open that folder as the project. Never tell the student to git clone a repository.
-
-1. Read skill.md at the project root and follow the instructor protocol exactly.
-2. Install dependencies and load session state. Windows PowerShell and bash both work:
-     cd tutor
-     npm install
-     node cli/index.mjs status --json
-   (npm run tutor -- status --json also works. Prefer node cli/index.mjs on Windows PowerShell.)
-3. Point CLI sync at production:
-     LEARNLAB_API_URL=https://learnerslab.onrender.com
-   VITE_API_URL with the same value is also accepted. In PowerShell: $env:LEARNLAB_API_URL="https://learnerslab.onrender.com"
-4. The student should create an account or sign in at https://tutor-alpha-sandy.vercel.app/ so progress, brain, and profile return to the cohort API. After they have an account, sync with:
-     node cli/index.mjs sync --email THEIR_EMAIL --password THEIR_PASSWORD --json
-   Or they sign in on the website — do not ask them to paste JWTs. The website dashboard is the source of truth for the cohort.
-5. Use the tutor CLI for all curriculum and progression. Never invent lessons. If no session: node cli/index.mjs start --json
-6. Never write full BUILD solutions. Teach one step at a time (CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT).`
+export const UNIVERSAL_PROMPT = 'Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions'
 
 export const DEFAULT_TITLE = 'LearnLab — The Open Engineering Bootcamp in Your IDE'
 export const DEFAULT_DESCRIPTION =
-  'Local-first AI engineering bootcamp. Your IDE becomes a private instructor that scores how you think, builds evidence portfolios, and adapts to your level — no cloud lock-in.'
+  'Your AI editor becomes a private instructor. Paste one prompt, install the LearnLab CLI, and build evidence recruiters can read.'
 
 export function setPageMeta({ title, description } = {}) {
   document.title = title || DEFAULT_TITLE

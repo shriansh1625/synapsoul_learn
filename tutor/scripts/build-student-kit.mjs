@@ -267,9 +267,10 @@ function assertSafe(files) {
 function collectFiles() {
   const files = []
 
-  for (const name of ['skill.md', 'AGENTS.md', 'CLAUDE.md', 'PROMPT.md']) {
+  for (const name of ['AGENTS.md', 'CLAUDE.md', 'PROMPT.md']) {
     addCopied(files, name, join(ROOT_DIR, name))
   }
+  addCopied(files, 'skill.md', join(PUBLIC_DIR, 'skill.md'))
 
   addCopied(files, 'README.md', join(TUTOR_DIR, 'README-student.md'))
   addCopied(files, 'tutor/README-student.md', join(TUTOR_DIR, 'README-student.md'))
@@ -305,7 +306,6 @@ function collectFiles() {
 function main() {
   mkdirSync(PUBLIC_DIR, { recursive: true })
 
-  copyFileSync(join(ROOT_DIR, 'skill.md'), join(PUBLIC_DIR, 'skill.md'))
   copyFileSync(join(ROOT_DIR, 'PROMPT.md'), join(PUBLIC_DIR, 'PROMPT.md'))
 
   const files = collectFiles()
@@ -313,6 +313,7 @@ function main() {
 
   const zip = writeZip(files)
   writeFileSync(ZIP_PATH, zip)
+  const kb = Math.round(zip.length / 1024)
 
   const listed = listZipNames(zip)
   if (listed.length !== files.length) {
@@ -340,10 +341,9 @@ function main() {
     }
   }
 
-  const kb = Math.round(zip.length / 1024)
-  console.log(`Student kit: ${files.length} files, ${kb} KB`)
+  console.log(`Optional kit zip: ${files.length} files, ${kb} KB`)
   console.log(`Wrote ${toPosix(relative(ROOT_DIR, ZIP_PATH))}`)
-  console.log('Copied skill.md and PROMPT.md to tutor/public/')
+  console.log('Hosted protocol stays at tutor/public/skill.md')
   console.log('VERIFY OK: no .env, no server/, no owner secrets')
 }
 

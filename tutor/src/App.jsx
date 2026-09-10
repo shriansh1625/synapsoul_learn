@@ -15,7 +15,7 @@ import {
   fetchLlmHint, apiEnabled, fetchMe, logoutAdminOtp,
 } from './api.js'
 import { loadModuleJson } from './curriculumModules.js'
-import { copyText, setPageMeta, UNIVERSAL_PROMPT, KIT_ZIP_PATH, humanizeApiError, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
 
 function publicRouteUsername(raw) {
   try {
@@ -628,7 +628,7 @@ export default function App() {
           LearnLab ·{' '}
           <button type="button" className="link-btn" onClick={goToLanding}>Home</button>
           {' · '}
-          <a className="link-btn" href={KIT_ZIP_PATH} download="learnlab-kit.zip">Download kit</a>
+          <a className="link-btn" href="/skill.md">Instructor protocol</a>
         </p>
       </footer>
     </div>
@@ -680,7 +680,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
         setHintState({ curriculum: hintText, nudge: hintText, source: 'curriculum' })
       }
     } catch {
-      setHintState({ curriculum: null, nudge: 'Could not load hint. Run `npm run tutor -- hint` in terminal.', source: 'error' })
+      setHintState({ curriculum: null, nudge: 'Could not load hint. Run `learnlab hint` in terminal.', source: 'error' })
     } finally {
       setHintLoading(false)
     }
@@ -730,7 +730,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
           <div className="card-badge">Recommended next</div>
           <h2 className="display-xs">{recommendedSkill.title}</h2>
           <p>{recommendedSkill.description}</p>
-          <code className="cli-block">npm run tutor -- start --skill {recommendedSkill.id}</code>
+          <code className="cli-block">learnlab start --skill {recommendedSkill.id}</code>
         </section>
       )}
 
@@ -793,7 +793,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
           <p className="section-eyebrow">First module</p>
           <h2 className="display-xs">No modules completed yet</h2>
           <p>Paste the universal prompt in Cursor to start System Design Fundamentals. Evidence lands here as you ship.</p>
-          <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
+          <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
           <StartPromptCopy />
           <p className="cursor-hint">You can also say <code>Start my lesson</code> in Cursor after the instructor boots.</p>
         </section>
@@ -868,9 +868,9 @@ function SkillsView({ progress, selectedSkill, onSelectSkill, skillUnlocked }) {
             <h2 className="display-xs">{selectedSkill.title}</h2>
             <p>{selectedSkill.description}</p>
             <h3>Start in your editor</h3>
-            <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
+            <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
             <p className="cursor-hint">Then say <code>Start {selectedSkill.title}</code> in chat, or run:</p>
-            <code className="cli-block">npm run tutor -- start --skill {selectedSkill.id}</code>
+            <code className="cli-block">learnlab start --skill {selectedSkill.id}</code>
             <h3>Growth dimensions</h3>
             <div className="skills">
               {selectedSkill.growthDimensions?.map(d => (
@@ -1210,8 +1210,8 @@ function StartPromptCopy() {
       <button type="button" className="btn-primary" onClick={copy}>
         {copied ? 'Prompt copied' : 'Copy universal prompt'}
       </button>
-      <a className="btn-secondary" href={KIT_ZIP_PATH} download="learnlab-kit.zip">
-        Download student kit
+      <a className="btn-secondary" href="/skill.md">
+        Open instructor protocol
       </a>
       {copied && <p className="form-feedback is-success" role="status">Prompt copied to clipboard</p>}
       {error && <p className="form-feedback is-error" role="alert">{error}</p>}
@@ -1351,8 +1351,8 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
               <p className="section-eyebrow">Step 3 of 3</p>
               <h2 className="display-xs">Start your <em>first module</em></h2>
               <p className="section-sub">Paste this in Cursor, then say &quot;Continue my lesson&quot;.</p>
-              <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
-              <p className="cursor-hint">Optional CLI: <code>npm run tutor -- start --skill {foundation?.id} --track {track}</code></p>
+              <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
+              <p className="cursor-hint">Optional CLI: <code>learnlab start --skill {foundation?.id} --track {track}</code></p>
             </>
           )}
         </div>
