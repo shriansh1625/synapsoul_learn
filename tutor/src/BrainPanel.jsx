@@ -3,13 +3,11 @@ import { canSyncProgress, fetchCoachNote, fetchLearningStats, reactToInteraction
 import { notifyBrainReaction } from './learnerActivity.js'
 
 export function BrainPanel({ snapshot, session, profile }) {
-  if (!snapshot?.recommendedNext && !snapshot?.mastery?.length && !snapshot?.graph) return null
-
-  const rec = snapshot.recommendedNext
-  const due = snapshot.dueReviews || []
-  const signals = snapshot.recentSignals || []
-  const mastery = snapshot.mastery || []
-  const hintPct = Math.round((snapshot.hintDependency || 0) * 100)
+  const rec = snapshot?.recommendedNext
+  const due = snapshot?.dueReviews || []
+  const signals = snapshot?.recentSignals || []
+  const mastery = snapshot?.mastery || []
+  const hintPct = Math.round((snapshot?.hintDependency || 0) * 100)
 
   const [coach, setCoach] = useState(null)
   const [coachLoading, setCoachLoading] = useState(false)
@@ -67,6 +65,8 @@ export function BrainPanel({ snapshot, session, profile }) {
 
   const patternCount = learningStats?.patterns ?? 0
   const lastInsight = learningStats?.recentPatterns?.slice(-1)[0]
+
+  if (!snapshot?.recommendedNext && !snapshot?.mastery?.length && !snapshot?.graph) return null
 
   return (
     <section className="brain-panel">

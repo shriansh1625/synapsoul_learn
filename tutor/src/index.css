@@ -230,7 +230,7 @@ code {
 }
 
 /* Hero & stats */
-.hero { margin-bottom: 48px; }
+.hero { margin-bottom: 40px; }
 .dashboard-hero { padding-top: 8px; }
 .hero-sub { color: var(--text-muted); margin-bottom: 28px; font-size: 1.05rem; }
 
@@ -382,11 +382,11 @@ code {
   transition: width 0.6s ease;
 }
 
-.dashboard-dimensions { margin-bottom: 32px; }
+.dashboard-dimensions { margin-bottom: 40px; }
 .dashboard-dimensions h2 { margin-bottom: 20px; }
 
 /* Session */
-.current-session { margin-bottom: 36px; }
+.current-session { margin-bottom: 40px; }
 .session-title {
   font-family: var(--serif);
   font-size: 1.5rem;
@@ -458,11 +458,11 @@ code {
   word-break: break-all;
 }
 
-.start-card { margin-bottom: 36px; text-align: center; }
+.start-card { margin-bottom: 40px; text-align: center; }
 .start-card h2 { margin-bottom: 12px; }
 
 /* Features */
-.features { margin-bottom: 56px; }
+.features { margin-bottom: 40px; }
 .features h2 { margin-bottom: 24px; color: var(--text-muted); }
 .feature-grid {
   display: grid;
@@ -2272,7 +2272,7 @@ a.btn-primary, a.btn-secondary {
 }
 .track-option span { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
 
-.recommend-card { margin-bottom: 24px; }
+.recommend-card { margin-bottom: 40px; }
 
 /* SynapSoul Brain panel */
 .brain-panel { margin-bottom: 40px; }
@@ -2312,8 +2312,15 @@ a.btn-primary, a.btn-secondary {
 
 .brain-grid {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
+  align-items: stretch;
+}
+.brain-grid > .card {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 .brain-mastery h3,
 .brain-side h3 {
@@ -2370,6 +2377,8 @@ a.btn-primary, a.btn-secondary {
   gap: 12px;
   font-size: 0.78rem;
   color: var(--text-muted);
+  margin-top: auto;
+  padding-top: 16px;
 }
 .brain-meta-row strong { color: var(--text); }
 .brain-coach { margin-bottom: 20px; border-color: rgba(99, 102, 241, 0.25); }
@@ -3247,14 +3256,13 @@ a.link-btn {
 .cog-graph-canvas {
   position: relative;
   background: #0a0a0c;
-  border-color: rgba(236, 231, 220, 0.08);
   overflow: hidden;
-  min-height: 280px;
+  min-height: 320px;
 }
-.cog-svg { display: block; width: 100%; height: auto; min-height: 280px; }
+.cog-svg { display: block; width: 100%; height: auto; min-height: 320px; }
 .cog-label {
   fill: #ece7dc;
-  font-size: 9px;
+  font-size: 10px;
   font-family: var(--sans-display);
   letter-spacing: 0.02em;
 }
@@ -3311,7 +3319,7 @@ a.link-btn {
 .cog-dot.is-block { background: #1c1c1a; border-color: #8a7a6a; }
 .cog-meta-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   margin-top: 14px;
 }
@@ -3365,6 +3373,13 @@ a.link-btn {
   font-size: 1.05rem;
   line-height: 1.65;
 }
-@media (max-width: 900px) {
-  .cog-meta-grid { grid-template-columns: 1fr; }
+@media (max-width: 700px) {
+  /* Keep the full dashboard graph legible on phones: scroll sideways at
+     natural scale instead of shrinking labels below readability. */
+  .cog-graph-canvas { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cog-graph:not(.is-compact) .cog-svg {
+    width: auto;
+    min-width: 100%;
+    max-width: none;
+  }
 }

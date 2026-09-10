@@ -37,8 +37,8 @@ function layout(nodes) {
       y: origin.y + 22 + Math.floor(k / 3) * 14,
     }
   }
-  const width = Math.max(640, left + lanes.length * colW + 40)
-  const height = Math.max(280, top + Math.max(0, ...lanes.map(l => l.modules.length)) * rowH + 36)
+  const width = Math.max(640, left + lanes.length * colW + 110)
+  const height = Math.max(320, top + Math.max(0, ...lanes.map(l => l.modules.length)) * rowH + 36)
   return { pos, lanes, width, height }
 }
 
@@ -113,6 +113,8 @@ export function CognitiveGraph({ graph, compact = false, overlayEvents = [], tit
         <svg
           className="cog-svg"
           viewBox={`0 0 ${width} ${height}`}
+          width={width}
+          height={height}
           role="img"
           aria-label="Cognitive graph of concepts and modules"
         >
