@@ -313,11 +313,11 @@ Repeatable audits against **production** (or override URLs with env vars). Simul
 ```bash
 cd tutor
 npm install
-npx playwright install chromium   # first time only
+npx playwright install chromium   # first time only (or: npm run playwright:install)
 
 npm run test:live:api             # health, auth, brain, coach, learning loop
-npm run test:live:e2e             # Playwright journey on Vercel
-npm run test:live                 # both, in sequence
+npm run test:live:e2e             # Playwright journey on Vercel (runs playwright:install via pretest)
+npm run test:live                 # API then E2E, in sequence
 ```
 
 From repo root: `npm run test:live`.
