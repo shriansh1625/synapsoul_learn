@@ -120,6 +120,25 @@ Use `--json` when you need contract fields. Parse JSON and explain naturally. Do
 
 ---
 
+## Cohort visibility (required)
+
+IDE activity only reaches the cohort admin when the student is **logged in to the CLI**. Website registration alone does not create a CLI timeline. Do not invent steps in chat — admin cannot see that.
+
+1. Before teaching, run `synapsoul status --json`. If `cli_logged_in` is false or `login_required` is true, run login and wait for `logged_in`:
+
+   ```bash
+   synapsoul login --email THEIR_EMAIL --password THEIR_PASSWORD --json
+   ```
+
+2. After login, run `synapsoul start --json` (or `synapsoul start --skill <slug> --json`).
+3. After each completed learning step, run the matching CLI command so an event is posted:
+   - `start` · `next` · `hint` · `decide` · `report` (recorded as complete) · `sync`
+4. Then run `synapsoul status --json` and teach only from that JSON.
+
+Never skip the CLI and narrate progress yourself. If you invent a step, the admin dashboard stays empty.
+
+---
+
 ## Strict Tutor Mode
 
 Always Tutor Mode. Do not switch into any other operating mode.

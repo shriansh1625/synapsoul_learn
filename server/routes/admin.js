@@ -10,6 +10,7 @@ import {
 } from '../lib/adminAuth.js'
 import { adminOtpError, requestAdminOtp, revokeAdminSession, verifyAdminOtp } from '../lib/adminOtp.js'
 import { ownerUser } from '../lib/userFields.js'
+import { isTestAccount, mapCliEventRow } from '../lib/cliEvents.js'
 
 const router = Router()
 
@@ -70,16 +71,39 @@ router.use(requireAdminJwt, requireAdmin, requireAdminOtp)
 
 router.get('/overview', async (_req, res) => {
   try {
-    const [users, completed, recent] = await Promise.all([
-      pool.query('SELECT COUNT(*)::int AS count FROM users'),
-      pool.query('SELECT COUNT(*)::int AS count FROM completed_modules'),
-      pool.query(`SELECT COUNT(*)::int AS count FROM users WHERE last_seen > NOW() - INTERVAL '7 days'`),
+    const testEmail = `u.email ILIKE '%@test.local' OR lower(u.email) LIKE 'audit-%' OR lower(coalesce(u.name,'')) LIKE '%live audit%'`
+    const [users, completed, recent, lastCli] = await Promise.all([
+      pool.query(`SELECT COUNT(*)::int AS count FROM users u WHERE NOT (${testEmail})`),
+      pool.query(`
+        SELECT COUNT(*)::int AS count
+        FROM completed_modules cm
+        JOIN users u ON u.id = cm.user_id
+        WHERE NOT (${testEmail})
+      `),
+      pool.query(`
+        SELECT COUNT(*)::int AS count FROM users u
+        WHERE u.last_seen > NOW() - INTERVAL '7 days'
+          AND NOT (${testEmail})
+      `),
+      pool.query(`
+        SELECT
+          MAX(e.created_at) AS last_cli_at,
+          COUNT(*) FILTER (WHERE e.created_at > NOW() - INTERVAL '7 days')::int AS events_7d,
+          COUNT(DISTINCT e.user_id)::int AS students_with_cli
+        FROM cli_events e
+        JOIN users u ON u.id = e.user_id
+        WHERE NOT (${testEmail})
+      `).catch(() => ({ rows: [{}] })),
     ])
+    const cli = lastCli.rows[0] || {}
     res.json({
       label: 'Admin only',
       students: users.rows[0]?.count || 0,
       modules_completed: completed.rows[0]?.count || 0,
       active_7d: recent.rows[0]?.count || 0,
+      last_cli_at: cli.last_cli_at || null,
+      cli_events_7d: cli.events_7d || 0,
+      students_with_cli: cli.students_with_cli || 0,
     })
   } catch (e) {
     res.status(500).json({ error: 'Could not load overview' })
@@ -94,11 +118,29 @@ router.get('/students', async (_req, res) => {
         u.github_username, u.profile_public, u.is_admin, u.created_at,
         COUNT(DISTINCT cm.id)::int AS modules_completed,
         COALESCE(AVG(cm.score), 0) AS avg_score,
-        (SELECT COUNT(*)::int FROM portfolio p WHERE p.user_id = u.id) AS portfolio_count
+        (SELECT COUNT(*)::int FROM portfolio p WHERE p.user_id = u.id) AS portfolio_count,
+        latest_cli.created_at AS last_cli_at,
+        latest_cli.type AS last_cli_command,
+        latest_cli.skill_id AS last_cli_skill,
+        latest_cli.module_id AS last_cli_module,
+        latest_cli.step AS last_cli_step,
+        COALESCE(cli_counts.event_count, 0)::int AS cli_event_count
       FROM users u
       LEFT JOIN completed_modules cm ON cm.user_id = u.id
-      GROUP BY u.id
-      ORDER BY u.last_seen DESC NULLS LAST, u.created_at DESC
+      LEFT JOIN LATERAL (
+        SELECT type, skill_id, module_id, step, created_at
+        FROM cli_events e
+        WHERE e.user_id = u.id
+        ORDER BY e.created_at DESC
+        LIMIT 1
+      ) latest_cli ON true
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS event_count
+        FROM cli_events e
+        WHERE e.user_id = u.id
+      ) cli_counts ON true
+      GROUP BY u.id, latest_cli.created_at, latest_cli.type, latest_cli.skill_id, latest_cli.module_id, latest_cli.step, cli_counts.event_count
+      ORDER BY latest_cli.created_at DESC NULLS LAST, u.last_seen DESC NULLS LAST, u.created_at DESC
     `)
     res.json({
       label: 'Admin only',
@@ -108,6 +150,13 @@ router.get('/students', async (_req, res) => {
         email: r.email,
         username: r.username || '',
         last_seen: r.last_seen || null,
+        last_cli_at: r.last_cli_at || null,
+        last_cli_command: r.last_cli_command || null,
+        last_cli_skill: r.last_cli_skill || null,
+        last_cli_module: r.last_cli_module || null,
+        last_cli_step: r.last_cli_step || null,
+        cli_event_count: r.cli_event_count || 0,
+        is_test: isTestAccount(r.email, r.name),
         modules_completed: r.modules_completed || 0,
         track: r.track || 'node',
         readiness: readinessScore(r.modules_completed, r.avg_score, r.portfolio_count),
@@ -130,7 +179,7 @@ router.get('/students/:id', async (req, res) => {
     if (!rows[0]) return notFound(res)
 
     const uid = rows[0].id
-    const [session, completed, decisions, scores, portfolio, memory, llmEvents] = await Promise.all([
+    const [session, completed, decisions, scores, portfolio, memory, llmEvents, cliRows] = await Promise.all([
       pool.query(
         'SELECT skill_id, module_id, step, track, hints_used, started_at FROM user_sessions WHERE user_id = $1',
         [uid]
@@ -158,6 +207,12 @@ router.get('/students/:id', async (req, res) => {
          ORDER BY created_at DESC LIMIT 20`,
         [uid]
       ).catch(() => ({ rows: [] })),
+      pool.query(
+        `SELECT type, skill_id, module_id, step, payload, created_at
+         FROM cli_events WHERE user_id = $1
+         ORDER BY created_at DESC LIMIT 200`,
+        [uid]
+      ).catch(() => ({ rows: [] })),
     ])
 
     const completedModules = {}
@@ -182,7 +237,9 @@ router.get('/students/:id', async (req, res) => {
       brainSnapshot = null
     }
 
+    const cliEvents = (cliRows.rows || []).map(mapCliEventRow)
     const events = [
+      ...cliEvents,
       ...completed.rows.map(r => ({
         type: 'module_complete',
         at: r.completed_at,
@@ -211,7 +268,7 @@ router.get('/students/:id', async (req, res) => {
         module_id: session.rows[0].module_id,
         detail: session.rows[0].step,
       }] : []),
-    ].sort((a, b) => String(b.at || '').localeCompare(String(a.at || ''))).slice(0, 40)
+    ].sort((a, b) => String(b.at || '').localeCompare(String(a.at || ''))).slice(0, 80)
 
     const sess = session.rows[0]
     const modulesCompleted = completed.rows.length
@@ -242,6 +299,7 @@ router.get('/students/:id', async (req, res) => {
         state: memoryJson.brain || null,
         snapshot: brainSnapshot,
       },
+      cli_events: cliEvents,
       events,
     })
   } catch (e) {

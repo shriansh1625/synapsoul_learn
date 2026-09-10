@@ -164,3 +164,19 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_user ON admin_sessions (user_id, expires_at);
+
+-- Honest LMS telemetry from the student CLI (start/next/hint/decide/complete/sync).
+-- Not keylogging: no IDE files, clipboard, screenshots, or unrelated process data.
+CREATE TABLE IF NOT EXISTS cli_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  skill_id TEXT,
+  module_id TEXT,
+  step TEXT,
+  payload JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_cli_events_user_created ON cli_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_cli_events_created ON cli_events (created_at DESC);

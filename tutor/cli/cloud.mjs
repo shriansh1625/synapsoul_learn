@@ -86,22 +86,29 @@ export function saveToken(token, email) {
   )
 }
 
-async function apiFetch(apiBase, path, { method = 'GET', token, body } = {}) {
+async function apiFetch(apiBase, path, { method = 'GET', token, body, timeoutMs = 15000 } = {}) {
   const headers = { Accept: 'application/json' }
   if (body) headers['Content-Type'] = 'application/json'
   if (token) headers.Authorization = `Bearer ${token}`
-  const res = await fetch(`${apiBase}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const err = new Error(data.error || `HTTP ${res.status}`)
-    err.status = res.status
-    throw err
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(`${apiBase}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      const err = new Error(data.error || `HTTP ${res.status}`)
+      err.status = res.status
+      throw err
+    }
+    return data
+  } finally {
+    clearTimeout(timer)
   }
-  return data
 }
 
 export async function loginToApi(email, password, apiBase) {
@@ -144,4 +151,40 @@ export async function pushProgressAndBrain({ apiBase, token, progress, brain }) 
     }).catch(() => {})
   }
   return { ok: true, api: base }
+}
+
+const CLI_EVENT_TYPES = new Set(['start', 'next', 'hint', 'decide', 'module_complete', 'sync'])
+
+export function isCliLoggedIn() {
+  return Boolean(loadSavedToken())
+}
+
+export async function postCliEvent({ type, skillId, moduleId, step, payload } = {}) {
+  if (!CLI_EVENT_TYPES.has(type)) return { ok: false, skipped: 'type' }
+  const token = loadSavedToken()
+  const apiBase = getApiBase() || PRODUCTION_API
+  if (!token) return { ok: false, loginRequired: true }
+  try {
+    await apiFetch(apiBase, '/api/progress/events', {
+      method: 'POST',
+      token,
+      timeoutMs: 8000,
+      body: {
+        type,
+        skillId: skillId || null,
+        moduleId: moduleId || null,
+        step: step || null,
+        payload: payload && typeof payload === 'object' ? payload : {},
+        at: new Date().toISOString(),
+        source: 'cli',
+      },
+    })
+    return { ok: true }
+  } catch (e) {
+    return {
+      ok: false,
+      loginRequired: e.status === 401,
+      error: e.message,
+    }
+  }
 }

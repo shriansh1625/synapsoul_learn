@@ -3,6 +3,7 @@ import { pool } from '../db/pool.js'
 import { auth } from '../middleware/auth.js'
 import { AdaptiveEngine } from '../lib/brain/index.js'
 import { touchLastSeen } from '../lib/adminAuth.js'
+import { insertCliEvent, mapCliEventRow, normalizeCliEvent } from '../lib/cliEvents.js'
 
 const router = Router()
 
@@ -254,6 +255,41 @@ router.put('/sync', auth, async (req, res) => {
     res.json({ ok: true, synced: true })
   } catch (e) {
     res.status(500).json({ error: 'Could not sync progress' })
+  }
+})
+
+router.post('/events', auth, async (req, res) => {
+  const parsed = normalizeCliEvent(req.body)
+  if (parsed.error) return res.status(400).json({ error: parsed.error })
+
+  try {
+    const recent = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM cli_events
+       WHERE user_id = $1 AND created_at > NOW() - INTERVAL '1 minute'`,
+      [req.user.id]
+    )
+    if ((recent.rows[0]?.n || 0) > 40) {
+      return res.status(429).json({ error: 'Too many events' })
+    }
+    const row = await insertCliEvent(req.user.id, parsed)
+    await touchLastSeen(req.user.id)
+    res.json({ ok: true, event: mapCliEventRow(row) })
+  } catch (e) {
+    res.status(500).json({ error: 'Could not record event' })
+  }
+})
+
+router.get('/events', auth, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, type, skill_id, module_id, step, payload, created_at
+       FROM cli_events WHERE user_id = $1
+       ORDER BY created_at DESC LIMIT 100`,
+      [req.user.id]
+    )
+    res.json({ events: rows.map(mapCliEventRow) })
+  } catch (e) {
+    res.status(500).json({ error: 'Could not load events' })
   }
 })
 

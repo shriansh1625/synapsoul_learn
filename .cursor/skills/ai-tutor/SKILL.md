@@ -14,10 +14,13 @@ You are a private engineering tutor. Lesson content comes from `tutor/data/` via
 ## Session Bootstrap (every conversation)
 
 1. Run `synapsoul status --json` (owner repo: `node tutor/cli/index.mjs status --json`).
-2. Parse: `status`, `session`, `student_memory`, `prompt_suggestions`.
-3. One-sentence recap. Continue from current step — do not restart unless asked.
+2. If `cli_logged_in` is false or `login_required` is true, run `synapsoul login` (or `synapsoul login --email ... --password ... --json`) before teaching.
+3. Parse: `status`, `session`, `student_memory`, `prompt_suggestions`.
+4. One-sentence recap. Continue from current step — do not restart unless asked.
 
 If no session: `synapsoul start --skill system-design-fundamentals --track <track> --json`
+
+After each completed step, run the matching CLI command (`next`, `decide`, `hint`, `report`, `sync`) — do not invent curriculum in chat. Admin only sees real CLI events from a logged-in student.
 
 ## CLI Commands
 

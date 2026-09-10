@@ -72,11 +72,16 @@ export async function checkDbHealth() {
       `SELECT
         to_regclass('public.llm_interactions') IS NOT NULL AS interactions,
         to_regclass('public.llm_reactions') IS NOT NULL AS reactions,
-        to_regclass('public.llm_learned_patterns') IS NOT NULL AS patterns`
+        to_regclass('public.llm_learned_patterns') IS NOT NULL AS patterns,
+        to_regclass('public.cli_events') IS NOT NULL AS cli_events`
     )
     const row = rows[0] || {}
     const llmOk = row.interactions && row.reactions && row.patterns
-    return { db: 'ok', llmTables: llmOk ? 'ok' : 'missing' }
+    return {
+      db: 'ok',
+      llmTables: llmOk ? 'ok' : 'missing',
+      cliEventsTable: row.cli_events ? 'ok' : 'missing',
+    }
   } catch (e) {
     return { db: 'error', dbError: e.message, llmTables: 'unknown' }
   }
@@ -145,6 +150,29 @@ export async function ensureAdminOtpTables() {
   return true
 }
 
+export async function ensureCliEventsTable() {
+  if (!process.env.DATABASE_URL) return false
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS cli_events (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      skill_id TEXT,
+      module_id TEXT,
+      step TEXT,
+      payload JSONB DEFAULT '{}'::jsonb,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
+  await pool.query(
+    'CREATE INDEX IF NOT EXISTS idx_cli_events_user_created ON cli_events (user_id, created_at DESC)'
+  )
+  await pool.query(
+    'CREATE INDEX IF NOT EXISTS idx_cli_events_created ON cli_events (created_at DESC)'
+  )
+  return true
+}
+
 export async function initDb() {
   const schema = readFileSync(join(__dirname, 'schema.sql'), 'utf8')
   try {
@@ -167,5 +195,10 @@ export async function initDb() {
     await ensureAdminOtpTables()
   } catch (e) {
     console.warn('Admin OTP table migration warning:', e.message)
+  }
+  try {
+    await ensureCliEventsTable()
+  } catch (e) {
+    console.warn('CLI events table migration warning:', e.message)
   }
 }

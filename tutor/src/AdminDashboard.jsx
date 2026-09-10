@@ -177,12 +177,40 @@ function AdminOtpChallenge({ onVerified, onHome }) {
   )
 }
 
+function formatRelative(value) {
+  if (!value) return null
+  const t = new Date(value).getTime()
+  if (Number.isNaN(t)) return formatWhen(value)
+  const s = Math.round((Date.now() - t) / 1000)
+  if (s < 45) return 'Just now'
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
+  if (s < 86400 * 7) return `${Math.floor(s / 86400)}d ago`
+  return formatWhen(value)
+}
+
+function commandLabel(type) {
+  if (type === 'module_complete') return 'complete'
+  return type || '—'
+}
+
+function matchesQuery(student, query) {
+  if (!query) return true
+  const hay = [student.name, student.email, student.username, student.github]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  return hay.includes(query)
+}
+
 function AdminDashboard({ overview, onHome }) {
   const [students, setStudents] = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [detail, setDetail] = useState(null)
   const [error, setError] = useState('')
   const [loadingDetail, setLoadingDetail] = useState(false)
+  const [query, setQuery] = useState('')
+  const [showTest, setShowTest] = useState(false)
 
   useEffect(() => {
     setPageMeta({
@@ -211,18 +239,27 @@ function AdminDashboard({ overview, onHome }) {
   }
 
   const stats = overview || {}
+  const q = query.trim().toLowerCase()
+  const visible = students.filter(s => (showTest || !s.is_test) && matchesQuery(s, q))
+  const hiddenTestCount = students.filter(s => s.is_test).length
+  const selected = students.find(s => s.id === selectedId)
   const snapshot = detail?.brain?.snapshot
   const profile = detail?.profile
   const session = detail?.progress?.session
   const completed = Object.keys(detail?.progress?.completedModules || {})
+  const cliEvents = detail?.cli_events || []
+  const webOnly = Boolean(detail && profile && !cliEvents.length)
 
   return (
     <div className="admin-shell">
       <header className="admin-banner">
         <div>
-          <p className="section-eyebrow">Admin only · private</p>
-          <h1 className="display-sm">Cohort dashboard</h1>
-          <p className="admin-sub">Student progress, brain, and profiles. Not visible to students.</p>
+          <p className="section-eyebrow">Private · admin</p>
+          <h1 className="display-sm">Cohort</h1>
+          <p className="admin-sub">
+            Bootcamp CLI activity from logged-in students. Website sign-in alone is not enough — they must run
+            {' '}<code>synapsoul login</code> then tutor commands in the IDE.
+          </p>
         </div>
         <button type="button" className="btn-secondary" onClick={onHome}>Back to SynapSoul</button>
       </header>
@@ -230,7 +267,7 @@ function AdminDashboard({ overview, onHome }) {
       <div className="admin-stats">
         <article className="admin-stat">
           <span>Students</span>
-          <strong>{stats.students ?? students.length}</strong>
+          <strong>{stats.students ?? visible.length}</strong>
         </article>
         <article className="admin-stat">
           <span>Modules completed</span>
@@ -240,79 +277,128 @@ function AdminDashboard({ overview, onHome }) {
           <span>Active (7 days)</span>
           <strong>{stats.active_7d ?? '—'}</strong>
         </article>
+        <article className="admin-stat">
+          <span>Last CLI activity</span>
+          <strong>{formatRelative(stats.last_cli_at) || 'None yet'}</strong>
+        </article>
       </div>
 
       {error && <p className="form-feedback is-error" role="alert">{error}</p>}
 
       <div className="admin-layout">
-        <section className="card elevated admin-table-wrap">
-          <h2>Cohort</h2>
-          <div className="admin-table-scroll">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Username</th>
-                  <th>Track</th>
-                  <th>Modules</th>
-                  <th>Readiness</th>
-                  <th>GitHub</th>
-                  <th>Last seen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map(s => (
-                  <tr
-                    key={s.id}
-                    className={selectedId === s.id ? 'is-selected' : ''}
-                    onClick={() => openStudent(s.id)}
-                  >
-                    <td>{s.name || '—'}</td>
-                    <td>{s.email}</td>
-                    <td>{s.username || '—'}</td>
-                    <td>{s.track}</td>
-                    <td>{s.modules_completed}</td>
-                    <td>{s.readiness}</td>
-                    <td>{s.github || '—'}</td>
-                    <td>{formatWhen(s.last_seen)}</td>
-                  </tr>
-                ))}
-                {!students.length && (
-                  <tr>
-                    <td colSpan={8}>No students yet.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <section className="card elevated admin-roster">
+          <div className="admin-roster-head">
+            <h2>Students</h2>
+            <p className="admin-roster-meta">{visible.length} shown</p>
           </div>
+          <div className="admin-toolbar">
+            <label className="admin-search">
+              <span className="visually-hidden">Search cohort</span>
+              <input
+                type="search"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search name, email, username"
+              />
+            </label>
+            <label className="admin-toggle">
+              <input
+                type="checkbox"
+                checked={showTest}
+                onChange={e => setShowTest(e.target.checked)}
+              />
+              <span>Show test accounts</span>
+            </label>
+          </div>
+          {!showTest && hiddenTestCount > 0 && (
+            <p className="admin-test-note">{hiddenTestCount} test account{hiddenTestCount === 1 ? '' : 's'} hidden (@test.local / Live Audit Bot)</p>
+          )}
+          <ul className="admin-student-list">
+            {visible.map(s => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  className={selectedId === s.id ? 'admin-student is-selected' : 'admin-student'}
+                  onClick={() => openStudent(s.id)}
+                >
+                  <span className="admin-student-main">
+                    <strong>{s.name || s.email}</strong>
+                    <span>{s.email}</span>
+                  </span>
+                  <span className="admin-student-cli">
+                    <em>{s.last_cli_command ? commandLabel(s.last_cli_command) : 'No CLI'}</em>
+                    <span>{s.last_cli_at ? formatRelative(s.last_cli_at) : '—'}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+            {!visible.length && (
+              <li className="admin-empty-row">No students match this filter.</li>
+            )}
+          </ul>
         </section>
 
-        <section className="card elevated admin-detail">
-          <p className="section-eyebrow">Admin only</p>
-          {!selectedId && <p>Select a student to see private progress, brain, and profile.</p>}
+        <section className="card elevated admin-inspector">
+          <p className="section-eyebrow">Inspector</p>
+          {!selectedId && <p className="admin-inspector-empty">Select a student to inspect profile, session, and IDE activity.</p>}
           {loadingDetail && <p>Loading…</p>}
           {detail && profile && (
             <>
               <h2>{profile.name || profile.email}</h2>
               <dl className="admin-dl">
+                <div><dt>Name</dt><dd>{profile.name || '—'}</dd></div>
                 <div><dt>Email</dt><dd>{profile.email}</dd></div>
                 <div><dt>Username</dt><dd>{profile.username || '—'}</dd></div>
+                <div><dt>GitHub</dt><dd>{profile.github_username || selected?.github || '—'}</dd></div>
                 <div><dt>Track</dt><dd>{profile.track || '—'}</dd></div>
-                <div><dt>GitHub</dt><dd>{profile.github_username || '—'}</dd></div>
                 <div><dt>Readiness</dt><dd>{detail.readiness}</dd></div>
                 <div><dt>Last seen</dt><dd>{formatWhen(profile.last_seen)}</dd></div>
-                <div><dt>Headline</dt><dd>{profile.headline || '—'}</dd></div>
-                <div><dt>Bio</dt><dd>{profile.bio || '—'}</dd></div>
+                <div><dt>Last CLI</dt><dd>{selected?.last_cli_at ? `${commandLabel(selected.last_cli_command)} · ${formatWhen(selected.last_cli_at)}` : 'None'}</dd></div>
               </dl>
 
-              <h3>Session</h3>
+              <h3>Current session</h3>
               {session ? (
-                <p>{session.skillId} / {session.moduleId} · {session.step} · hints {session.hintsUsed || 0}</p>
-              ) : <p>No active session.</p>}
+                <p className="admin-session">
+                  <code>{session.skillId}</code>
+                  <span>/</span>
+                  <code>{session.moduleId}</code>
+                  <span className="admin-pill">{session.step}</span>
+                  <span className="admin-muted">hints {session.hintsUsed || 0}</span>
+                </p>
+              ) : <p className="admin-muted">No active session on the server.</p>}
 
               <h3>Modules completed</h3>
               <p>{completed.length ? completed.join(', ') : 'None yet.'}</p>
+
+              <h3>IDE activity</h3>
+              {webOnly ? (
+                <p className="admin-empty-cli">
+                  No IDE activity yet. Student must run synapsoul login then synapsoul start.
+                </p>
+              ) : (
+                <ol className="admin-timeline">
+                  {cliEvents.map((ev, i) => (
+                    <li key={`${ev.type}-${ev.at}-${i}`}>
+                      <time dateTime={ev.at || undefined}>{ev.at ? formatWhen(ev.at) : '—'}</time>
+                      <div>
+                        <strong>{commandLabel(ev.type)}</strong>
+                        {(ev.skill_id || ev.module_id) && (
+                          <span className="admin-timeline-loc">
+                            {[ev.skill_id, ev.module_id].filter(Boolean).join(' / ')}
+                            {ev.step ? ` · ${ev.step}` : ''}
+                          </span>
+                        )}
+                        {ev.hints_used != null && ev.type === 'hint' && (
+                          <span className="admin-muted"> · hint {ev.hints_used}</span>
+                        )}
+                        {ev.detail && ev.type !== 'hint' && (
+                          <span className="admin-muted"> · {ev.detail}</span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
 
               <h3>Brain snapshot</h3>
               {snapshot ? (
@@ -323,21 +409,7 @@ function AdminDashboard({ overview, onHome }) {
                   <li>Next: {snapshot.recommendedNext?.title || snapshot.recommendedNext?.id || '—'}</li>
                   <li>Why: {snapshot.why || '—'}</li>
                 </ul>
-              ) : <p>No brain snapshot yet.</p>}
-
-              <h3>Recent events</h3>
-              <ul className="admin-events">
-                {(detail.events || []).slice(0, 16).map((ev, i) => (
-                  <li key={`${ev.type}-${i}`}>
-                    <strong>{ev.type}</strong>
-                    {ev.skill_id ? ` · ${ev.skill_id}` : ''}
-                    {ev.module_id ? `/${ev.module_id}` : ''}
-                    {ev.detail ? ` — ${ev.detail}` : ''}
-                    {ev.at ? ` · ${formatWhen(ev.at)}` : ''}
-                  </li>
-                ))}
-                {!(detail.events || []).length && <li>No events yet.</li>}
-              </ul>
+              ) : <p className="admin-muted">No brain snapshot yet.</p>}
             </>
           )}
         </section>

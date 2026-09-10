@@ -24,6 +24,14 @@ import {
 } from './engine.mjs'
 import { ensureCurriculum } from './curriculumApi.mjs'
 import { PRODUCTION_API, PRODUCTION_SITE, CLI_NAME } from './paths.mjs'
+import { isCliLoggedIn } from './cloud.mjs'
+import {
+  TUTOR_EVENT_COMMANDS,
+  snapshotSession,
+  annotateCliAuth,
+  loginReminderText,
+  emitTutorCliEvent,
+} from './telemetry.mjs'
 
 const args = process.argv.slice(2)
 const json = args.includes('--json')
@@ -69,6 +77,7 @@ Production:
   API  ${PRODUCTION_API}
   Site ${PRODUCTION_SITE}
   Protocol ${PRODUCTION_SITE}/skill.md
+  Login required so cohort admin can see start / next / hint / decide / complete / sync.
 
 Install (students — no git clone):
   Unix:    curl -fsSL ${PRODUCTION_SITE}/install | sh
@@ -93,6 +102,7 @@ async function main() {
     }
   })
 
+  const sessionBefore = TUTOR_EVENT_COMMANDS[command] ? snapshotSession() : null
   let result
 
   switch (command) {
@@ -186,6 +196,15 @@ async function main() {
     default:
       console.log(helpText())
       process.exit(0)
+  }
+
+  if (TUTOR_EVENT_COMMANDS[command]) {
+    await emitTutorCliEvent(command, result, sessionBefore)
+  }
+  result = annotateCliAuth(result)
+
+  if (!json && typeof result === 'string' && !isCliLoggedIn() && TUTOR_EVENT_COMMANDS[command]) {
+    result += loginReminderText()
   }
 
   if (typeof result === 'object') {
