@@ -12,7 +12,7 @@ function envKey(name) {
 }
 
 export function isLlmEnabled() {
-  const flag = envKey('LEARNLAB_LLM_ENABLED')
+  const flag = envKey('SYNAPSOUL_LLM_ENABLED') || envKey('LEARNLAB_LLM_ENABLED')
   if (flag === 'false' || flag === '0') return false
   return !!(envKey('GROQ_API_KEY') || envKey('OPENAI_API_KEY') || envKey('ANTHROPIC_API_KEY'))
 }

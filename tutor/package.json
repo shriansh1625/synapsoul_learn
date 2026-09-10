@@ -4,6 +4,7 @@
   "version": "2.0.0",
   "type": "module",
   "bin": {
+    "synapsoul": "./cli/index.mjs",
     "learnlab": "./cli/index.mjs",
     "tutor": "./cli/index.mjs"
   },
@@ -15,6 +16,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "tutor": "node cli/index.mjs",
+    "synapsoul": "node cli/index.mjs",
     "learnlab": "node cli/index.mjs",
     "tutor:status": "node cli/index.mjs status --json",
     "tutor:catalog": "node cli/index.mjs catalog --json",

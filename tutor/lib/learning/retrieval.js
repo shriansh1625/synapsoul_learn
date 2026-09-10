@@ -74,7 +74,7 @@ export function formatFewShotsForPrompt({ examples, patternBlock }) {
     const exLines = examples.map((e, i) =>
       `Example ${i + 1} (${e.type}, score ${e.score?.toFixed?.(1) ?? e.score}):\nContext: ${e.context}\nResponse: ${e.response}`
     )
-    parts.push(`LearnLab has learned these work well:\n${exLines.join('\n\n')}`)
+    parts.push(`SynapSoul has learned these work well:\n${exLines.join('\n\n')}`)
   }
   return parts.join('\n\n')
 }

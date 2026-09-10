@@ -39,11 +39,11 @@ const FORBIDDEN_TEXT = [
 ]
 
 const STUDENT_PACKAGE_JSON = {
-  name: 'learnlab',
+  name: 'synapsoul',
   version: '2.1.0',
   private: true,
   type: 'module',
-  bin: { learnlab: './cli/index.mjs' },
+  bin: { synapsoul: './cli/index.mjs', learnlab: './cli/index.mjs' },
 }
 
 const DATA_JSON_FILES = [
@@ -127,7 +127,7 @@ function writeTar(files) {
   const parts = []
   for (const file of files) {
     const data = file.data
-    parts.push(tarHeader(file.name, data.length, file.name.endsWith('.mjs') || file.name.endsWith('learnlab') ? 0o755 : 0o644))
+    parts.push(tarHeader(file.name, data.length, file.name.endsWith('.mjs') || file.name.endsWith('synapsoul') || file.name.endsWith('learnlab') ? 0o755 : 0o644))
     parts.push(data)
     const pad = (512 - (data.length % 512)) % 512
     if (pad) parts.push(Buffer.alloc(pad))

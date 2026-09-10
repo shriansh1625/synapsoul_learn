@@ -1,19 +1,31 @@
 #!/bin/sh
-# LearnLab CLI installer — downloads the student CLI only. Does not clone a repo.
+# SynapSoul Learn Hub CLI installer — downloads the student CLI only. Does not clone a repo.
 set -e
 
-ORIGIN="${LEARNLAB_ORIGIN:-https://tutor-alpha-sandy.vercel.app}"
-API="${LEARNLAB_API_URL:-https://learnerslab.onrender.com}"
-SITE="${LEARNLAB_SITE:-https://tutor-alpha-sandy.vercel.app}"
-HOME_DIR="${LEARNLAB_HOME:-$HOME/.learnlab}"
+ORIGIN="${SYNAPSOUL_ORIGIN:-${LEARNLAB_ORIGIN:-https://tutor-alpha-sandy.vercel.app}}"
+API="${SYNAPSOUL_API_URL:-${LEARNLAB_API_URL:-https://learnerslab.onrender.com}}"
+SITE="${SYNAPSOUL_SITE:-${LEARNLAB_SITE:-https://tutor-alpha-sandy.vercel.app}}"
+
+if [ -n "${SYNAPSOUL_HOME:-}" ]; then
+  HOME_DIR="$SYNAPSOUL_HOME"
+elif [ -n "${LEARNLAB_HOME:-}" ]; then
+  HOME_DIR="$LEARNLAB_HOME"
+elif [ -d "$HOME/.synapsoul" ]; then
+  HOME_DIR="$HOME/.synapsoul"
+elif [ -d "$HOME/.learnlab" ]; then
+  HOME_DIR="$HOME/.learnlab"
+else
+  HOME_DIR="$HOME/.synapsoul"
+fi
+
 TARBALL_URL="${ORIGIN%/}/cli/learnlab-cli.tar.gz"
 
-echo "LearnLab installer"
+echo "SynapSoul Learn Hub installer"
 echo "  CLI home: $HOME_DIR"
 echo "  API:      $API"
 
 if ! command -v node >/dev/null 2>&1; then
-  echo "LearnLab needs Node.js 18 or newer."
+  echo "SynapSoul needs Node.js 18 or newer."
   echo "Install it from https://nodejs.org then re-run:"
   echo "  curl -fsSL ${ORIGIN%/}/install | sh"
   exit 1
@@ -31,21 +43,21 @@ if ! command -v tar >/dev/null 2>&1; then
 fi
 
 mkdir -p "$HOME_DIR"
-TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t learnlab)
+TMPDIR=$(mktemp -d 2>/dev/null || mktemp -d -t synapsoul)
 trap 'rm -rf "$TMPDIR"' EXIT
 
 echo "Downloading CLI from $TARBALL_URL"
 if command -v curl >/dev/null 2>&1; then
-  curl -fsSL "$TARBALL_URL" -o "$TMPDIR/learnlab-cli.tar.gz"
+  curl -fsSL "$TARBALL_URL" -o "$TMPDIR/cli.tar.gz"
 elif command -v wget >/dev/null 2>&1; then
-  wget -qO "$TMPDIR/learnlab-cli.tar.gz" "$TARBALL_URL"
+  wget -qO "$TMPDIR/cli.tar.gz" "$TARBALL_URL"
 else
   echo "Need curl or wget to download the CLI."
   exit 1
 fi
 
 # Keep session/auth across reinstalls
-tar -xzf "$TMPDIR/learnlab-cli.tar.gz" -C "$HOME_DIR"
+tar -xzf "$TMPDIR/cli.tar.gz" -C "$HOME_DIR"
 
 mkdir -p "$HOME_DIR/bin"
 cat > "$HOME_DIR/config.json" <<EOF
@@ -58,19 +70,26 @@ cat > "$HOME_DIR/config.json" <<EOF
 }
 EOF
 
-cat > "$HOME_DIR/bin/learnlab" <<'EOF'
+cat > "$HOME_DIR/bin/synapsoul" <<EOF
 #!/bin/sh
-ROOT="${LEARNLAB_HOME:-$HOME/.learnlab}"
-if [ -z "$LEARNLAB_API_URL" ]; then
-  LEARNLAB_API_URL="https://learnerslab.onrender.com"
+ROOT="\${SYNAPSOUL_HOME:-\${LEARNLAB_HOME:-$HOME_DIR}}"
+if [ -z "\$SYNAPSOUL_API_URL" ] && [ -z "\$LEARNLAB_API_URL" ]; then
+  SYNAPSOUL_API_URL="$API"
+  export SYNAPSOUL_API_URL
+fi
+if [ -z "\$LEARNLAB_API_URL" ] && [ -n "\$SYNAPSOUL_API_URL" ]; then
+  LEARNLAB_API_URL="\$SYNAPSOUL_API_URL"
   export LEARNLAB_API_URL
 fi
-exec node "$ROOT/cli/index.mjs" "$@"
+exec node "\$ROOT/cli/index.mjs" "\$@"
 EOF
+chmod +x "$HOME_DIR/bin/synapsoul"
+cp "$HOME_DIR/bin/synapsoul" "$HOME_DIR/bin/learnlab"
 chmod +x "$HOME_DIR/bin/learnlab"
 
 LOCAL_BIN="$HOME/.local/bin"
 mkdir -p "$LOCAL_BIN"
+ln -sf "$HOME_DIR/bin/synapsoul" "$LOCAL_BIN/synapsoul"
 ln -sf "$HOME_DIR/bin/learnlab" "$LOCAL_BIN/learnlab"
 
 on_path() {
@@ -84,7 +103,7 @@ append_rc() {
     return
   fi
   if [ -f "$rc" ] || [ -w "$(dirname "$rc")" ]; then
-    printf '\n# LearnLab CLI\n%s\n' "$line" >> "$rc"
+    printf '\n# SynapSoul CLI\n%s\n' "$line" >> "$rc"
     echo "Added ~/.local/bin to PATH in $rc"
   fi
 }
@@ -93,13 +112,13 @@ if ! on_path; then
   append_rc "$HOME/.bashrc"
   append_rc "$HOME/.zshrc"
   append_rc "$HOME/.profile"
-  echo "Restart your shell (or run: export PATH=\"\$HOME/.local/bin:\$PATH\") so learnlab is on PATH."
+  echo "Restart your shell (or run: export PATH=\"\$HOME/.local/bin:\$PATH\") so synapsoul is on PATH."
 fi
 
 echo
 echo "Installed. Next:"
-echo "  learnlab login"
-echo "  learnlab start"
+echo "  synapsoul login"
+echo "  synapsoul start"
 echo
 echo "Protocol: ${SITE%/}/skill.md"
 echo "Sign in at $SITE so progress returns to $API"

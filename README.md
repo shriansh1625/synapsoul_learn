@@ -1,4 +1,4 @@
-# LearnLab — The Open Engineering Bootcamp in Your IDE
+# SynapSoul Learn Hub — The Open Engineering Bootcamp in Your IDE
 
 **Your AI editor becomes your private engineering instructor.**
 
@@ -31,22 +31,22 @@ irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
 ```
 
 ```bash
-learnlab login
-learnlab start
+synapsoul login
+synapsoul start
 ```
 
 Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort API. Do **not** put `ADMIN_EMAIL`, Gmail credentials, or admin OTP details in the prompt or on the landing page.
 
 ---
 
-## Why LearnLab
+## Why SynapSoul Learn Hub
 
 - **One prompt** — copy from the landing page; works in Cursor, Claude, VS Code Copilot, and Codex
 - **Hosted protocol + CLI** — `skill.md` and a curl installer; curriculum from the API
 - **6 core skills, 22 modules, 4 tracks** — Node, Python, Go, TypeScript
 - **Adaptive memory** — your instructor remembers sessions and calibrates to your level
 - **5-dimension evidence scoring** — proof of how you think, not just what you completed
-- **Local session with cloud sync** — `~/.learnlab/session.json`; register on the site so progress returns to the cohort API
+- **Local session with cloud sync** — `~/.synapsoul/session.json`; register on the site so progress returns to the cohort API
 - **Custom modules** — extend the curriculum with JSON files
 
 ---
@@ -73,16 +73,16 @@ Then paste the universal prompt from the landing page into your IDE.
 
 ---
 
-## How a friend uses LearnLab
+## How a friend uses SynapSoul Learn Hub
 
 1. Open https://tutor-alpha-sandy.vercel.app/ and copy the one-liner.
 2. Paste it in Cursor, Claude Code, VS Code Copilot, or Codex.
-3. The instructor installs the LearnLab CLI (`curl` or `irm | iex`) and runs `learnlab login` then `learnlab start`.
+3. The instructor installs the SynapSoul CLI (`curl` or `irm | iex`) and runs `synapsoul login` then `synapsoul start`.
 4. Create an account or sign in on the site (email or GitHub) so progress returns to https://learnerslab.onrender.com.
 
 ```powershell
-learnlab login --email you@example.com --password your-password --json
-learnlab sync --json
+synapsoul login --email you@example.com --password your-password --json
+synapsoul sync --json
 ```
 
 The website is the source of truth for the cohort. Do not paste JWTs into chat.
@@ -105,9 +105,9 @@ Students never see this page. It is not in public nav or on the landing page. On
    |----------|-------|
    | `ADMIN_EMAIL` | `omshriansh16@gmail.com` |
    | `RESEND_API_KEY` | Resend API key (see below). **Never commit this.** |
-   | `RESEND_FROM` | `LearnLab <onboarding@resend.dev>` until you verify a domain |
+   | `RESEND_FROM` | `SynapSoul Learn Hub <onboarding@resend.dev>` until you verify a domain |
 
-2. Register or sign in on https://tutor-alpha-sandy.vercel.app/ with **that Gmail** and **your own password**. LearnLab does not set or invent an admin password. GitHub sign-in also works if the GitHub email is that address. `is_admin` is set automatically for that email only.
+2. Register or sign in on https://tutor-alpha-sandy.vercel.app/ with **that Gmail** and **your own password**. SynapSoul does not set or invent an admin password. GitHub sign-in also works if the GitHub email is that address. `is_admin` is set automatically for that email only.
 3. Open https://tutor-alpha-sandy.vercel.app/admin (or `/#/admin`).
 4. Click **Send code to Gmail**, then enter the 6-digit code. Codes expire in 10 minutes. You can request a new code at most once per 60 seconds. The code is sent over HTTPS (Resend), not SMTP; it still arrives in the Gmail inbox.
 5. After verify, the cohort dashboard loads. The OTP session lasts 12 hours or until logout.
@@ -126,10 +126,10 @@ Render **blocks outbound SMTP** on ports **587** and **465**, so Gmail SMTP is n
 
 1. Create a free account at [resend.com](https://resend.com) (use `omshriansh16@gmail.com` so you can send to that inbox before verifying a domain).
 2. Open **API Keys** and create a key.
-3. On **Render** → **learnlab-api** (`learnerslab.onrender.com`) → **Environment**, set `RESEND_API_KEY` to that key. Optionally set `RESEND_FROM=LearnLab <onboarding@resend.dev>`.
+3. On **Render** → **learnlab-api** (`learnerslab.onrender.com`) → **Environment**, set `RESEND_API_KEY` to that key. Optionally set `RESEND_FROM=SynapSoul Learn Hub <onboarding@resend.dev>`.
 4. **Redeploy** learnlab-api. Env vars on Vercel do nothing for OTP email.
 
-Until you verify a domain, keep `from` as `LearnLab <onboarding@resend.dev>`. Gmail SMTP (`GMAIL_APP_PASSWORD`) is an optional fallback only if Resend is unset **and** outbound SMTP happens to work. Do not treat SMTP as the production path.
+Until you verify a domain, keep `from` as `SynapSoul Learn Hub <onboarding@resend.dev>`. Gmail SMTP (`GMAIL_APP_PASSWORD`) is an optional fallback only if Resend is unset **and** outbound SMTP happens to work. Do not treat SMTP as the production path.
 
 If `RESEND_API_KEY` is missing, `/api/admin/otp/request` returns **503** with those setup steps to the admin UI only. Students never see that message.
 
@@ -206,15 +206,15 @@ Works with **Render Postgres** or **Supabase** — both use standard `DATABASE_U
 
 ---
 
-## LearnLab Instructor LLM
+## SynapSoul Instructor LLM
 
-LearnLab does **not** ship a fine-tuned foundation model. Instead it includes a **project-exclusive instructor layer** — persona, guardrails, and context assembly wired to your curriculum and adaptive brain.
+SynapSoul Learn Hub does **not** ship a fine-tuned foundation model. Instead it includes a **project-exclusive instructor layer** — persona, guardrails, and context assembly wired to your curriculum and adaptive brain.
 
-### What makes it exclusive to LearnLab
+### What makes it exclusive to SynapSoul Learn Hub
 
 | Piece | Role |
 |-------|------|
-| **Persona** | Fixed system prompt (`tutor/lib/llm/prompts/instructor.system.md`) — LearnLab branding, local-first, evidence portfolio |
+| **Persona** | Fixed system prompt (`tutor/lib/llm/prompts/instructor.system.md`) — SynapSoul branding, local-first, evidence portfolio |
 | **Guardrails** | Never writes full BUILD solutions; one step at a time; CONTEXT→DECIDE→BUILD→VERIFY→BREAK→FIX→REFLECT |
 | **Context** | Pulls skill/module/step excerpts from `tutor/data/skills`, brain snapshot (BKT/SM-2), and student profile |
 | **Overlay** | LLM enhances coach notes and hints; deterministic brain algorithms always run first |
@@ -245,7 +245,7 @@ CLI: `npm run tutor -- hint` calls LearnLabLLM when `GROQ_API_KEY` (or fallback 
 
 ## Self-Learning Instructor
 
-LearnLab does **not** fine-tune Groq's GPT-OSS 120B weights — that requires proprietary training infrastructure. Instead, LearnLab runs a **continuous learning loop** exclusive to this project:
+SynapSoul Learn Hub does **not** fine-tune Groq's GPT-OSS 120B weights — that requires proprietary training infrastructure. Instead, SynapSoul runs a **continuous learning loop** exclusive to this project:
 
 | What learns | How |
 |-------------|-----|
@@ -300,8 +300,9 @@ CLI: `npm run tutor -- learning stats --json`
 | `JWT_SECRET` | Yes | Random string for signing tokens |
 | `FRONTEND_URL` | Yes (prod) | Vercel URL for CORS |
 | `PORT` | No | Default `3001`; Render sets automatically |
-| `LEARNLAB_LLM_ENABLED` | No | Set `false` to disable LLM overlay (heuristics only) |
-| `GROQ_API_KEY` | No | Groq API key — enables LearnLab Instructor LLM (preferred when set) |
+| `LEARNLAB_LLM_ENABLED` | No | Legacy alias of `SYNAPSOUL_LLM_ENABLED`. Set `false` to disable LLM overlay (heuristics only) |
+| `SYNAPSOUL_LLM_ENABLED` | No | Set `false` to disable LLM overlay (heuristics only) |
+| `GROQ_API_KEY` | No | Groq API key — enables SynapSoul Instructor LLM (preferred when set) |
 | `GROQ_MODEL` | No | Groq model ID; default `openai/gpt-oss-120b` |
 | `OPENAI_API_KEY` | No | OpenAI key — used if Groq is not configured |
 | `ANTHROPIC_API_KEY` | No | Anthropic key — used if Groq and OpenAI are not configured |
@@ -313,7 +314,7 @@ CLI: `npm run tutor -- learning stats --json`
 | `LINKEDIN_CALLBACK_URL` | No | e.g. `https://learnerslab.onrender.com/api/auth/linkedin/callback` |
 | `ADMIN_EMAIL` | Yes (prod, for cohort admin) | Hard-locked default: `omshriansh16@gmail.com`. Server-only. Never put this in `VITE_*`. |
 | `RESEND_API_KEY` | Yes (prod, for admin OTP) | Resend HTTPS API key. Set on Render `learnlab-api` only — not Vercel. **Never commit this.** |
-| `RESEND_FROM` | No | Default `LearnLab <onboarding@resend.dev>` until a domain is verified. |
+| `RESEND_FROM` | No | Default `SynapSoul Learn Hub <onboarding@resend.dev>` until a domain is verified. |
 | `GMAIL_USER` | No | Optional SMTP fallback username. Render blocks 587/465. |
 | `GMAIL_APP_PASSWORD` | No | Optional SMTP fallback only. **Never commit this.** Do not use as the main path. |
 
@@ -332,7 +333,7 @@ CLI: `npm run tutor -- learning stats --json`
 Public hiring profiles can show a GitHub button and let builders sign in or connect GitHub. LinkedIn works as a pasted URL even when OAuth is off.
 
 1. GitHub → **Settings** → **Developer settings** → **OAuth Apps** → **New OAuth App**
-2. Application name: `LearnLab`
+2. Application name: `SynapSoul Learn Hub`
 3. Homepage URL: your Vercel origin, e.g. `https://tutor-alpha-sandy.vercel.app`
 4. Authorization callback URL: `https://learnerslab.onrender.com/api/auth/github/callback` (your Render API origin + `/api/auth/github/callback`)
 5. Copy the Client ID. Generate a Client Secret.
@@ -390,7 +391,7 @@ The public slug is the **`username` field saved on the server** (via **Save publ
 | GET | `/api/health` | — | Health check |
 | GET | `/api/brain` | JWT | Adaptive brain state |
 | POST | `/api/brain/coach` | JWT | Coach note (legacy; prefer `/api/llm/coach`) |
-| POST | `/api/llm/coach` | JWT | LearnLab Instructor coach note |
+| POST | `/api/llm/coach` | JWT | SynapSoul Instructor coach note |
 | POST | `/api/llm/hint` | optional JWT | Hint nudge with curriculum context |
 | POST | `/api/llm/reflect` | optional JWT | REFLECT question |
 | GET | `/api/llm/status` | — | LLM overlay status |
@@ -454,7 +455,7 @@ server/               ← Express API + PostgreSQL
   routes/             ← auth, progress, profile, leaderboard
 tutor/
   cli/                ← Session engine
-  lib/llm/            ← LearnLab Instructor LLM (persona, context, providers)
+  lib/llm/            ← SynapSoul Instructor LLM (persona, context, providers)
   lib/brain/          ← BKT + SM-2 adaptive engine
   lib/learning/       ← Self-learning experience store + retrieval
   data/skills/        ← Curriculum (JSON modules)
@@ -470,8 +471,10 @@ Repeatable audits against **production** (or override URLs with env vars). Simul
 
 | Variable | Default |
 |----------|---------|
-| `LEARNLAB_API_URL` | `https://learnerslab.onrender.com` |
-| `LEARNLAB_FRONTEND_URL` | `https://tutor-alpha-sandy.vercel.app` |
+| `SYNAPSOUL_API_URL` | `https://learnerslab.onrender.com` |
+| `LEARNLAB_API_URL` | Alias of `SYNAPSOUL_API_URL` (still accepted) |
+| `SYNAPSOUL_FRONTEND_URL` | `https://tutor-alpha-sandy.vercel.app` |
+| `LEARNLAB_FRONTEND_URL` | Alias of `SYNAPSOUL_FRONTEND_URL` (still accepted) |
 
 ```bash
 cd tutor

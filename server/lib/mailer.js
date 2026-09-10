@@ -5,13 +5,13 @@ const SMTP_TIMEOUT_MS = 10_000
 const RESEND_TIMEOUT_MS = 15_000
 const GMAIL_HOST = 'smtp.gmail.com'
 const RESEND_API_URL = 'https://api.resend.com/emails'
-const DEFAULT_RESEND_FROM = 'LearnLab <onboarding@resend.dev>'
+const DEFAULT_RESEND_FROM = 'SynapSoul Learn Hub <onboarding@resend.dev>'
 
 export const RESEND_NOT_CONFIGURED_MESSAGE =
-  'RESEND_API_KEY is missing on Render learnlab-api. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+  'RESEND_API_KEY is missing on the Render API service. Create a free account at resend.com, open API Keys, paste the key on the Render API service as RESEND_API_KEY, then redeploy.'
 
 export const GMAIL_NOT_CONFIGURED_MESSAGE =
-  'GMAIL_APP_PASSWORD is missing on Render learnlab-api (learnerslab.onrender.com). Vercel env vars are not used. Use a 16-character App Password with no spaces.'
+  'GMAIL_APP_PASSWORD is missing on the Render API service (learnerslab.onrender.com). Vercel env vars are not used. Use a 16-character App Password with no spaces.'
 
 export function sanitizeGmailAppPassword(raw) {
   return String(raw ?? '')
@@ -130,15 +130,15 @@ export function isConnectionError(err) {
 
 export function publicSmtpErrorMessage(err) {
   if (isAuthError(err)) {
-    return 'Gmail rejected the SMTP login. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+    return 'Gmail rejected the SMTP login. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on the Render API service as RESEND_API_KEY, then redeploy.'
   }
   if (isTimeoutError(err)) {
-    return 'Gmail SMTP timed out. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+    return 'Gmail SMTP timed out. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on the Render API service as RESEND_API_KEY, then redeploy.'
   }
   if (isConnectionError(err)) {
-    return 'Could not reach smtp.gmail.com. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+    return 'Could not reach smtp.gmail.com. Render blocks outbound SMTP on ports 587 and 465. Create a free account at resend.com, open API Keys, paste the key on the Render API service as RESEND_API_KEY, then redeploy.'
   }
-  return 'Could not send the admin code over SMTP. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+  return 'Could not send the admin code over SMTP. Create a free account at resend.com, open API Keys, paste the key on the Render API service as RESEND_API_KEY, then redeploy.'
 }
 
 function sendFailedError(cause) {
@@ -166,14 +166,14 @@ async function sendViaResend(code) {
       body: JSON.stringify({
         from: resendFrom(),
         to: [LOCKED_ADMIN_EMAIL],
-        subject: 'LearnLab admin code',
+        subject: 'SynapSoul Learn Hub admin code',
         text: otpMailBody(code),
       }),
       signal: controller.signal,
     })
   } catch (e) {
     const err = new Error(
-      'Could not reach Resend over HTTPS. Check RESEND_API_KEY on Render learnlab-api, then redeploy.'
+      'Could not reach Resend over HTTPS. Check RESEND_API_KEY on the Render API service, then redeploy.'
     )
     err.code = 'RESEND_SEND_FAILED'
     err.status = 503
@@ -195,8 +195,8 @@ async function sendViaResend(code) {
 
   const err = new Error(
     detail
-      ? `Resend could not send the admin code (${res.status}). ${detail} Check RESEND_API_KEY on Render learnlab-api.`
-      : `Resend could not send the admin code (${res.status}). Check RESEND_API_KEY on Render learnlab-api.`
+      ? `Resend could not send the admin code (${res.status}). ${detail} Check RESEND_API_KEY on the Render API service.`
+      : `Resend could not send the admin code (${res.status}). Check RESEND_API_KEY on the Render API service.`
   )
   err.code = 'RESEND_SEND_FAILED'
   err.status = 503
@@ -205,9 +205,9 @@ async function sendViaResend(code) {
 
 async function sendViaSmtp(code) {
   const mail = {
-    from: `LearnLab <${LOCKED_ADMIN_EMAIL}>`,
+    from: `SynapSoul Learn Hub <${LOCKED_ADMIN_EMAIL}>`,
     to: LOCKED_ADMIN_EMAIL,
-    subject: 'LearnLab admin code',
+    subject: 'SynapSoul Learn Hub admin code',
     text: otpMailBody(code),
   }
 

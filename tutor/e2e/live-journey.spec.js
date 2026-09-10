@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const SCREENSHOTS = join(__dirname, 'screenshots')
 
-test.describe('LearnLab live student journey', () => {
+test.describe('SynapSoul live student journey', () => {
   test.beforeAll(() => {
     mkdirSync(SCREENSHOTS, { recursive: true })
   })
@@ -27,6 +27,7 @@ test.describe('LearnLab live student journey', () => {
     })
 
     await page.addInitScript(() => {
+      localStorage.setItem('synapsoul-onboarded', '1')
       localStorage.setItem('learnlab-onboarded', '1')
       localStorage.setItem(
         'ai-tutor-progress-v2',
@@ -53,13 +54,16 @@ test.describe('LearnLab live student journey', () => {
       if (await skip.isVisible().catch(() => false)) {
         await skip.click()
       } else {
-        await page.evaluate(() => localStorage.setItem('learnlab-onboarded', '1'))
+        await page.evaluate(() => {
+          localStorage.setItem('synapsoul-onboarded', '1')
+          localStorage.setItem('learnlab-onboarded', '1')
+        })
         await page.reload({ waitUntil: 'domcontentloaded' })
       }
     }
 
     const dashboardNav = page.getByRole('button', { name: 'Dashboard' }).or(page.locator('nav').filter({ hasText: 'Dashboard' }))
-    const brainEyebrow = page.getByText('LearnLab Brain')
+    const brainEyebrow = page.getByText('SynapSoul Brain')
 
     const sawDashboard =
       (await dashboardNav.first().isVisible().catch(() => false)) ||

@@ -316,16 +316,16 @@ function promptSuggestions(progress, catalog, extra = []) {
   const suggestions = [...extra]
   const session = progress.session
   if (!session) {
-    suggestions.push(`learnlab start --skill ${catalog.foundationSkill}`)
-    suggestions.push('learnlab catalog')
+    suggestions.push(`synapsoul start --skill ${catalog.foundationSkill}`)
+    suggestions.push('synapsoul catalog')
     return suggestions
   }
   const step = session.step
-  if (step === 'DECIDE') suggestions.push('learnlab decide <A|B> --reasoning "<your reason>"')
-  else if (step === 'REFLECT') suggestions.push('learnlab report \'{"event_type":"module_evaluation",...}\'')
-  else suggestions.push(`learnlab next --summary "<what you did>" --evidence "<proof>"`)
-  suggestions.push('learnlab hint')
-  suggestions.push('learnlab status')
+  if (step === 'DECIDE') suggestions.push('synapsoul decide <A|B> --reasoning "<your reason>"')
+  else if (step === 'REFLECT') suggestions.push('synapsoul report \'{"event_type":"module_evaluation",...}\'')
+  else suggestions.push(`synapsoul next --summary "<what you did>" --evidence "<proof>"`)
+  suggestions.push('synapsoul hint')
+  suggestions.push('synapsoul status')
   return suggestions
 }
 
@@ -367,12 +367,12 @@ export function cmdStatus(json) {
       ? 'Complete your profile to unlock bootcamp.'
       : session
         ? `${session.skill.title} · ${session.module.title} · ${session.step}`
-        : 'No active session. Run learnlab start to begin.',
+        : 'No active session. Run synapsoul start to begin.',
     profile: progress.profile,
     profile_ready: progress.profile_ready,
     profile_confirmed: progress.profile_confirmed || progress.profile?.confirmed,
     public_profile_ready: progress.public_profile_ready,
-    profile_url: progress.profile?.username ? `https://learnlab.local/${progress.profile.username}` : null,
+    profile_url: progress.profile?.username ? `${PRODUCTION_SITE}/u/${progress.profile.username}` : null,
     readiness_score: readiness,
     headline_dimensions: headlineDimensions,
     badges,
@@ -382,7 +382,7 @@ export function cmdStatus(json) {
     student_memory: memory,
     brain: attachBrain(progress, null, { persist: false }),
     prompt_suggestions: profileRequired
-      ? ['learnlab profile', 'learnlab profile update --name "..." --degree "..." --bio "..."', 'learnlab profile confirm']
+      ? ['synapsoul profile', 'synapsoul profile update --name "..." --degree "..." --bio "..."', 'synapsoul profile confirm']
       : promptSuggestions(progress, catalog),
   }
 
@@ -425,7 +425,7 @@ export function cmdStart({ skill, track, json }) {
       status: 'foundation_required',
       message: `Complete ${catalog.foundationSkill} Launchpad first.`,
       foundationSkill: catalog.foundationSkill,
-      prompt_suggestions: [`learnlab start --skill ${catalog.foundationSkill}`, 'learnlab catalog'],
+      prompt_suggestions: [`synapsoul start --skill ${catalog.foundationSkill}`, 'synapsoul catalog'],
     } : `Foundation required. Complete ${catalog.foundationSkill} first.`
   }
 
@@ -479,7 +479,7 @@ export function cmdNext({ summary, evidence, proofFile, json }) {
     proof = readJson(proofFile)
   }
   if (!proof.summary || !proof.evidence?.length) {
-    return error('proof_required', 'learnlab next requires --summary and --evidence', json)
+    return error('proof_required', 'synapsoul next requires --summary and --evidence', json)
   }
 
   const step = session.step
@@ -490,13 +490,13 @@ export function cmdNext({ summary, evidence, proofFile, json }) {
   session.stepProof[step] = proof
 
   if (step === 'REFLECT') {
-    return error('reflect_gate', 'Complete module evaluation with learnlab report before advancing.', json, [
-      'learnlab report \'{"event_type":"module_evaluation",...}\'',
+    return error('reflect_gate', 'Complete module evaluation with synapsoul report before advancing.', json, [
+      'synapsoul report \'{"event_type":"module_evaluation",...}\'',
     ])
   }
 
   const nextStep = STEPS[stepIndex + 1]
-  if (!nextStep) return error('module_end', 'Module complete. Submit evaluation via learnlab report.', json)
+  if (!nextStep) return error('module_end', 'Module complete. Submit evaluation via synapsoul report.', json)
 
   session.step = nextStep
   const snapshot = attachBrain(progress, {
@@ -527,7 +527,7 @@ export function cmdDecide({ choice, reasoning, json }) {
   if (!session) return error('no_session', 'No active session.', json)
   if (session.step !== 'DECIDE') return error('step_mismatch', `Expected DECIDE, currently at ${session.step}`, json)
   if (!['A', 'B'].includes(choice)) return error('invalid_choice', 'Choice must be A or B', json)
-  if (!reasoning?.trim()) return error('reasoning_required', 'learnlab decide requires --reasoning', json)
+  if (!reasoning?.trim()) return error('reasoning_required', 'synapsoul decide requires --reasoning', json)
 
   const key = `${session.skillId}:${session.moduleId}`
   progress.decisions[key] = choice
@@ -734,8 +734,8 @@ export function cmdReport({ reportJson, json }) {
     student_memory: buildStudentMemory(progress, catalog),
     brain: snapshot,
     prompt_suggestions: nextModuleId
-      ? [`learnlab status`, `Continue with next module in ${session.skillId}`]
-      : ['learnlab catalog', 'learnlab start --skill <next-skill>'],
+      ? [`synapsoul status`, `Continue with next module in ${session.skillId}`]
+      : ['synapsoul catalog', 'synapsoul start --skill <next-skill>'],
   }
   return json ? result : result.message
 }
@@ -791,8 +791,8 @@ export function cmdProfile({ json }) {
     badges: computeBadges(progress, catalog),
     hiring_summary: progress.profile?.hiring_summary || generateHiringSummary(progress, catalog),
     prompt_suggestions: progress.profile?.confirmed
-      ? ['learnlab status', 'learnlab catalog']
-      : ['learnlab profile update --name "..." --degree "..." --bio "..."', 'learnlab profile confirm'],
+      ? ['synapsoul status', 'synapsoul catalog']
+      : ['synapsoul profile update --name "..." --degree "..." --bio "..."', 'synapsoul profile confirm'],
   }
   return json ? result : JSON.stringify(result.profile, null, 2)
 }
@@ -814,16 +814,16 @@ export function cmdProfileUpdate({ name, degree, bio, username, college, track, 
     status: 'profile_updated',
     profile: progress.profile,
     profile_ready: progress.profile_ready,
-    profile_url: progress.profile.username ? `https://learnlab.local/${progress.profile.username}` : null,
-    prompt_suggestions: ['learnlab profile confirm'],
+    profile_url: progress.profile.username ? `${PRODUCTION_SITE}/u/${progress.profile.username}` : null,
+    prompt_suggestions: ['synapsoul profile confirm'],
   }
-  return json ? result : 'Profile updated. Run learnlab profile confirm when ready.'
+  return json ? result : 'Profile updated. Run synapsoul profile confirm when ready.'
 }
 
 export function cmdProfileConfirm({ json }) {
   const progress = loadProgress()
   if (!progress.profile?.name || !progress.profile?.degree || !progress.profile?.bio) {
-    return error('profile_incomplete', 'Name, degree, and bio are required.', json, ['learnlab profile update --name "..." --degree "..." --bio "..."'])
+    return error('profile_incomplete', 'Name, degree, and bio are required.', json, ['synapsoul profile update --name "..." --degree "..." --bio "..."'])
   }
   progress.profile.confirmed = true
   progress.profile_confirmed = true
@@ -833,8 +833,8 @@ export function cmdProfileConfirm({ json }) {
     status: 'profile_confirmed',
     message: 'Profile confirmed. Bootcamp unlocked.',
     profile: progress.profile,
-    profile_url: progress.profile.username ? `https://learnlab.local/${progress.profile.username}` : null,
-    prompt_suggestions: [`learnlab start --skill system-design-fundamentals`, 'learnlab catalog'],
+    profile_url: progress.profile.username ? `${PRODUCTION_SITE}/u/${progress.profile.username}` : null,
+    prompt_suggestions: [`synapsoul start --skill system-design-fundamentals`, 'synapsoul catalog'],
   }
   return json ? result : result.message
 }
@@ -856,7 +856,7 @@ export function cmdFeedback({ summary, type, json }) {
     status: 'feedback_recorded',
     message: 'Feedback recorded. Thank you.',
     id: entry.id,
-    prompt_suggestions: ['learnlab status'],
+    prompt_suggestions: ['synapsoul status'],
   }
   return json ? result : result.message
 }
@@ -932,8 +932,8 @@ export function cmdStatusAll({ json }) {
     completedCount: Object.keys(progress.completedModules).length,
     portfolioCount: progress.portfolio?.length || 0,
     prompt_suggestions: progress.session
-      ? ['learnlab status', `learnlab start --skill ${progress.session.skillId}`]
-      : ['learnlab catalog', `learnlab start --skill ${catalog.foundationSkill}`],
+      ? ['synapsoul status', `synapsoul start --skill ${progress.session.skillId}`]
+      : ['synapsoul catalog', `synapsoul start --skill ${catalog.foundationSkill}`],
   }
   return json ? result : skills.map(s =>
     `${s.active ? '▶' : s.unlocked ? '✓' : '○'} ${s.title}: ${s.completedModules}/${s.moduleCount}${s.active ? ` (${s.currentStep})` : ''}`
@@ -1012,8 +1012,8 @@ export async function cmdSync({ publish, json, email, password }) {
   if (publish) {
     const username = progress.profile?.username
     if (!username) {
-      return error('username_required', 'Set username via learnlab profile update --username "..." before --publish', json, [
-        'learnlab profile update --username "your-handle"',
+      return error('username_required', 'Set username via synapsoul profile update --username "..." before --publish', json, [
+        'synapsoul profile update --username "your-handle"',
       ])
     }
     const dir = publicDir()
@@ -1050,12 +1050,12 @@ export async function cmdSync({ publish, json, email, password }) {
     } else if (!apiBase) {
       cloud = {
         attempted: false,
-        skipped: `Set LEARNLAB_API_URL=${PRODUCTION_API} then re-run sync, or sign in at ${PRODUCTION_SITE}`,
+        skipped: `Set SYNAPSOUL_API_URL=${PRODUCTION_API} then re-run sync, or sign in at ${PRODUCTION_SITE}`,
       }
     } else {
       cloud = {
         attempted: false,
-        skipped: `Sign in at ${PRODUCTION_SITE} or run: learnlab login --email you@example.com --password your-password --json`,
+        skipped: `Sign in at ${PRODUCTION_SITE} or run: synapsoul login --email you@example.com --password your-password --json`,
       }
     }
   } catch (e) {
@@ -1079,10 +1079,10 @@ export async function cmdSync({ publish, json, email, password }) {
     profile_url: publishedUrl || (progress.profile?.username ? `${PRODUCTION_SITE}/u/${progress.profile.username}` : null),
     readiness_score: exportData.public_profile.readiness_score,
     prompt_suggestions: cloudOk
-      ? ['learnlab status', `Open ${PRODUCTION_SITE}`]
+      ? ['synapsoul status', `Open ${PRODUCTION_SITE}`]
       : loginRequested
-        ? ['learnlab status']
-        : [`learnlab login --email you@example.com --password your-password --json`, `Sign in at ${PRODUCTION_SITE}`],
+        ? ['synapsoul status']
+        : [`synapsoul login --email you@example.com --password your-password --json`, `Sign in at ${PRODUCTION_SITE}`],
   }
   return json ? result : result.message
 }
@@ -1109,8 +1109,8 @@ export function cmdPretest({ json }) {
     questions: PRETEST_QUESTIONS,
     completed: progress.profile.pretestCompleted,
     prompt_suggestions: progress.profile.pretestCompleted
-      ? ['learnlab start --skill system-design-fundamentals']
-      : ['learnlab pretest submit --answers "1A,2A,3A,4A,5A"', 'Answer one question at a time in chat'],
+      ? ['synapsoul start --skill system-design-fundamentals']
+      : ['synapsoul pretest submit --answers "1A,2A,3A,4A,5A"', 'Answer one question at a time in chat'],
   }
   return json ? result : 'Pretest ready. Answer questions in chat.'
 }
@@ -1118,9 +1118,9 @@ export function cmdPretest({ json }) {
 export function cmdPretestSubmit({ answers, json }) {
   const progress = loadProgress()
   if (!answers?.trim()) {
-    return error('answers_required', 'learnlab pretest submit --answers "1A,2A,3A,4A,5A"', json, [
-      'learnlab pretest',
-      'learnlab pretest submit --answers "1A,2A,3A,4A,5A"',
+    return error('answers_required', 'synapsoul pretest submit --answers "1A,2A,3A,4A,5A"', json, [
+      'synapsoul pretest',
+      'synapsoul pretest submit --answers "1A,2A,3A,4A,5A"',
     ])
   }
 
@@ -1163,8 +1163,8 @@ export function cmdPretestSubmit({ answers, json }) {
     answers: parsed,
     brain: snapshot,
     prompt_suggestions: [
-      'learnlab profile update --name "..." --degree "..." --bio "..."',
-      'learnlab start --skill system-design-fundamentals',
+      'synapsoul profile update --name "..." --degree "..." --bio "..."',
+      'synapsoul start --skill system-design-fundamentals',
     ],
   }
   return json ? result : result.message
@@ -1174,7 +1174,7 @@ export function cmdScore({ json }) {
   const progress = loadProgress()
   const catalog = loadCatalog()
   const session = progress.session
-  if (!session) return error('no_session', 'No active session. Run learnlab start first.', json, ['learnlab start'])
+  if (!session) return error('no_session', 'No active session. Run synapsoul start first.', json, ['synapsoul start'])
 
   const module = loadModule(session.skillId, session.moduleId)
   const manifest = loadSkillManifest(session.skillId)
@@ -1218,14 +1218,14 @@ export function cmdScore({ json }) {
       : 'First session today — welcome them and set clear expectations.',
     instructor_flow: [
       'Student says "score my answer" or pastes work.',
-      'Run learnlab score --json (this command).',
+      'Run synapsoul score --json (this command).',
       'Fill feedback_slot per dimension with quoted evidence.',
-      'Share scores verbally — do NOT run learnlab next until student is ready.',
+      'Share scores verbally — do NOT run synapsoul next until student is ready.',
     ],
     session: sessionPayload(progress, catalog),
     prompt_suggestions: [
       'Share dimension feedback with the student',
-      `learnlab next --summary "..." --evidence "..."`,
+      `synapsoul next --summary "..." --evidence "..."`,
     ],
   }
   return json ? result : `Score template for ${session.step}. Dimensions: ${dimIds.join(', ')}`
@@ -1270,7 +1270,7 @@ export function cmdShare({ json }) {
   const username = progress.profile?.username
   const profileUrl = username ? `http://localhost:5173/#/u/${username}` : null
 
-  const markdown = `🚀 ${name === 'I' ? "I'm" : `${name} is`} building job-ready engineering proof with **LearnLab**!
+  const markdown = `🚀 ${name === 'I' ? "I'm" : `${name} is`} building job-ready engineering proof with **SynapSoul Learn Hub**!
 
 📊 **Readiness:** ${readiness}/100
 🏆 **Top skill:** ${topSkill}
@@ -1279,7 +1279,7 @@ ${profileUrl ? `🔗 ${profileUrl}` : ''}
 
 The open engineering bootcamp in your IDE — local-first, evidence-backed.
 
-#LearnLab #Engineering #BuildInPublic`
+#SynapSoul #Engineering #BuildInPublic`
 
   const result = {
     status: 'share',
@@ -1288,7 +1288,7 @@ The open engineering bootcamp in your IDE — local-first, evidence-backed.
     readiness_score: readiness,
     top_skill: topSkill,
     profile_url: profileUrl,
-    prompt_suggestions: ['learnlab sync --publish', 'learnlab profile update --username "your-handle"'],
+    prompt_suggestions: ['synapsoul sync --publish', 'synapsoul profile update --username "your-handle"'],
   }
   return json ? result : markdown
 }
@@ -1299,7 +1299,7 @@ export async function cmdLearningStats({ json }) {
   const result = { status: 'learning_stats', ...stats }
   if (json) return result
   const rate = stats.successRate != null ? `${Math.round(stats.successRate * 100)}%` : 'n/a'
-  return `LearnLab learning: ${stats.patterns} patterns, ${stats.interactions} interactions, ${stats.reactions} reactions, success rate ${rate}`
+  return `SynapSoul learning: ${stats.patterns} patterns, ${stats.interactions} interactions, ${stats.reactions} reactions, success rate ${rate}`
 }
 
 function generateHiringSummary(progress, catalog) {

@@ -33,11 +33,11 @@ const VALUE_PROPS = [
   },
   {
     title: 'Your repo, your progress',
-    desc: 'Local-first session in ~/.learnlab. Sign in here when you want progress on the cohort API and a recruiter-facing profile.',
+    desc: 'Local-first session in ~/.synapsoul. Sign in here when you want progress on the cohort API and a recruiter-facing profile.',
   },
   {
     title: 'One prompt, full bootcamp',
-    desc: 'Copy one line from this site. Your AI editor reads the hosted protocol, installs the LearnLab CLI, and teaches from the API.',
+    desc: 'Copy one line from this site. Your AI editor reads the hosted protocol, installs the SynapSoul CLI, and teaches from the API.',
   },
 ]
 
@@ -148,15 +148,15 @@ const HOW_60_SECONDS = [
 
 const HOW_IT_WORKS = [
   { num: '01', title: 'Open your AI editor', desc: 'Cursor, Claude Code, VS Code Copilot, Codex, or Antigravity — any editor that can read a URL and run a terminal.' },
-  { num: '02', title: 'Paste one prompt', desc: 'Copy the line below. Your instructor reads the hosted protocol and installs the LearnLab CLI — no zip, no git clone.' },
+  { num: '02', title: 'Paste one prompt', desc: 'Copy the line below. Your instructor reads the hosted protocol and installs the SynapSoul CLI — no zip, no git clone.' },
   { num: '03', title: 'Learn by doing', desc: 'CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT. Real engineering, not tutorial hell.' },
-  { num: '04', title: 'Sign in so progress returns', desc: 'Create a LearnLab account on this site. Progress and brain sync to the cohort API when you use that account — public hiring profiles stay opt-in.' },
+  { num: '04', title: 'Sign in so progress returns', desc: 'Create a SynapSoul account on this site. Progress and brain sync to the cohort API when you use that account — public hiring profiles stay opt-in.' },
 ]
 
 const ANY_IDE_STEPS = [
   { num: '01', title: 'Paste the prompt', desc: 'Copy the one-liner into Cursor, Claude Code, VS Code Copilot, or Codex. The hosted protocol does the rest.' },
   { num: '02', title: 'Install the CLI', desc: 'Unix: curl installer. Windows: irm | iex. The CLI talks to the production API — no GitHub clone.' },
-  { num: '03', title: 'Login and start', desc: 'learnlab login, then learnlab start. Curriculum comes from the API, not from a zip of the codebase.' },
+  { num: '03', title: 'Login and start', desc: 'synapsoul login, then synapsoul start. Curriculum comes from the API, not from a zip of the codebase.' },
   { num: '04', title: 'Sign in on this site', desc: 'Register or log in here (email or GitHub) so your progress returns to the cohort API.' },
 ]
 
@@ -170,7 +170,7 @@ const CONVERSATION = [
 const FAQ = [
   { q: 'Is this just another AI chatbot?', a: 'No. Your instructor remembers sessions, tracks concepts, scores reasoning across five dimensions, and builds an evidence-backed profile.' },
   { q: 'What IDE does it work with?', a: 'Any AI editor: Cursor, Claude Code, VS Code Copilot, Codex, Antigravity — paste one prompt and follow the hosted protocol. You do not clone GitHub.' },
-  { q: 'Where does my progress go?', a: 'It stays in ~/.learnlab first. When you register or sign in on this site, progress and brain sync to the LearnLab API. Public hiring profiles stay opt-in. People who never create an account are not silently tracked.' },
+  { q: 'Where does my progress go?', a: 'It stays in ~/.synapsoul first. When you register or sign in on this site, progress and brain sync to the SynapSoul API. Public hiring profiles stay opt-in. People who never create an account are not silently tracked.' },
   { q: 'The agent assumes I know something. What do I do?', a: 'Say "I don\'t know — explain from scratch." The instructor adapts to your level.' },
   { q: 'How do I get the most out of this?', a: 'Challenge it: "Why this approach?" "What breaks if I skip this?" "Score my reasoning."' },
 ]
@@ -216,8 +216,8 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
       <nav className="glass-nav reveal" aria-label="Main navigation">
         <div className={`glass-nav-pill ${menuOpen ? 'is-open' : ''}`}>
           <a href="#top" className="glass-nav-logo" onClick={e => { e.preventDefault(); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
-            <span className="logo-badge">LL</span>
-            <span className="logo-text">LearnLab</span>
+            <span className="logo-badge">SS</span>
+            <span className="logo-text">SynapSoul</span>
           </a>
           <button
             type="button"
@@ -232,7 +232,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
             <span />
           </button>
           <div id="landing-menu" className={`glass-nav-links ${menuOpen ? 'is-open' : ''}`}>
-            <button type="button" onClick={() => goSection('why')}>Why LearnLab</button>
+            <button type="button" onClick={() => goSection('why')}>Why SynapSoul</button>
             <button type="button" onClick={() => goSection('any-ide')}>Any IDE</button>
             <button type="button" onClick={() => goSection('how')}>How It Works</button>
             <button type="button" onClick={() => goSection('skills')}>Skills</button>
@@ -330,7 +330,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
 
       <section className="landing-value reveal" id="why">
         <div className="section-head">
-          <p className="section-eyebrow">Why LearnLab</p>
+          <p className="section-eyebrow">Why SynapSoul</p>
           <h2 className="display-sm">Built for engineers who <em>ship</em></h2>
           <p className="section-desc">
             A private AI instructor in your IDE — adaptive memory, scored evidence,
@@ -614,7 +614,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
 
       <footer className="landing-footer">
         <p>
-          LearnLab · Local-first engineering bootcamp ·{' '}
+          SynapSoul Learn Hub · Local-first engineering bootcamp ·{' '}
           <button type="button" className="link-btn" onClick={onEnterApp}>Dashboard</button>
           {' · '}
           <a className="link-btn" href="/skill.md">Instructor protocol</a>

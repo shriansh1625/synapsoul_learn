@@ -1,5 +1,5 @@
 /**
- * Autonomous API journey against LearnLab production (or LEARNLAB_API_URL).
+ * Autonomous API journey against SynapSoul production (or SYNAPSOUL_API_URL / LEARNLAB_API_URL).
  * Writes test-results/live-audit-api.json and merges into live-audit-latest.json.
  */
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'fs'
@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = join(__dirname, '..', '..')
 const RESULTS_DIR = join(REPO_ROOT, 'test-results')
 
-const API_BASE = (process.env.LEARNLAB_API_URL || 'https://learnerslab.onrender.com').replace(/\/$/, '')
+const API_BASE = (process.env.SYNAPSOUL_API_URL || process.env.LEARNLAB_API_URL || 'https://learnerslab.onrender.com').replace(/\/$/, '')
 
 function nowIso() {
   return new Date().toISOString()
@@ -280,14 +280,14 @@ export async function runApiJourney() {
 
   mkdirSync(RESULTS_DIR, { recursive: true })
   writeFileSync(join(RESULTS_DIR, 'live-audit-api.json'), JSON.stringify(report, null, 2))
-  mergeLatestReport({ api: report, frontend: process.env.LEARNLAB_FRONTEND_URL || null })
+  mergeLatestReport({ api: report, frontend: process.env.SYNAPSOUL_FRONTEND_URL || process.env.LEARNLAB_FRONTEND_URL || null })
 
   return report
 }
 
 function printHumanSummary(report) {
   const { summary, durationMs, target } = report
-  console.log('\n=== LearnLab Live API Audit ===')
+  console.log('\n=== SynapSoul Live API Audit ===')
   console.log(`Target: ${target}`)
   console.log(`Duration: ${durationMs}ms`)
   console.log(`Result: ${summary.passed}/${summary.total} passed, ${summary.failed} failed\n`)

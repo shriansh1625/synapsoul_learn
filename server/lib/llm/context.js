@@ -94,7 +94,7 @@ export function buildPromptContext({
   const excerpt = excerptStep(stepData, step, track)
 
   const lines = [
-    '# LearnLab session context',
+    '# SynapSoul session context',
     skill ? `Skill: ${skill.title} (${skillId})` : skillId ? `Skill: ${skillId}` : '',
     modMeta ? `Module: ${modMeta.title} (${moduleId})` : module?.title ? `Module: ${module.title}` : '',
     step ? `Current step: ${step}` : '',

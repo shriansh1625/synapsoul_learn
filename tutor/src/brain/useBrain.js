@@ -4,7 +4,8 @@ import { AdaptiveEngine, hydrateFromProgress, mergeStates, buildCurriculum } fro
 import { SKILL_MANIFESTS } from '../../lib/brain/curriculumData.js'
 import { canSyncProgress, fetchBrain, putBrain } from '../api.js'
 
-const BRAIN_KEY = 'learnlab-brain-v1'
+const BRAIN_KEY = 'synapsoul-brain-v1'
+const LEGACY_BRAIN_KEY = 'learnlab-brain-v1'
 
 function webCurriculum() {
   return buildCurriculum(catalog, SKILL_MANIFESTS)
@@ -12,7 +13,7 @@ function webCurriculum() {
 
 function loadLocal() {
   try {
-    const raw = localStorage.getItem(BRAIN_KEY)
+    const raw = localStorage.getItem(BRAIN_KEY) || localStorage.getItem(LEGACY_BRAIN_KEY)
     if (raw) return JSON.parse(raw)
   } catch { /* ignore */ }
   return null
@@ -20,7 +21,9 @@ function loadLocal() {
 
 function saveLocal(state) {
   try {
-    localStorage.setItem(BRAIN_KEY, JSON.stringify(state))
+    const json = JSON.stringify(state)
+    localStorage.setItem(BRAIN_KEY, json)
+    localStorage.setItem(LEGACY_BRAIN_KEY, json)
   } catch { /* quota */ }
 }
 

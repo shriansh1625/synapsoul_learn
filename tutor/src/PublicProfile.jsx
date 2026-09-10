@@ -3,7 +3,7 @@ import catalog from '../data/catalog.json'
 import { fetchPublicProfile, publicProfileUrl } from './api.js'
 import { copyText, setPageMeta, humanizeApiError, slugifyUsername } from './siteUtils.js'
 
-const EMPTY_BIO = 'Engineering learner in the LearnLab bootcamp — collecting evidence of how they design, debug, and ship.'
+const EMPTY_BIO = 'Engineering learner in the SynapSoul bootcamp — collecting evidence of how they design, debug, and ship.'
 
 function GitHubIcon() {
   return (
@@ -86,18 +86,18 @@ export default function PublicProfile({ username, onBack }) {
   useEffect(() => {
     if (error) {
       setPageMeta({
-        title: 'Profile not found · LearnLab',
-        description: `No public LearnLab hiring profile for ${routeSlug || username}.`,
+        title: 'Profile not found · SynapSoul',
+        description: `No public SynapSoul hiring profile for ${routeSlug || username}.`,
       })
       return
     }
     if (!profile) {
-      setPageMeta({ title: `${routeSlug || username} · LearnLab` })
+      setPageMeta({ title: `${routeSlug || username} · SynapSoul` })
       return
     }
     setPageMeta({
-      title: `${profile.name || profile.username} · LearnLab`,
-      description: profile.headline || profile.bio || `${profile.name || profile.username} on LearnLab — evidence from built work, not certificates.`,
+      title: `${profile.name || profile.username} · SynapSoul`,
+      description: profile.headline || profile.bio || `${profile.name || profile.username} on SynapSoul — evidence from built work, not certificates.`,
     })
   }, [error, profile, routeSlug, username])
 
@@ -105,13 +105,13 @@ export default function PublicProfile({ username, onBack }) {
     return (
       <div className="public-profile hiring-profile">
         <header className="public-header">
-          <button type="button" className="link-btn back-btn" onClick={onBack}>← LearnLab</button>
+          <button type="button" className="link-btn back-btn" onClick={onBack}>← SynapSoul</button>
         </header>
         <section className="card empty-state">
           <p className="section-eyebrow">Hiring profile</p>
           <h2 className="display-xs">Profile not found</h2>
-          <p>No public LearnLab profile for <code>{routeSlug || username}</code>. Ask the builder to set a username and make the profile public.</p>
-          <button type="button" className="btn-secondary" onClick={onBack}>Back to LearnLab</button>
+          <p>No public SynapSoul profile for <code>{routeSlug || username}</code>. Ask the builder to set a username and make the profile public.</p>
+          <button type="button" className="btn-secondary" onClick={onBack}>Back to SynapSoul</button>
         </section>
       </div>
     )
@@ -147,7 +147,7 @@ export default function PublicProfile({ username, onBack }) {
   return (
     <div className="public-profile hiring-profile">
       <header className="public-header">
-        <button type="button" className="link-btn back-btn" onClick={onBack}>← LearnLab</button>
+        <button type="button" className="link-btn back-btn" onClick={onBack}>← SynapSoul</button>
         <div className="public-header-actions">
           {copyError && <span className="field-hint">{copyError}</span>}
           <button type="button" className="btn-secondary copy-link-btn" onClick={copyLink} disabled={!profileUrl}>
@@ -166,12 +166,12 @@ export default function PublicProfile({ username, onBack }) {
               <div className="pp-avatar pp-avatar-fallback">{initial}</div>
             )}
             <div className="pp-identity-copy">
-              <p className="section-eyebrow">LearnLab builder</p>
+              <p className="section-eyebrow">SynapSoul builder</p>
               <h1 className="pp-name">{profile.name || displayHandle}</h1>
               {headline && <p className="pp-headline">{headline}</p>}
               <p className="pp-bio">{bio}</p>
               <p className="pp-meta">
-                {metaBits.length ? metaBits.join(' · ') : 'LearnLab bootcamp'}
+                {metaBits.length ? metaBits.join(' · ') : 'SynapSoul bootcamp'}
               </p>
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function PublicProfile({ username, onBack }) {
           <div className="pp-empty">
             <p className="pp-empty-title">Building evidence</p>
             <p>
-              This builder is in the LearnLab bootcamp. Scored artifacts — design decisions, debugging writeups,
+              This builder is in the SynapSoul bootcamp. Scored artifacts — design decisions, debugging writeups,
               and production proof — land here as modules are completed. Nothing is invented for the empty state.
             </p>
           </div>
@@ -342,7 +342,7 @@ export default function PublicProfile({ username, onBack }) {
       </section>
 
       <footer className="public-footer">
-        <p>LearnLab hiring profile · Evidence from built work, not certificates</p>
+        <p>SynapSoul hiring profile · Evidence from built work, not certificates</p>
       </footer>
     </div>
   )

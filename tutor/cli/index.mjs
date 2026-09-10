@@ -43,7 +43,7 @@ function getMultiFlag(name) {
 }
 
 function helpText() {
-  return `LearnLab CLI
+  return `SynapSoul Learn Hub CLI
 
 Commands:
   ${CLI_NAME} login [--email <email> --password <password>] [--json]
@@ -82,7 +82,7 @@ async function main() {
     return
   }
   if (args.includes('--version') || command === 'version' || args.includes('-v')) {
-    console.log('learnlab 2.1.0')
+    console.log('synapsoul 2.1.0')
     return
   }
 

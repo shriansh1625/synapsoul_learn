@@ -90,7 +90,7 @@ describe('smtp error classifiers', () => {
 describe('resend mailer', () => {
   it('defaults from to Resend onboarding until a domain is verified', () => {
     delete process.env.RESEND_FROM
-    assert.equal(resendFrom(), 'LearnLab <onboarding@resend.dev>')
+    assert.equal(resendFrom(), 'SynapSoul Learn Hub <onboarding@resend.dev>')
   })
 
   it('treats Resend as configured when RESEND_API_KEY is set', () => {
@@ -156,8 +156,8 @@ describe('resend mailer', () => {
     assert.equal(calls[0].opts.headers.Authorization, 'Bearer re_test_key')
     const body = JSON.parse(calls[0].opts.body)
     assert.equal(body.to[0], 'omshriansh16@gmail.com')
-    assert.equal(body.from, 'LearnLab <onboarding@resend.dev>')
-    assert.equal(body.subject, 'LearnLab admin code')
+    assert.equal(body.from, 'SynapSoul Learn Hub <onboarding@resend.dev>')
+    assert.equal(body.subject, 'SynapSoul Learn Hub admin code')
     assert.match(body.text, /123456/)
     assert.match(body.text, /10 minutes/)
   })

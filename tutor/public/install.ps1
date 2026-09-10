@@ -1,19 +1,41 @@
-# LearnLab CLI installer for Windows. Downloads the student CLI only. Does not clone a repo.
+# SynapSoul Learn Hub CLI installer for Windows. Downloads the student CLI only. Does not clone a repo.
 $ErrorActionPreference = 'Stop'
 
-$Origin = if ($env:LEARNLAB_ORIGIN) { $env:LEARNLAB_ORIGIN.TrimEnd('/') } else { 'https://tutor-alpha-sandy.vercel.app' }
-$Api = if ($env:LEARNLAB_API_URL) { $env:LEARNLAB_API_URL.TrimEnd('/') } else { 'https://learnerslab.onrender.com' }
-$Site = if ($env:LEARNLAB_SITE) { $env:LEARNLAB_SITE.TrimEnd('/') } else { 'https://tutor-alpha-sandy.vercel.app' }
-$HomeDir = if ($env:LEARNLAB_HOME) { $env:LEARNLAB_HOME } else { Join-Path $HOME '.learnlab' }
+function First-Env([string[]]$Names, [string]$Fallback) {
+  foreach ($n in $Names) {
+    $v = [Environment]::GetEnvironmentVariable($n, 'Process')
+    if (-not $v) { $v = [Environment]::GetEnvironmentVariable($n, 'User') }
+    if ($v -and $v.Trim()) { return $v.Trim().TrimEnd('/') }
+  }
+  return $Fallback
+}
+
+$Origin = First-Env @('SYNAPSOUL_ORIGIN', 'LEARNLAB_ORIGIN') 'https://tutor-alpha-sandy.vercel.app'
+$Api = First-Env @('SYNAPSOUL_API_URL', 'LEARNLAB_API_URL') 'https://learnerslab.onrender.com'
+$Site = First-Env @('SYNAPSOUL_SITE', 'LEARNLAB_SITE') 'https://tutor-alpha-sandy.vercel.app'
+
+$homeOverride = First-Env @('SYNAPSOUL_HOME', 'LEARNLAB_HOME') ''
+$synHome = Join-Path $HOME '.synapsoul'
+$legacyHome = Join-Path $HOME '.learnlab'
+if ($homeOverride) {
+  $HomeDir = $homeOverride
+} elseif (Test-Path $synHome) {
+  $HomeDir = $synHome
+} elseif (Test-Path $legacyHome) {
+  $HomeDir = $legacyHome
+} else {
+  $HomeDir = $synHome
+}
+
 $TarballUrl = "$Origin/cli/learnlab-cli.tar.gz"
 
-Write-Host "LearnLab installer"
+Write-Host "SynapSoul Learn Hub installer"
 Write-Host "  CLI home: $HomeDir"
 Write-Host "  API:      $Api"
 
 $node = Get-Command node -ErrorAction SilentlyContinue
 if (-not $node) {
-  Write-Error "LearnLab needs Node.js 18 or newer. Install it from https://nodejs.org then re-run: irm $Origin/install.ps1 | iex"
+  Write-Error "SynapSoul needs Node.js 18 or newer. Install it from https://nodejs.org then re-run: irm $Origin/install.ps1 | iex"
 }
 
 $major = [int]((node -p "process.versions.node.split('.')[0]") 2>$null)
@@ -24,7 +46,7 @@ if ($major -lt 18) {
 New-Item -ItemType Directory -Force -Path $HomeDir | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $HomeDir 'bin') | Out-Null
 
-$tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("learnlab-cli-" + [guid]::NewGuid().ToString() + ".tar.gz")
+$tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("synapsoul-cli-" + [guid]::NewGuid().ToString() + ".tar.gz")
 Write-Host "Downloading CLI from $TarballUrl"
 Invoke-WebRequest -Uri $TarballUrl -OutFile $tmp -UseBasicParsing
 tar -xzf $tmp -C $HomeDir
@@ -40,21 +62,28 @@ $config = @{
 } | ConvertTo-Json
 Set-Content -Path (Join-Path $HomeDir 'config.json') -Value $config -Encoding utf8
 
-$cmdPath = Join-Path $HomeDir 'bin\learnlab.cmd'
-@(
+$cmdBody = @(
   '@echo off'
   'setlocal'
-  'if not defined LEARNLAB_HOME set "LEARNLAB_HOME=%USERPROFILE%\.learnlab"'
-  'if not defined LEARNLAB_API_URL set "LEARNLAB_API_URL=https://learnerslab.onrender.com"'
-  'node "%LEARNLAB_HOME%\cli\index.mjs" %*'
-) | Set-Content -Path $cmdPath -Encoding ascii
+  "if not defined SYNAPSOUL_HOME if not defined LEARNLAB_HOME set `"SYNAPSOUL_HOME=$HomeDir`""
+  'if defined SYNAPSOUL_HOME (set "ROOT=%SYNAPSOUL_HOME%") else (set "ROOT=%LEARNLAB_HOME%")'
+  "if not defined SYNAPSOUL_API_URL if not defined LEARNLAB_API_URL set `"SYNAPSOUL_API_URL=$Api`""
+  'if not defined LEARNLAB_API_URL if defined SYNAPSOUL_API_URL set "LEARNLAB_API_URL=%SYNAPSOUL_API_URL%"'
+  'node "%ROOT%\cli\index.mjs" %*'
+)
+$cmdPath = Join-Path $HomeDir 'bin\synapsoul.cmd'
+Set-Content -Path $cmdPath -Value $cmdBody -Encoding ascii
+Copy-Item $cmdPath (Join-Path $HomeDir 'bin\learnlab.cmd') -Force
 
-$psPath = Join-Path $HomeDir 'bin\learnlab.ps1'
-@(
-  '$root = if ($env:LEARNLAB_HOME) { $env:LEARNLAB_HOME } else { Join-Path $HOME ''.learnlab'' }'
-  'if (-not $env:LEARNLAB_API_URL) { $env:LEARNLAB_API_URL = ''https://learnerslab.onrender.com'' }'
+$psBody = @(
+  "`$root = if (`$env:SYNAPSOUL_HOME) { `$env:SYNAPSOUL_HOME } elseif (`$env:LEARNLAB_HOME) { `$env:LEARNLAB_HOME } else { '$HomeDir' }"
+  "if (-not `$env:SYNAPSOUL_API_URL -and -not `$env:LEARNLAB_API_URL) { `$env:SYNAPSOUL_API_URL = '$Api' }"
+  'if (-not $env:LEARNLAB_API_URL -and $env:SYNAPSOUL_API_URL) { $env:LEARNLAB_API_URL = $env:SYNAPSOUL_API_URL }'
   '& node (Join-Path $root ''cli\index.mjs'') @args'
-) | Set-Content -Path $psPath -Encoding utf8
+)
+$psPath = Join-Path $HomeDir 'bin\synapsoul.ps1'
+Set-Content -Path $psPath -Encoding utf8 -Value $psBody
+Copy-Item $psPath (Join-Path $HomeDir 'bin\learnlab.ps1') -Force
 
 $binDir = Join-Path $HomeDir 'bin'
 $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
@@ -69,8 +98,8 @@ $env:Path = "$binDir;$env:Path"
 
 Write-Host ""
 Write-Host "Installed. Next:"
-Write-Host "  learnlab login"
-Write-Host "  learnlab start"
+Write-Host "  synapsoul login"
+Write-Host "  synapsoul start"
 Write-Host ""
 Write-Host "If this window was already open, restart the terminal or run:"
 Write-Host "  & `"$cmdPath`" login"

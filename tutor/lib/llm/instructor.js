@@ -10,7 +10,7 @@ export function getSystemPrompt() {
   try {
     cachedSystem = readFileSync(join(__dirname, 'prompts', 'instructor.system.md'), 'utf8')
   } catch {
-    cachedSystem = 'You are the LearnLab Instructor. One step at a time. Never write full BUILD solutions.'
+    cachedSystem = 'You are the SynapSoul Instructor. One step at a time. Never write full BUILD solutions.'
   }
   return cachedSystem
 }

@@ -8,6 +8,7 @@ import {
   authFile,
   learnlabHome,
   defaultApiBase,
+  envFirst,
 } from './paths.mjs'
 
 export { PRODUCTION_API, PRODUCTION_SITE }
@@ -65,7 +66,8 @@ export function resolveSyncApiBase({ login } = {}) {
 }
 
 export function loadSavedToken() {
-  if (process.env.LEARNLAB_TOKEN) return process.env.LEARNLAB_TOKEN
+  const fromEnv = envFirst('SYNAPSOUL_TOKEN', 'LEARNLAB_TOKEN')
+  if (fromEnv) return fromEnv
   if (!existsSync(AUTH_PATH)) return null
   try {
     const data = JSON.parse(readFileSync(AUTH_PATH, 'utf8'))
@@ -105,7 +107,7 @@ async function apiFetch(apiBase, path, { method = 'GET', token, body } = {}) {
 export async function loginToApi(email, password, apiBase) {
   const base = apiBase || resolveSyncApiBase({ login: true })
   if (!base) {
-    throw new Error(`Set LEARNLAB_API_URL=${PRODUCTION_API} or sign in at ${PRODUCTION_SITE}`)
+    throw new Error(`Set SYNAPSOUL_API_URL=${PRODUCTION_API} or sign in at ${PRODUCTION_SITE}`)
   }
   const data = await apiFetch(base, '/api/auth/login', {
     method: 'POST',
@@ -117,7 +119,7 @@ export async function loginToApi(email, password, apiBase) {
 
 export async function pushProgressAndBrain({ apiBase, token, progress, brain }) {
   const base = apiBase || getApiBase()
-  if (!base) throw new Error('LEARNLAB_API_URL is not set')
+  if (!base) throw new Error('SYNAPSOUL_API_URL is not set')
   if (!token) throw new Error('Not signed in')
 
   const brainState = brain?.state || brain || progress?.studentMemory?.brain || null

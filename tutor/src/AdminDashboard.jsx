@@ -24,8 +24,8 @@ function NotFoundAdmin({ onHome }) {
     <section className="card empty-state not-found-page elevated">
       <p className="section-eyebrow">404</p>
       <h1 className="display-sm">This page isn’t in the bootcamp</h1>
-      <p>No LearnLab route for <code>/admin</code>.</p>
-      <button type="button" className="btn-primary" onClick={onHome}>Back to LearnLab</button>
+      <p>No SynapSoul route for <code>/admin</code>.</p>
+      <button type="button" className="btn-primary" onClick={onHome}>Back to SynapSoul</button>
     </section>
   )
 }
@@ -80,14 +80,14 @@ function otpRequestErrorMessage(err) {
   if (code === 'MAILER_NOT_CONFIGURED' || code === 'RESEND_SEND_FAILED') {
     return (
       text ||
-      'RESEND_API_KEY is missing on Render learnlab-api. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+      'RESEND_API_KEY is missing on the Render API service. Create a free account at resend.com, open API Keys, paste the key on the Render API service as RESEND_API_KEY, then redeploy.'
     )
   }
   if (code === 'TIMEOUT' || /timed out|aborted/i.test(text)) {
-    return 'Sending timed out. Create a free account at resend.com, open API Keys, paste the key on Render learnlab-api as RESEND_API_KEY, then redeploy.'
+    return 'Sending timed out. Create a free account at resend.com, open API Keys, paste the key on the Render API service as RESEND_API_KEY, then redeploy.'
   }
   if (!text || /failed to fetch|network|could not reach/i.test(text)) {
-    return 'Could not reach LearnLab. Check your connection and try again.'
+    return 'Could not reach SynapSoul. Check your connection and try again.'
   }
   return text || 'Could not send the code.'
 }
@@ -172,7 +172,7 @@ function AdminOtpChallenge({ onVerified, onHome }) {
         </button>
       </form>
       {error && <p className="form-feedback is-error" role="alert">{error}</p>}
-      <button type="button" className="btn-secondary" onClick={onHome}>Back to LearnLab</button>
+      <button type="button" className="btn-secondary" onClick={onHome}>Back to SynapSoul</button>
     </section>
   )
 }
@@ -186,8 +186,8 @@ function AdminDashboard({ overview, onHome }) {
 
   useEffect(() => {
     setPageMeta({
-      title: 'Cohort admin · LearnLab',
-      description: 'Private LearnLab cohort dashboard. Admin only.',
+      title: 'Cohort admin · SynapSoul',
+      description: 'Private SynapSoul cohort dashboard. Admin only.',
     })
     fetchAdminStudents()
       .then(data => setStudents(data.students || []))
@@ -224,7 +224,7 @@ function AdminDashboard({ overview, onHome }) {
           <h1 className="display-sm">Cohort dashboard</h1>
           <p className="admin-sub">Student progress, brain, and profiles. Not visible to students.</p>
         </div>
-        <button type="button" className="btn-secondary" onClick={onHome}>Back to LearnLab</button>
+        <button type="button" className="btn-secondary" onClick={onHome}>Back to SynapSoul</button>
       </header>
 
       <div className="admin-stats">

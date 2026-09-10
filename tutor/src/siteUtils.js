@@ -6,9 +6,24 @@ export const INSTALL_WINDOWS = 'irm https://tutor-alpha-sandy.vercel.app/install
 
 export const UNIVERSAL_PROMPT = 'Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions'
 
-export const DEFAULT_TITLE = 'LearnLab — The Open Engineering Bootcamp in Your IDE'
+export const DEFAULT_TITLE = 'SynapSoul Learn Hub — The Open Engineering Bootcamp in Your IDE'
 export const DEFAULT_DESCRIPTION =
-  'Your AI editor becomes a private instructor. Paste one prompt, install the LearnLab CLI, and build evidence recruiters can read.'
+  'Your AI editor becomes a private instructor. Paste one prompt, install the SynapSoul CLI, and build evidence recruiters can read.'
+
+export function storageGet(...keys) {
+  for (const key of keys) {
+    const v = localStorage.getItem(key)
+    if (v != null && v !== '') return v
+  }
+  return null
+}
+
+export function storageSet(value, ...keys) {
+  for (const key of keys) {
+    if (value == null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
+  }
+}
 
 export function setPageMeta({ title, description } = {}) {
   document.title = title || DEFAULT_TITLE
@@ -64,10 +79,10 @@ export async function copyText(text) {
 export function humanizeApiError(err, fallback = 'Something went wrong. Try again.') {
   const raw = err && err.message ? String(err.message) : ''
   if (!raw || /failed to fetch|networkerror|load failed|network request failed/i.test(raw)) {
-    return 'Could not reach LearnLab. Check your connection and try again.'
+    return 'Could not reach SynapSoul. Check your connection and try again.'
   }
   if (/unexpected token|syntaxerror|<html|doctype/i.test(raw)) {
-    return 'LearnLab returned an unexpected response. Try again in a moment.'
+    return 'SynapSoul returned an unexpected response. Try again in a moment.'
   }
   if (raw.length > 180 || /at\s+\S+\s+\(|stack|traceback/i.test(raw)) {
     return fallback
@@ -80,6 +95,6 @@ export function statusFallback(status) {
   if (status === 403) return 'You do not have access to that.'
   if (status === 404) return 'That page or profile was not found.'
   if (status === 409) return 'That email or username is already taken.'
-  if (status >= 500) return 'LearnLab is having trouble right now. Try again in a moment.'
+  if (status >= 500) return 'SynapSoul is having trouble right now. Try again in a moment.'
   return 'Something went wrong. Try again.'
 }

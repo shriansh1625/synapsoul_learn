@@ -86,7 +86,7 @@ function defaultPL0(state) {
 }
 
 /**
- * LearnLab Brain — adaptive engine.
+ * SynapSoul Brain — adaptive engine.
  * Algorithms are the default intelligence. Optional LLM is coach-only.
  */
 export class AdaptiveEngine {

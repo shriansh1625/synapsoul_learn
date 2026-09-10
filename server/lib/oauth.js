@@ -98,7 +98,7 @@ export async function exchangeGithubCode(req, code) {
   const ghHeaders = {
     Accept: 'application/vnd.github+json',
     Authorization: `Bearer ${tokenData.access_token}`,
-    'User-Agent': 'LearnLab',
+    'User-Agent': 'SynapSoul',
   }
   const [userRes, emailRes] = await Promise.all([
     fetch('https://api.github.com/user', { headers: ghHeaders }),

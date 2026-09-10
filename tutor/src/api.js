@@ -1,32 +1,48 @@
 import { humanizeApiError, statusFallback, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
-const TOKEN_KEY = 'learnlab-token'
-const ADMIN_OTP_KEY = 'learnlab-admin-otp'
+const TOKEN_KEY = 'synapsoul-token'
+const LEGACY_TOKEN_KEY = 'learnlab-token'
+const ADMIN_OTP_KEY = 'synapsoul-admin-otp'
+const LEGACY_ADMIN_OTP_KEY = 'learnlab-admin-otp'
+
+function readKey(...keys) {
+  for (const key of keys) {
+    const v = localStorage.getItem(key)
+    if (v) return v
+  }
+  return null
+}
+
+function writeKey(value, ...keys) {
+  for (const key of keys) {
+    if (value) localStorage.setItem(key, value)
+    else localStorage.removeItem(key)
+  }
+}
 
 export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  return readKey(TOKEN_KEY, LEGACY_TOKEN_KEY)
 }
 
 export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_KEY, token)
+  if (token) writeKey(token, TOKEN_KEY, LEGACY_TOKEN_KEY)
   else {
-    localStorage.removeItem(TOKEN_KEY)
+    writeKey(null, TOKEN_KEY, LEGACY_TOKEN_KEY)
     clearAdminOtp()
   }
 }
 
 export function getAdminOtp() {
-  return localStorage.getItem(ADMIN_OTP_KEY)
+  return readKey(ADMIN_OTP_KEY, LEGACY_ADMIN_OTP_KEY)
 }
 
 export function setAdminOtp(token) {
-  if (token) localStorage.setItem(ADMIN_OTP_KEY, token)
-  else localStorage.removeItem(ADMIN_OTP_KEY)
+  writeKey(token || null, ADMIN_OTP_KEY, LEGACY_ADMIN_OTP_KEY)
 }
 
 export function clearAdminOtp() {
-  localStorage.removeItem(ADMIN_OTP_KEY)
+  writeKey(null, ADMIN_OTP_KEY, LEGACY_ADMIN_OTP_KEY)
 }
 
 export function isLoggedIn() {

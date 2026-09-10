@@ -74,7 +74,7 @@ async function start() {
   } else {
     console.warn('DATABASE_URL not set — auth/progress endpoints will fail until configured')
   }
-  app.listen(PORT, () => console.log(`LearnLab API on :${PORT}`))
+  app.listen(PORT, () => console.log(`SynapSoul API on :${PORT}`))
 }
 
 start()

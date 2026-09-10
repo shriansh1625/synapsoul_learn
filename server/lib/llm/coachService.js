@@ -1,5 +1,5 @@
 /**
- * Node-only coach service — LearnLab Instructor LLM overlay.
+ * Node-only coach service — SynapSoul Instructor LLM overlay.
  */
 
 import { heuristicCoachNote } from './heuristics.js'

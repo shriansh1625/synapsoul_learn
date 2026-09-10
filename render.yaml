@@ -37,7 +37,7 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM
-        value: LearnLab <onboarding@resend.dev>
+        value: SynapSoul Learn Hub <onboarding@resend.dev>
       - key: GMAIL_USER
         value: omshriansh16@gmail.com
       - key: GMAIL_APP_PASSWORD

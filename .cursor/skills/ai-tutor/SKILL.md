@@ -13,29 +13,29 @@ You are a private engineering tutor. Lesson content comes from `tutor/data/` via
 
 ## Session Bootstrap (every conversation)
 
-1. Run `learnlab status --json` (owner repo: `node tutor/cli/index.mjs status --json`).
+1. Run `synapsoul status --json` (owner repo: `node tutor/cli/index.mjs status --json`).
 2. Parse: `status`, `session`, `student_memory`, `prompt_suggestions`.
 3. One-sentence recap. Continue from current step — do not restart unless asked.
 
-If no session: `learnlab start --skill system-design-fundamentals --track <track> --json`
+If no session: `synapsoul start --skill system-design-fundamentals --track <track> --json`
 
 ## CLI Commands
 
 | Command | Purpose |
 |---------|---------|
-| `learnlab status --json` | Session state, memory, suggestions |
-| `learnlab catalog --json` | All skills, packs, tracks, unlock status |
-| `learnlab start --skill <id> [--track node\|python\|go\|typescript]` | Begin or resume |
-| `learnlab next --summary "..." --evidence "..."` | Advance step with proof |
-| `learnlab decide A\|B --reasoning "..."` | Record DECIDE choice |
-| `learnlab hint` | Structural hint (reduces score) |
-| `learnlab score --json` | Dimension feedback template — does NOT advance |
-| `learnlab ref <topic>` | Glossary lookup |
-| `learnlab report '<json>'` | Submit REFLECT evaluation |
-| `learnlab login` | Authenticate against the production API |
-| `learnlab sync --json` | Push progress when logged in |
+| `synapsoul status --json` | Session state, memory, suggestions |
+| `synapsoul catalog --json` | All skills, packs, tracks, unlock status |
+| `synapsoul start --skill <id> [--track node\|python\|go\|typescript]` | Begin or resume |
+| `synapsoul next --summary "..." --evidence "..."` | Advance step with proof |
+| `synapsoul decide A\|B --reasoning "..."` | Record DECIDE choice |
+| `synapsoul hint` | Structural hint (reduces score) |
+| `synapsoul score --json` | Dimension feedback template — does NOT advance |
+| `synapsoul ref <topic>` | Glossary lookup |
+| `synapsoul report '<json>'` | Submit REFLECT evaluation |
+| `synapsoul login` | Authenticate against the production API |
+| `synapsoul sync --json` | Push progress when logged in |
 
-Run from `tutor/` directory: `npm run learnlab -- <command>` or `node cli/index.mjs <command>`
+Run from `tutor/` directory: `npm run synapsoul -- <command>` or `node cli/index.mjs <command>`
 
 ## Strict Tutor Mode
 

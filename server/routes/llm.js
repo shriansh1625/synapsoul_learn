@@ -108,7 +108,7 @@ router.post('/reflect', optionalAuth, async (req, res) => {
 })
 
 router.get('/status', (_, res) => {
-  res.json({ enabled: llm.enabled(), instructor: 'LearnLab Instructor LLM' })
+  res.json({ enabled: llm.enabled(), instructor: 'SynapSoul Instructor LLM' })
 })
 
 export default router

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Packs the student-facing LearnLab kit into tutor/public/learnlab-kit.zip
+ * Packs the student-facing SynapSoul kit into tutor/public/learnlab-kit.zip
  * so Vercel can serve it at /learnlab-kit.zip. Owner/server secrets stay out.
  */
 import {
@@ -46,12 +46,14 @@ const FORBIDDEN_TEXT = [
 ]
 
 const STUDENT_PACKAGE_JSON = {
-  name: 'learnlab-tutor',
+  name: 'synapsoul-tutor',
   private: true,
   version: '2.0.0',
   type: 'module',
-  bin: { tutor: './cli/index.mjs' },
+  bin: { synapsoul: './cli/index.mjs', learnlab: './cli/index.mjs', tutor: './cli/index.mjs' },
   scripts: {
+    synapsoul: 'node cli/index.mjs',
+    learnlab: 'node cli/index.mjs',
     tutor: 'node cli/index.mjs',
     'tutor:status': 'node cli/index.mjs status --json',
     'tutor:catalog': 'node cli/index.mjs catalog --json',

@@ -76,5 +76,5 @@ export function upsertPattern({ category, skillId, patternText, evidenceCount, s
 export function formatPatternsForPrompt(patterns) {
   if (!patterns?.length) return ''
   const lines = patterns.map((p, i) => `${i + 1}. ${p.pattern_text}`)
-  return `LearnLab has learned these patterns work well:\n${lines.join('\n')}`
+  return `SynapSoul has learned these patterns work well:\n${lines.join('\n')}`
 }

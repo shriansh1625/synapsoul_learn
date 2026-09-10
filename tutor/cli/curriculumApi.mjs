@@ -47,7 +47,7 @@ export async function refreshCurriculumFromApi({ apiBase } = {}) {
 export async function ensureCurriculum() {
   const catalogPath = join(dataDir(), 'catalog.json')
   const hasLocal = existsSync(catalogPath)
-  const shouldFetch = isStandalone() || process.env.LEARNLAB_REFRESH_CURRICULUM === '1'
+  const shouldFetch = isStandalone() || process.env.SYNAPSOUL_REFRESH_CURRICULUM === '1' || process.env.LEARNLAB_REFRESH_CURRICULUM === '1'
   if (!shouldFetch && hasLocal) return { ok: true, source: 'local' }
   try {
     const result = await refreshCurriculumFromApi()

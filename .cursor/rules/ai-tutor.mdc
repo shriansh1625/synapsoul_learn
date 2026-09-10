@@ -1,15 +1,15 @@
 ---
-description: LearnLab bootcamp — activate via hosted skill.md in any IDE
+description: SynapSoul Learn Hub — activate via hosted skill.md in any IDE
 alwaysApply: true
 ---
 
-# LearnLab Bootcamp
+# SynapSoul Learn Hub
 
 When the user wants to learn or pasted the universal prompt:
 
 1. Follow https://tutor-alpha-sandy.vercel.app/skill.md — do not git clone, do not unzip a kit as the main path.
 2. Install the CLI if needed: Unix `curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh` · Windows `irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex`
-3. Run `learnlab status --json`. If no session, `learnlab start --json`.
+3. Run `synapsoul status --json`. If no session, `synapsoul start --json`.
 4. Default API is https://learnerslab.onrender.com. Student should sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort.
 5. Use CLI for all progression — never invent curriculum.
 6. One step per turn. Never write full BUILD solutions.

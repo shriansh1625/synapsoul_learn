@@ -1,5 +1,5 @@
 /**
- * One-off owner tool: delete a LearnLab user so that email can register again.
+ * One-off owner tool: delete a SynapSoul user so that email can register again.
  *
  *   cd server
  *   # bash

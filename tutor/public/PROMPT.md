@@ -1,4 +1,4 @@
-# LearnLab — Universal IDE Prompt
+# SynapSoul Learn Hub — Universal IDE Prompt
 
 Copy **one** line into your AI editor:
 
@@ -29,8 +29,8 @@ irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
 Then:
 
 ```bash
-learnlab login
-learnlab start
+synapsoul login
+synapsoul start
 ```
 
 Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort API.

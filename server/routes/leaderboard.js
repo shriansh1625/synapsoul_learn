@@ -22,7 +22,7 @@ router.get('/', async (_req, res) => {
     entries: rows.map((r, i) => ({
       ...r,
       rank: i + 1,
-      headline: `${r.college_name || 'LearnLab'} · ${r.degree || ''}`.trim(),
+      headline: `${r.college_name || 'SynapSoul'} · ${r.degree || ''}`.trim(),
       readiness_score: Math.min(100, r.modules_completed * 8 + Math.round(Number(r.avg_score) * 10) + Math.min(r.portfolio_count * 4, 20)),
     })),
   })

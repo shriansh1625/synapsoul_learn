@@ -1,4 +1,4 @@
-# LearnLab student CLI
+# SynapSoul student CLI
 
 You do **not** need GitHub access. You do **not** unzip this folder as the main path.
 
@@ -28,7 +28,7 @@ Windows PowerShell:
 irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
 ```
 
-3. `learnlab login` then `learnlab start`
+3. `synapsoul login` then `synapsoul start`
 
 4. Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort.
 

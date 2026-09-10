@@ -82,7 +82,7 @@ async function attachGithub(userId, profile) {
     [profile.github_id, userId]
   )
   if (taken.rows[0]) {
-    const err = new Error('This GitHub account is already connected to another LearnLab user')
+    const err = new Error('This GitHub account is already connected to another SynapSoul user')
     err.status = 409
     throw err
   }

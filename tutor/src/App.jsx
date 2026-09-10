@@ -15,7 +15,10 @@ import {
   fetchLlmHint, apiEnabled, fetchMe, logoutAdminOtp,
 } from './api.js'
 import { loadModuleJson } from './curriculumModules.js'
-import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError, slugifyUsername, isValidPublicUsername, storageGet, storageSet } from './siteUtils.js'
+
+const ONBOARDED_KEYS = ['synapsoul-onboarded', 'learnlab-onboarded']
+const CEREMONY_KEYS = ['synapsoul-ceremony-shown', 'learnlab-ceremony-shown']
 
 function publicRouteUsername(raw) {
   try {
@@ -259,7 +262,7 @@ export default function App() {
   }, [authUser])
 
   useEffect(() => {
-    if (!showLanding && !localStorage.getItem('learnlab-onboarded')) {
+    if (!showLanding && !storageGet(...ONBOARDED_KEYS)) {
       setShowOnboarding(true)
     }
   }, [showLanding])
@@ -294,20 +297,20 @@ export default function App() {
     if (showLanding || route.type === 'public' || route.type === 'oauth') return
     if (route.type === 'notfound' || route.type === 'admin') {
       setPageMeta({
-        title: 'Page not found · LearnLab',
-        description: 'That LearnLab page does not exist. Head back to the bootcamp home.',
+        title: 'Page not found · SynapSoul',
+        description: 'That SynapSoul Learn Hub page does not exist. Head back to the bootcamp home.',
       })
       return
     }
     const titles = {
-      dashboard: ['Dashboard · LearnLab', 'Your LearnLab bootcamp progress, evidence, and next module.'],
-      skills: ['Skills · LearnLab', 'Six engineering skills — system design, debugging, production, AI, and communication.'],
-      portfolio: ['Portfolio · LearnLab', 'Evidence of how you design, debug, and ship — not certificates.'],
-      profile: ['Profile · LearnLab', 'Edit your recruiter-facing LearnLab hiring profile.'],
-      leaderboard: ['Leaderboard · LearnLab', 'Readiness rankings across the LearnLab bootcamp.'],
-      college: ['College · LearnLab', 'Cohort insights for college partners.'],
-      dimensions: ['Dimensions · LearnLab', 'Scored reasoning across LearnLab evidence dimensions.'],
-      glossary: ['Glossary · LearnLab', 'Engineering terms used across the LearnLab curriculum.'],
+      dashboard: ['Dashboard · SynapSoul', 'Your SynapSoul Learn Hub bootcamp progress, evidence, and next module.'],
+      skills: ['Skills · SynapSoul', 'Six engineering skills — system design, debugging, production, AI, and communication.'],
+      portfolio: ['Portfolio · SynapSoul', 'Evidence of how you design, debug, and ship — not certificates.'],
+      profile: ['Profile · SynapSoul', 'Edit your recruiter-facing SynapSoul hiring profile.'],
+      leaderboard: ['Leaderboard · SynapSoul', 'Readiness rankings across the SynapSoul Learn Hub bootcamp.'],
+      college: ['College · SynapSoul', 'Cohort insights for college partners.'],
+      dimensions: ['Dimensions · SynapSoul', 'Scored reasoning across SynapSoul evidence dimensions.'],
+      glossary: ['Glossary · SynapSoul', 'Engineering terms used across the SynapSoul curriculum.'],
     }
     const pair = titles[view] || titles.dashboard
     setPageMeta({ title: pair[0], description: pair[1] })
@@ -318,7 +321,7 @@ export default function App() {
     window.location.hash = ''
     setRoute(parseRoute())
     setView('dashboard')
-    if (!localStorage.getItem('learnlab-onboarded')) setShowOnboarding(true)
+    if (!storageGet(...ONBOARDED_KEYS)) setShowOnboarding(true)
   }
 
   function saveProfilePartial(partial) {
@@ -356,9 +359,9 @@ export default function App() {
       type: 'onboarding',
       payload: { track: profileData.track, level: profileData.level || progress.profile?.level || 'beginner' },
     })
-    localStorage.setItem('learnlab-onboarded', '1')
+    storageSet('1', ...ONBOARDED_KEYS)
     setShowOnboarding(false)
-    addToast('Welcome to LearnLab — paste the universal prompt in Cursor', 'success')
+    addToast('Welcome to SynapSoul — paste the universal prompt in Cursor', 'success')
   }
 
   function handleAuthSuccess({ token, user }) {
@@ -369,7 +372,7 @@ export default function App() {
     if (user) {
       setProgress(p => ({ ...p, profile: { ...p.profile, ...user } }))
     }
-    addToast(`Signed in as ${user?.name || user?.email || 'LearnLab'}`, 'success')
+    addToast(`Signed in as ${user?.name || user?.email || 'SynapSoul'}`, 'success')
     fetchProgress()
       .then(p => setProgress(p))
       .catch(() => {})
@@ -505,7 +508,7 @@ export default function App() {
           onSaveProfile={saveProfilePartial}
           onTryRegister={tryRegisterOnboarding}
           onComplete={completeOnboarding}
-          onDismiss={() => { localStorage.setItem('learnlab-onboarded', '1'); setShowOnboarding(false) }}
+          onDismiss={() => { storageSet('1', ...ONBOARDED_KEYS); setShowOnboarding(false) }}
         />
       )}
       {showAuth && (
@@ -519,7 +522,7 @@ export default function App() {
         <div className="header-inner">
           <div className="logo">
             <span className="logo-icon">◈</span>
-            <span className="logo-text">LearnLab</span>
+            <span className="logo-text">SynapSoul</span>
             <span className="version">v2</span>
           </div>
           <button
@@ -625,7 +628,7 @@ export default function App() {
 
       <footer className="footer">
         <p>
-          LearnLab ·{' '}
+          SynapSoul ·{' '}
           <button type="button" className="link-btn" onClick={goToLanding}>Home</button>
           {' · '}
           <a className="link-btn" href="/skill.md">Instructor protocol</a>
@@ -680,7 +683,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
         setHintState({ curriculum: hintText, nudge: hintText, source: 'curriculum' })
       }
     } catch {
-      setHintState({ curriculum: null, nudge: 'Could not load hint. Run `learnlab hint` in terminal.', source: 'error' })
+      setHintState({ curriculum: null, nudge: 'Could not load hint. Run `synapsoul hint` in terminal.', source: 'error' })
     } finally {
       setHintLoading(false)
     }
@@ -730,7 +733,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
           <div className="card-badge">Recommended next</div>
           <h2 className="display-xs">{recommendedSkill.title}</h2>
           <p>{recommendedSkill.description}</p>
-          <code className="cli-block">learnlab start --skill {recommendedSkill.id}</code>
+          <code className="cli-block">synapsoul start --skill {recommendedSkill.id}</code>
         </section>
       )}
 
@@ -777,7 +780,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
             <div className="hint-result card">
               {hintState.curriculum && <p><strong>Curriculum:</strong> {hintState.curriculum}</p>}
               {hintState.nudge && hintState.nudge !== hintState.curriculum && (
-                <p><strong>Nudge{hintState.source === 'llm' ? ' (LearnLab LLM)' : ''}:</strong> {hintState.nudge}</p>
+                <p><strong>Nudge{hintState.source === 'llm' ? ' (SynapSoul LLM)' : ''}:</strong> {hintState.nudge}</p>
               )}
             </div>
           )}
@@ -870,7 +873,7 @@ function SkillsView({ progress, selectedSkill, onSelectSkill, skillUnlocked }) {
             <h3>Start in your editor</h3>
             <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
             <p className="cursor-hint">Then say <code>Start {selectedSkill.title}</code> in chat, or run:</p>
-            <code className="cli-block">learnlab start --skill {selectedSkill.id}</code>
+            <code className="cli-block">synapsoul start --skill {selectedSkill.id}</code>
             <h3>Growth dimensions</h3>
             <div className="skills">
               {selectedSkill.growthDimensions?.map(d => (
@@ -999,7 +1002,7 @@ function computeReadiness(progress) {
 
 function oauthErrorMessage(code) {
   const map = {
-    github_taken: 'That GitHub account is already connected to another LearnLab user',
+    github_taken: 'That GitHub account is already connected to another SynapSoul user',
     github_oauth_failed: 'GitHub sign-in failed. Try email, or check API OAuth env vars.',
     linkedin_oauth_failed: 'LinkedIn sign-in failed. You can still paste a LinkedIn URL on your profile.',
     linkedin_email_required: 'LinkedIn did not share an email. Paste your LinkedIn URL on your profile instead.',
@@ -1012,7 +1015,7 @@ function oauthErrorMessage(code) {
 
 function OAuthCatch({ route, onSuccess, onSetup, onError }) {
   useEffect(() => {
-    setPageMeta({ title: 'Signing in · LearnLab', description: 'Finishing LearnLab sign-in.' })
+    setPageMeta({ title: 'Signing in · SynapSoul', description: 'Finishing SynapSoul sign-in.' })
     let cancelled = false
     async function finish() {
       try {
@@ -1045,8 +1048,8 @@ function OAuthCatch({ route, onSuccess, onSetup, onError }) {
 }
 
 function CompletionCeremony({ progress }) {
-  if (localStorage.getItem('learnlab-ceremony-shown')) return null
-  localStorage.setItem('learnlab-ceremony-shown', '1')
+  if (storageGet(...CEREMONY_KEYS)) return null
+  storageSet('1', ...CEREMONY_KEYS)
   return (
     <section className="card elevated ceremony-card">
       <p className="section-eyebrow">Bootcamp complete</p>
@@ -1224,8 +1227,8 @@ function NotFoundView({ onHome, path }) {
     <section className="card empty-state not-found-page elevated">
       <p className="section-eyebrow">404</p>
       <h1 className="display-sm">This page isn’t in the bootcamp</h1>
-      <p>No LearnLab route for <code>{path || 'that URL'}</code>.</p>
-      <button type="button" className="btn-primary" onClick={onHome}>Back to LearnLab</button>
+      <p>No SynapSoul route for <code>{path || 'that URL'}</code>.</p>
+      <button type="button" className="btn-primary" onClick={onHome}>Back to SynapSoul</button>
     </section>
   )
 }
@@ -1352,7 +1355,7 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
               <h2 className="display-xs">Start your <em>first module</em></h2>
               <p className="section-sub">Paste this in Cursor, then say &quot;Continue my lesson&quot;.</p>
               <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
-              <p className="cursor-hint">Optional CLI: <code>learnlab start --skill {foundation?.id} --track {track}</code></p>
+              <p className="cursor-hint">Optional CLI: <code>synapsoul start --skill {foundation?.id} --track {track}</code></p>
             </>
           )}
         </div>

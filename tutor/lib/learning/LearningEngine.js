@@ -97,7 +97,7 @@ export class LearningEngine {
     ).join('\n')
 
     const skillLabel = skillId || 'general'
-    const metaPrompt = `You are the LearnLab meta-learner. Given these successful ${type} interactions for skill "${skillLabel}", distill exactly 3 concise rules for future ${type} responses. Each rule one sentence. No markdown bullets — return JSON: {"rules":["rule1","rule2","rule3"]}`
+    const metaPrompt = `You are the SynapSoul meta-learner. Given these successful ${type} interactions for skill "${skillLabel}", distill exactly 3 concise rules for future ${type} responses. Each rule one sentence. No markdown bullets — return JSON: {"rules":["rule1","rule2","rule3"]}`
 
     let rules = []
     try {

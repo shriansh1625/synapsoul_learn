@@ -34,7 +34,7 @@ class LiveE2eReporter {
     const failed = this.steps.filter(s => s.status === 'fail').length
     const report = {
       suite: 'live-e2e',
-      target: process.env.LEARNLAB_FRONTEND_URL || 'https://tutor-alpha-sandy.vercel.app',
+      target: process.env.SYNAPSOUL_FRONTEND_URL || process.env.LEARNLAB_FRONTEND_URL || 'https://tutor-alpha-sandy.vercel.app',
       startedAt: this.startedAt,
       finishedAt: new Date().toISOString(),
       durationMs,

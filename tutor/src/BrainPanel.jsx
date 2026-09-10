@@ -69,16 +69,16 @@ export function BrainPanel({ snapshot, session, profile }) {
   return (
     <section className="brain-panel">
       <div className="brain-panel-head">
-        <p className="section-eyebrow">LearnLab Brain</p>
+        <p className="section-eyebrow">SynapSoul Brain</p>
         <h2 className="display-xs">Adaptive <em>engine</em></h2>
         <p className="section-sub">
           Bayesian knowledge tracing + spaced repetition · {snapshot.eventCount || 0} learning events
           {snapshot.preferredPace ? ` · ${snapshot.preferredPace} pace` : ''}
         </p>
         {canSyncProgress() && learningStats && (
-          <p className="learning-indicator" title="LearnLab improves from reactions and outcomes">
+          <p className="learning-indicator" title="SynapSoul improves from reactions and outcomes">
             <span className="learning-dot" />
-            LearnLab is learning · {patternCount} pattern{patternCount !== 1 ? 's' : ''}
+            SynapSoul is learning · {patternCount} pattern{patternCount !== 1 ? 's' : ''}
             {lastInsight ? ` · "${lastInsight.slice(0, 60)}${lastInsight.length > 60 ? '…' : ''}"` : ''}
           </p>
         )}
@@ -91,7 +91,7 @@ export function BrainPanel({ snapshot, session, profile }) {
             <div className="brain-coach-actions">
               {coach?.source && (
                 <span className={`coach-source coach-source-${coach.source}`}>
-                  {coach.source === 'llm' ? 'LearnLab LLM' : 'heuristic'}
+                  {coach.source === 'llm' ? 'SynapSoul LLM' : 'heuristic'}
                 </span>
               )}
               {coach?.interactionId && canSyncProgress() && (
@@ -126,7 +126,7 @@ export function BrainPanel({ snapshot, session, profile }) {
             <>
               <p className="brain-coach-note">{coach.note}</p>
               {reactionSent === 'helpful' && (
-                <p className="reaction-thanks">Thanks — LearnLab will use this to improve future hints.</p>
+                <p className="reaction-thanks">Thanks — SynapSoul will use this to improve future hints.</p>
               )}
             </>
           )}

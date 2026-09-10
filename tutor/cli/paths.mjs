@@ -8,14 +8,29 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export const CLI_ROOT = join(__dirname, '..')
 export const PRODUCTION_API = 'https://learnerslab.onrender.com'
 export const PRODUCTION_SITE = 'https://tutor-alpha-sandy.vercel.app'
-export const CLI_NAME = 'learnlab'
+export const CLI_NAME = 'synapsoul'
+
+/** Prefer SYNAPSOUL_* then legacy LEARNLAB_* so old installs keep working. */
+export function envFirst(...keys) {
+  for (const key of keys) {
+    const v = process.env[key]
+    if (v != null && String(v).trim() !== '') return String(v)
+  }
+  return ''
+}
 
 export function learnlabHome() {
-  return process.env.LEARNLAB_HOME || join(homedir(), '.learnlab')
+  const fromEnv = envFirst('SYNAPSOUL_HOME', 'LEARNLAB_HOME')
+  if (fromEnv) return fromEnv
+  const syn = join(homedir(), '.synapsoul')
+  const legacy = join(homedir(), '.learnlab')
+  if (existsSync(syn)) return syn
+  if (existsSync(legacy)) return legacy
+  return syn
 }
 
 export function isStandalone() {
-  if (process.env.LEARNLAB_STANDALONE === '1') return true
+  if (envFirst('SYNAPSOUL_STANDALONE', 'LEARNLAB_STANDALONE') === '1') return true
   const home = learnlabHome().replace(/\\/g, '/').replace(/\/$/, '').toLowerCase()
   const root = CLI_ROOT.replace(/\\/g, '/').replace(/\/$/, '').toLowerCase()
   return root === home || root.startsWith(`${home}/`)
@@ -32,7 +47,8 @@ export function loadInstallConfig() {
 }
 
 export function dataDir() {
-  if (process.env.LEARNLAB_DATA_DIR) return process.env.LEARNLAB_DATA_DIR
+  const fromEnv = envFirst('SYNAPSOUL_DATA_DIR', 'LEARNLAB_DATA_DIR')
+  if (fromEnv) return fromEnv
   return join(CLI_ROOT, 'data')
 }
 
@@ -65,7 +81,7 @@ export function ensureDir(dir) {
 }
 
 export function defaultApiBase() {
-  const env = String(process.env.LEARNLAB_API_URL || process.env.VITE_API_URL || '').replace(/\/$/, '')
+  const env = envFirst('SYNAPSOUL_API_URL', 'LEARNLAB_API_URL', 'VITE_API_URL').replace(/\/$/, '')
   if (env) return env
   const cfg = loadInstallConfig()
   if (cfg?.apiUrl) return String(cfg.apiUrl).replace(/\/$/, '')

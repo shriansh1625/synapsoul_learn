@@ -45,7 +45,7 @@ router.get('/stats', optionalAuth, async (req, res) => {
     res.json({
       ...stats,
       learning: true,
-      instructor: 'LearnLab Self-Learning Instructor',
+      instructor: 'SynapSoul Self-Learning Instructor',
     })
   } catch (e) {
     res.status(500).json({ error: e.message })
