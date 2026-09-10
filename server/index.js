@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import { pool, initDb } from './db/pool.js'
+import { pool, initDb, checkDbHealth } from './db/pool.js'
 import authRoutes from './routes/auth.js'
 import progressRoutes from './routes/progress.js'
 import profileRoutes from './routes/profile.js'
@@ -47,7 +47,10 @@ app.use(cors({
 }))
 app.use(express.json())
 
-app.get('/api/health', (_, res) => res.json({ status: 'ok' }))
+app.get('/api/health', async (_, res) => {
+  const health = { status: 'ok', ...(await checkDbHealth()) }
+  res.json(health)
+})
 app.use('/api/auth', authRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/profile', profileRoutes)

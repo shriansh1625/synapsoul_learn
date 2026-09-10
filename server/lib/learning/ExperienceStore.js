@@ -53,7 +53,7 @@ export class ExperienceStore {
       created_at: new Date().toISOString(),
     }
 
-    if (this.pool) {
+    if (this.pool && process.env.DATABASE_URL) {
       try {
         await this.pool.query(
           `INSERT INTO llm_interactions
@@ -61,8 +61,8 @@ export class ExperienceStore {
            VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$11)`,
           [id, userId, type, skillId, moduleId, step, JSON.stringify(contextJson), promptHash, responseText, provider, model]
         )
-      } catch {
-        /* fall through to local */
+      } catch (e) {
+        console.warn('[ExperienceStore] interaction insert failed:', e.message)
       }
     }
 
@@ -86,15 +86,15 @@ export class ExperienceStore {
       created_at: new Date().toISOString(),
     }
 
-    if (this.pool) {
+    if (this.pool && process.env.DATABASE_URL) {
       try {
         await this.pool.query(
           `INSERT INTO llm_reactions (id, interaction_id, user_id, reaction, implicit_score, signal_json)
            VALUES ($1,$2,$3,$4,$5,$6::jsonb)`,
           [id, interactionId, userId, reaction, implicitScore, JSON.stringify(signalJson)]
         )
-      } catch {
-        /* local fallback */
+      } catch (e) {
+        console.warn('[ExperienceStore] reaction insert failed:', e.message)
       }
     }
 
@@ -163,13 +163,14 @@ export class ExperienceStore {
     const explicitTotal = helpful + notHelpful
     const successRate = explicitTotal ? helpful / explicitTotal : null
 
-    if (this.pool) {
+    if (this.pool && process.env.DATABASE_URL) {
       try {
         const { rows: pRows } = await this.pool.query('SELECT COUNT(*)::int AS n FROM llm_learned_patterns')
         const { rows: iRows } = await this.pool.query('SELECT COUNT(*)::int AS n FROM llm_interactions')
+        const { rows: rRows } = await this.pool.query('SELECT COUNT(*)::int AS n FROM llm_reactions')
         return {
           interactions: iRows[0]?.n ?? interactions.length,
-          reactions: reactions.length,
+          reactions: rRows[0]?.n ?? reactions.length,
           patterns: pRows[0]?.n ?? patterns.length,
           helpful,
           notHelpful,
@@ -178,8 +179,8 @@ export class ExperienceStore {
           recentPatterns: patterns.slice(-3).map(p => p.pattern_text),
           source: 'postgres+local',
         }
-      } catch {
-        /* local only */
+      } catch (e) {
+        console.warn('[ExperienceStore] stats query failed:', e.message)
       }
     }
 
