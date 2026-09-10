@@ -12,9 +12,9 @@ import { getExperienceStore } from '../learning/ExperienceStore.js'
 import { getActiveProvider, getActiveModel } from '../learning/LearningEngine.js'
 
 export class LearnLabLLM {
-  constructor({ timeoutMs = 4000, pool = null } = {}) {
+  constructor({ timeoutMs = 4000 } = {}) {
     this.timeoutMs = timeoutMs
-    this.store = getExperienceStore(pool)
+    this.store = getExperienceStore()
   }
 
   enabled() {

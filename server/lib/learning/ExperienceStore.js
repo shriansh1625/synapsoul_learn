@@ -201,6 +201,11 @@ export class ExperienceStore {
 let defaultStore = null
 
 export function getExperienceStore(pool = defaultPool) {
-  if (!defaultStore) defaultStore = new ExperienceStore({ pool })
+  const resolvedPool = pool ?? defaultPool
+  if (!defaultStore) {
+    defaultStore = new ExperienceStore({ pool: resolvedPool })
+  } else if (!defaultStore.pool && resolvedPool) {
+    defaultStore.pool = resolvedPool
+  }
   return defaultStore
 }
