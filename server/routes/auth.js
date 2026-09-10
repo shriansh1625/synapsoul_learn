@@ -19,6 +19,7 @@ import {
 } from '../lib/oauth.js'
 import { touchLastSeen, promoteIfAdminEmail, emailIsAdmin } from '../lib/adminAuth.js'
 import { parseCliNonce, putCliToken, takeCliToken } from '../lib/cliAuth.js'
+import { mirrorObserveFireAndForget } from '../lib/learning/ServerLearnerMirror.js'
 
 const router = Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
@@ -138,6 +139,9 @@ router.post('/register', async (req, res) => {
     )
     await promoteIfAdminEmail(user)
     await touchLastSeen(user.id)
+    mirrorObserveFireAndForget(user.id, { type: 'session_start', source: 'website', command: 'register' }, {
+      progress: { profile: user },
+    })
     res.json({ token: signToken(user), user })
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Email or username already exists' })
@@ -158,6 +162,9 @@ router.post('/login', async (req, res) => {
     const user = ownerUser(rows[0])
     await promoteIfAdminEmail(user)
     await touchLastSeen(user.id)
+    mirrorObserveFireAndForget(user.id, { type: 'session_start', source: 'website', command: 'login' }, {
+      progress: { profile: user },
+    })
     res.json({ token: signToken(user), user })
   } catch (e) {
     res.status(500).json({ error: 'Could not sign in. Try again.' })

@@ -4,6 +4,7 @@ import {
   publicProfileUrl, oauthStartUrl,
 } from './api.js'
 import { copyText, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
+import { notifyProfileUpdate } from './learnerActivity.js'
 
 function computeReadiness(progress, catalog) {
   const completed = Object.keys(progress.completedModules || {}).length
@@ -137,6 +138,7 @@ export default function ProfileView({
       onAuthUser?.(user)
       onSaveLocal(user)
       setForm(f => formFrom({ ...f, ...user }, user))
+      notifyProfileUpdate({ profile: user })
       addToast?.('Hiring profile saved — your public link is live', 'success')
     } catch (err) {
       setError(err.message || 'Could not save your profile. Try again.')

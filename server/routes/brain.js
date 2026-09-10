@@ -5,6 +5,7 @@ import { AdaptiveEngine, hydrateFromProgress } from '../lib/brain/index.js'
 import { maybeCoachNote } from '../lib/llm/coachService.js'
 import { linkOutcome } from '../lib/learning/implicitSignals.js'
 import { touchLastSeen } from '../lib/adminAuth.js'
+import { mirrorObserveFireAndForget } from '../lib/learning/ServerLearnerMirror.js'
 
 const router = Router()
 
@@ -72,6 +73,14 @@ router.post('/observe', auth, async (req, res) => {
     memory.cognitive_graph = snapshot.graph
     await saveMemory(req.user.id, memory)
     linkOutcome({ ...event, skillId: event.skillId, moduleId: event.moduleId }, req.user.id).catch(() => {})
+    mirrorObserveFireAndForget(req.user.id, {
+      type: 'brain_observe',
+      source: 'website',
+      skillId: event.skillId,
+      moduleId: event.moduleId,
+      step: event.step,
+      text: event.type,
+    }, { brainSnapshot: snapshot })
     res.json({ ok: true, snapshot })
   } catch (e) {
     res.status(500).json({ error: e.message })

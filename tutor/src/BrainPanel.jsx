@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { canSyncProgress, fetchCoachNote, fetchLearningStats, reactToInteraction } from './api.js'
+import { notifyBrainReaction } from './learnerActivity.js'
 
 export function BrainPanel({ snapshot, session, profile }) {
   if (!snapshot?.recommendedNext && !snapshot?.mastery?.length && !snapshot?.graph) return null
@@ -55,6 +56,7 @@ export function BrainPanel({ snapshot, session, profile }) {
     setReacting(true)
     try {
       await reactToInteraction(coach.interactionId, reaction)
+      notifyBrainReaction(reaction)
       setReactionSent(reaction)
     } catch {
       setReactionSent(null)

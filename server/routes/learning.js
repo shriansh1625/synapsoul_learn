@@ -3,6 +3,7 @@ import { optionalAuth } from '../middleware/optionalAuth.js'
 import { auth } from '../middleware/auth.js'
 import { getExperienceStore } from '../lib/learning/ExperienceStore.js'
 import { getLearningEngine } from '../lib/learning/LearningEngine.js'
+import { mirrorObserveFireAndForget } from '../lib/learning/ServerLearnerMirror.js'
 
 const router = Router()
 const store = getExperienceStore()
@@ -26,6 +27,14 @@ router.post('/react', optionalAuth, async (req, res) => {
     })
 
     const consolidation = await engine.maybeConsolidateAfterReaction()
+
+    if (req.user?.id) {
+      mirrorObserveFireAndForget(req.user.id, {
+        type: 'reaction',
+        source: 'website',
+        text: reaction,
+      })
+    }
 
     res.json({
       ok: true,

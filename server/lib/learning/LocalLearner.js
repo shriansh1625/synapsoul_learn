@@ -146,7 +146,11 @@ export class LocalLearner {
       hints_used: session.hintsUsed ?? event.hintsUsed ?? null,
     }
 
-    if (['cli_command', 'sync', 'consolidate'].includes(kind) || event.command) {
+    const chunkKinds = new Set([
+      'cli_command', 'sync', 'consolidate', 'session_start',
+      'website_login', 'profile_update', 'progress_sync', 'reaction', 'brain_observe',
+    ])
+    if (chunkKinds.has(kind) || event.command) {
       appendChunk(chunk)
     }
 

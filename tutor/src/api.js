@@ -182,6 +182,15 @@ export function observeBrain(event) {
   return apiFetch('/api/brain/observe', { method: 'POST', body: JSON.stringify(event) })
 }
 
+/** Fire-and-forget Local Learner signal (logged-in website activity only). */
+export function observeLearner(body) {
+  if (!canSyncProgress()) return Promise.resolve({ ok: false, skipped: true })
+  return apiFetch('/api/learner/observe', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }).catch(() => ({ ok: false }))
+}
+
 export function fetchCoachNote(body) {
   return apiFetch('/api/llm/coach', { method: 'POST', body: JSON.stringify(body) })
 }

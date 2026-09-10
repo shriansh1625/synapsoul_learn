@@ -12,6 +12,7 @@ import {
 } from '../lib/userFields.js'
 import { AdaptiveEngine, publicGraphSummary, maybeEnrichHiring } from '../lib/brain/index.js'
 import { groqComplete } from '../lib/llm/providers/groq.js'
+import { mirrorObserveFireAndForget } from '../lib/learning/ServerLearnerMirror.js'
 
 const router = Router()
 
@@ -148,7 +149,15 @@ router.put('/', auth, async (req, res) => {
         profile_public,
       ]
     )
-    res.json({ user: ownerUser(rows[0]) })
+    const user = ownerUser(rows[0])
+    mirrorObserveFireAndForget(req.user.id, {
+      type: 'profile_update',
+      source: 'website',
+      command: 'profile update',
+    }, {
+      progress: { profile: user },
+    })
+    res.json({ user })
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Username already taken' })
     res.status(500).json({ error: 'Could not save your profile. Try again.' })

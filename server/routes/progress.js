@@ -4,6 +4,7 @@ import { auth } from '../middleware/auth.js'
 import { AdaptiveEngine, cliEventToBrain } from '../lib/brain/index.js'
 import { touchLastSeen } from '../lib/adminAuth.js'
 import { insertCliEvent, mapCliEventRow, normalizeCliEvent, classifyLearnerActivity } from '../lib/cliEvents.js'
+import { mirrorObserveFireAndForget } from '../lib/learning/ServerLearnerMirror.js'
 
 const router = Router()
 
@@ -63,7 +64,7 @@ router.get('/', auth, async (req, res) => {
     lastSeen: true,
     session: sessionPayload,
   })
-  res.json({
+  const progressPayload = {
     version: 2,
     profile: user.rows[0],
     session: sessionPayload,
@@ -77,7 +78,17 @@ router.get('/', auth, async (req, res) => {
     last_cli_at: lastCliAt,
     has_cli: activity.has_cli,
     session_kind: activity.session_kind,
+  }
+  let brainSnapshot = null
+  try {
+    const mem = memory.rows[0]?.memory || {}
+    if (mem.brain) brainSnapshot = new AdaptiveEngine({ state: mem.brain }).snapshot()
+  } catch { /* best-effort */ }
+  mirrorObserveFireAndForget(uid, { type: 'progress_sync', source: 'website' }, {
+    progress: progressPayload,
+    brainSnapshot,
   })
+  res.json(progressPayload)
 })
 
 router.put('/session', auth, async (req, res) => {
@@ -90,6 +101,15 @@ router.put('/session', auth, async (req, res) => {
     [req.user.id, skillId, moduleId, step, track || 'node', hintsUsed || 0]
   )
   await touchLastSeen(req.user.id)
+  mirrorObserveFireAndForget(req.user.id, {
+    type: 'brain_observe',
+    source: 'website',
+    skillId,
+    moduleId,
+    step,
+  }, {
+    progress: { session: { skillId, moduleId, step, track, hintsUsed } },
+  })
   res.json({ ok: true, source: 'website' })
 })
 
@@ -166,6 +186,12 @@ router.post('/module-complete', auth, async (req, res) => {
   }
 
   await touchLastSeen(uid)
+  mirrorObserveFireAndForget(uid, {
+    type: 'module_complete',
+    source: 'website',
+    skillId,
+    moduleId,
+  })
   res.json({ ok: true })
 })
 
@@ -275,6 +301,7 @@ router.put('/sync', auth, async (req, res) => {
     )
 
     await touchLastSeen(uid)
+    mirrorObserveFireAndForget(uid, { type: 'sync', command: 'progress sync', source: 'cli' })
     res.json({ ok: true, synced: true })
   } catch (e) {
     res.status(500).json({ error: 'Could not sync progress' })
@@ -309,6 +336,14 @@ router.post('/events', auth, async (req, res) => {
         [req.user.id, JSON.stringify(memory)]
       )
     } catch { /* graph update is best-effort */ }
+    mirrorObserveFireAndForget(req.user.id, {
+      type: 'progress_event',
+      command: parsed.type,
+      source: parsed.payload?.source || 'cli',
+      skillId: parsed.skillId,
+      moduleId: parsed.moduleId,
+      step: parsed.step,
+    })
     await touchLastSeen(req.user.id)
     res.json({ ok: true, event: mapCliEventRow(row) })
   } catch (e) {

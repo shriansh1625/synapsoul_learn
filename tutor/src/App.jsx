@@ -9,6 +9,12 @@ import ProfileView from './ProfileView.jsx'
 import AuthModal from './AuthModal.jsx'
 import AdminGate from './AdminDashboard.jsx'
 import { BrainPanel } from './BrainPanel.jsx'
+import {
+  seedWebsiteSessionStart,
+  notifyProgressSync,
+  resetLearnerActivitySession,
+  notifySessionStep,
+} from './learnerActivity.js'
 import { CognitiveGraph } from './CognitiveGraph.jsx'
 import { useBrain } from './brain/useBrain.js'
 import {
@@ -238,6 +244,7 @@ export default function App() {
       }
       prevCompletedRef.current = new Set(Object.keys(cliProgress.completedModules || {}))
       setProgress(cliProgress)
+      notifyProgressSync(cliProgress)
     }
 
     async function syncProgress() {
@@ -260,6 +267,24 @@ export default function App() {
     const interval = setInterval(syncProgress, 8000)
     return () => { cancelled = true; clearInterval(interval) }
   }, [showLanding, addToast, authUser])
+
+  useEffect(() => {
+    if (!isLoggedIn() || !authUser || showLanding) return
+    if (view === 'dashboard' || view === 'profile') {
+      seedWebsiteSessionStart(progress)
+    }
+  }, [authUser, view, showLanding])
+
+  const prevSessionStepRef = useRef(null)
+  useEffect(() => {
+    if (!isLoggedIn() || !authUser) return
+    const sess = progress.session
+    const key = sess ? `${sess.skillId}:${sess.moduleId}:${sess.step}` : null
+    if (key && key !== prevSessionStepRef.current) {
+      prevSessionStepRef.current = key
+      notifySessionStep(sess)
+    }
+  }, [progress.session, authUser])
 
   useEffect(() => {
     if (!isLoggedIn()) return
@@ -362,6 +387,8 @@ export default function App() {
       setToken(token)
       setAuthUser(user)
       syncFailuresRef.current = 0
+      resetLearnerActivitySession()
+      seedWebsiteSessionStart({ profile: user })
       addToast('Account created — you can sign in on any device', 'success')
     } catch {
       addToast('Account saved on this device — cloud sync unavailable', 'error')
@@ -390,9 +417,14 @@ export default function App() {
     if (user) {
       setProgress(p => ({ ...p, profile: { ...p.profile, ...user } }))
     }
+    resetLearnerActivitySession()
+    seedWebsiteSessionStart(user ? { profile: user } : progress)
     addToast(`Signed in as ${user?.name || user?.email || 'SynapSoul'}`, 'success')
     fetchProgress()
-      .then(p => setProgress(p))
+      .then(p => {
+        setProgress(p)
+        notifyProgressSync(p)
+      })
       .catch(() => {})
   }
 
@@ -404,6 +436,7 @@ export default function App() {
     }
     setToken(null)
     setAuthUser(null)
+    resetLearnerActivitySession()
     addToast('Signed out — progress stays on this device', 'success')
   }
 

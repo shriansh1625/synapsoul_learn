@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import catalog from '../../data/catalog.json'
 import { AdaptiveEngine, hydrateFromProgress, mergeStates, buildCurriculum } from '../../lib/brain/index.js'
 import { SKILL_MANIFESTS } from '../../lib/brain/curriculumData.js'
-import { canSyncProgress, fetchBrain, putBrain } from '../api.js'
+import { canSyncProgress, fetchBrain, putBrain, observeBrain } from '../api.js'
 
 const BRAIN_KEY = 'synapsoul-brain-v1'
 const LEGACY_BRAIN_KEY = 'learnlab-brain-v1'
@@ -74,7 +74,11 @@ export function useBrain(progress, authUser) {
     stateRef.current = engine.state
     persist(engine.state)
     setTick(t => t + 1)
-    return engine.snapshot()
+    const snap = engine.snapshot()
+    if (canSyncProgress()) {
+      observeBrain({ ...event, skillId: event.skillId, moduleId: event.moduleId }).catch(() => {})
+    }
+    return snap
   }, [engine, persist])
 
   return { snapshot, observe, state: engine.state }

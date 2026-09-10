@@ -148,7 +148,7 @@ Windows PowerShell: the commands are identical (`synapsoul status --json`). Pref
 | `synapsoul status --json` | Session, memory, readiness — **source of truth** |
 | `synapsoul sync --json` | Push local session to https://learnerslab.onrender.com when logged in |
 | `synapsoul learn status --json` | SynapSoul Local Learner stats (`~/.synapsoul/learner`) |
-| `synapsoul learn consolidate` | Distill teaching rules (Ollama if `OLLAMA_HOST` set, else heuristics) |
+| `synapsoul learn consolidate` | Optional manual distillation (auto every 15 observes while logged in) |
 | `synapsoul profile` | View profile |
 | `synapsoul profile update --name "..." --degree "..." --bio "..."` | Update profile |
 | `synapsoul profile confirm` | Confirm profile and unlock bootcamp |
@@ -221,13 +221,17 @@ CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT
 
 ---
 
-## SynapSoul Local Learner (privacy)
+## SynapSoul Local Learner (always on)
 
-The **Local Learner** improves coaching from SynapSoul data only: CLI events, profile, brain snapshot, LLM reactions, decisions, and module scores. Data stays under `~/.synapsoul/learner/` on the student machine. It is **not** IDE-wide surveillance.
+The **Local Learner** is **always active** once the student is logged in (CLI JWT or website session). It learns from SynapSoul data only: CLI commands, profile saves, progress sync, brain panel reactions, and bootcamp steps — **not** IDE keylogs or arbitrary files.
 
-Optional offline distillation: install [Ollama](https://ollama.com) separately, set `OLLAMA_HOST` (e.g. `http://127.0.0.1:11434`) and `OLLAMA_MODEL` (e.g. `llama3.2`), then run `synapsoul learn consolidate`. Online instructor calls still use the cloud LLM when configured.
+- CLI: every teaching command after login is observed; rules auto-consolidate every **15** observes (and on `synapsoul sync`).
+- Website: dashboard/profile mount, progress poll, profile save, brain reactions, and session step changes post learner signals when signed in.
+- Local data: `~/.synapsoul/learner/` on the student machine.
 
-After `synapsoul sync`, an anonymized pattern digest may sync to the cohort API for admin cross-device visibility.
+`synapsoul learn consolidate` is optional (manual distillation). With [Ollama](https://ollama.com) (`OLLAMA_HOST`, `OLLAMA_MODEL`), consolidation can use a local model; otherwise heuristics apply.
+
+After `synapsoul sync` (or server auto-consolidation), an anonymized pattern digest syncs to the cohort API for admin visibility.
 
 ---
 

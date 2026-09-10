@@ -460,7 +460,7 @@ function AdminDashboard({ overview, onHome }) {
                 </>
               ) : (
                 <p className="admin-muted">
-                  No digest yet. Student runs <code>synapsoul learn consolidate</code> and <code>synapsoul sync</code> while logged in.
+                  No digest yet. Local Learner runs automatically on CLI and website activity; digest appears after sync or auto-consolidation (every 15 signals).
                 </p>
               )}
 

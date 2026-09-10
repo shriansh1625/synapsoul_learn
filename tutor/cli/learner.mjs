@@ -2,6 +2,60 @@ import { loadProgress } from './engine.mjs'
 import { getLocalLearner } from '../lib/learning/LocalLearner.js'
 import { readLearnerMeta } from '../lib/learning/learnerStore.js'
 import { pushLearnerDigest } from './cloud.mjs'
+import { isCliLoggedIn } from './cloud.mjs'
+
+export const AUTO_CONSOLIDATE_EVERY = 15
+
+const LEARNER_COMMANDS = new Set([
+  'start', 'next', 'decide', 'hint', 'report', 'sync', 'status',
+])
+
+export function shouldCliLearnerObserve(command, result) {
+  if (!isCliLoggedIn()) return false
+  if (command === 'status') {
+    try {
+      const session = loadProgress()?.session
+      return Boolean(session?.skillId && session?.moduleId)
+    } catch {
+      return false
+    }
+  }
+  if (!LEARNER_COMMANDS.has(command)) return false
+  if (command === 'sync') {
+    return result?.status === 'synced' || result?.status === 'sync_partial' || result?.cloud?.ok === true
+  }
+  return true
+}
+
+export function observeSessionStart(source = 'cli') {
+  try {
+    const progress = loadProgress()
+    const learner = getLocalLearner()
+    learner.observe({
+      type: 'session_start',
+      command: source === 'cli' ? 'login' : source,
+      progress,
+    })
+    maybeAutoConsolidate()
+    return { ok: true }
+  } catch {
+    return { ok: false }
+  }
+}
+
+export function maybeAutoConsolidate() {
+  try {
+    const m = readLearnerMeta()
+    if (m.observeCount > 0 && m.observeCount % AUTO_CONSOLIDATE_EVERY === 0) {
+      const learner = getLocalLearner()
+      learner.consolidate({ force: true })
+        .then(() => pushLearnerDigest(learner.buildSyncDigest()).catch(() => {}))
+        .catch(() => {})
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 export function observeAfterCli(command, result, sessionBefore) {
   try {
@@ -16,10 +70,7 @@ export function observeAfterCli(command, result, sessionBefore) {
       brain: result?.brain,
       graph: result?.graph || result?.brain?.graph,
     })
-    const m = readLearnerMeta()
-    if (m.observeCount > 0 && m.observeCount % 25 === 0) {
-      learner.consolidate({ force: true }).catch(() => {})
-    }
+    maybeAutoConsolidate()
     return out
   } catch {
     return { ok: false }

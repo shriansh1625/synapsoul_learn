@@ -24,7 +24,14 @@ import {
   cmdLearningStats,
   cmdGraph,
 } from './engine.mjs'
-import { cmdLearnStatus, cmdLearnConsolidate, observeAfterCli, observeAfterSync } from './learner.mjs'
+import {
+  cmdLearnStatus,
+  cmdLearnConsolidate,
+  observeAfterCli,
+  observeAfterSync,
+  observeSessionStart,
+  shouldCliLearnerObserve,
+} from './learner.mjs'
 import { ensureCurriculum } from './curriculumApi.mjs'
 import { PRODUCTION_API, PRODUCTION_SITE, CLI_NAME } from './paths.mjs'
 import { isCliLoggedIn } from './cloud.mjs'
@@ -257,8 +264,17 @@ async function main() {
 
   if (TUTOR_EVENT_COMMANDS[command]) {
     await emitTutorCliEvent(command, result, sessionBefore)
-    observeAfterCli(command, result, sessionBefore)
-    if (command === 'sync') await observeAfterSync(result)
+  }
+
+  if (isCliLoggedIn()) {
+    if ((command === 'login' || command === 'register') && result?.status === 'logged_in') {
+      observeSessionStart('cli')
+    } else if (shouldCliLearnerObserve(command, result)) {
+      observeAfterCli(command, result, sessionBefore)
+    }
+    if (command === 'sync' && shouldCliLearnerObserve('sync', result)) {
+      await observeAfterSync()
+    }
   }
   result = annotateCliAuth(result)
 

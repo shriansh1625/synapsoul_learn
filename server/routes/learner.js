@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { auth } from '../middleware/auth.js'
 import { pool } from '../db/pool.js'
+import { mirrorObserveFireAndForget } from '../lib/learning/ServerLearnerMirror.js'
 
 const router = Router()
 
@@ -41,7 +42,30 @@ router.post('/sync', auth, async (req, res) => {
       )
     }
 
+    mirrorObserveFireAndForget(req.user.id, { type: 'sync', command: 'learner sync' })
     res.json({ ok: true, digest })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
+
+router.post('/observe', auth, async (req, res) => {
+  try {
+    const body = req.body || {}
+    const event = {
+      type: body.type || 'website',
+      command: body.command || null,
+      source: body.source || 'website',
+      skillId: body.skillId || null,
+      moduleId: body.moduleId || null,
+      step: body.step || null,
+      text: body.text || null,
+    }
+    mirrorObserveFireAndForget(req.user.id, event, {
+      progress: body.progress || null,
+      brainSnapshot: body.brainSnapshot || null,
+    })
+    res.json({ ok: true })
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
