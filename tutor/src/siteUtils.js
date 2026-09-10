@@ -1,10 +1,11 @@
+export const SITE_ORIGIN = 'https://synapsoullearn.runs-on.dev'
 export const KIT_ZIP_PATH = '/learnlab-kit.zip'
-export const KIT_ZIP_URL = 'https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip'
-export const SKILL_MD_URL = 'https://tutor-alpha-sandy.vercel.app/skill.md'
-export const INSTALL_UNIX = 'curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh'
-export const INSTALL_WINDOWS = 'irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex'
+export const KIT_ZIP_URL = `${SITE_ORIGIN}/learnlab-kit.zip`
+export const SKILL_MD_URL = `${SITE_ORIGIN}/skill.md`
+export const INSTALL_UNIX = `curl -fsSL ${SITE_ORIGIN}/install | sh`
+export const INSTALL_WINDOWS = `irm ${SITE_ORIGIN}/install.ps1 | iex`
 
-export const UNIVERSAL_PROMPT = 'Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions'
+export const UNIVERSAL_PROMPT = `Read ${SITE_ORIGIN}/skill.md and follow the instructions`
 
 export const DEFAULT_TITLE = 'SynapSoul Learn Hub — The Open Engineering Bootcamp in Your IDE'
 export const DEFAULT_DESCRIPTION =

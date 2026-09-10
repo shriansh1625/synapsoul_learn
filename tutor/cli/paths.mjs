@@ -7,7 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export const CLI_ROOT = join(__dirname, '..')
 export const PRODUCTION_API = 'https://learnerslab.onrender.com'
-export const PRODUCTION_SITE = 'https://tutor-alpha-sandy.vercel.app'
+export const PRODUCTION_SITE = 'https://synapsoullearn.runs-on.dev'
 export const CLI_NAME = 'synapsoul'
 
 /** Prefer SYNAPSOUL_* then legacy LEARNLAB_* so old installs keep working. */

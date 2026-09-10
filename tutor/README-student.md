@@ -2,8 +2,8 @@
 
 You do **not** need GitHub access. You do **not** unzip this folder as the main path.
 
-**Site:** https://tutor-alpha-sandy.vercel.app/
-**Protocol:** https://tutor-alpha-sandy.vercel.app/skill.md
+**Site:** https://synapsoullearn.runs-on.dev/
+**Protocol:** https://synapsoullearn.runs-on.dev/skill.md
 **API:** https://learnerslab.onrender.com
 
 ## Primary setup (any IDE)
@@ -11,7 +11,7 @@ You do **not** need GitHub access. You do **not** unzip this folder as the main 
 1. Paste this in your AI editor:
 
 ```
-Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
 ```
 
 2. Install the CLI:
@@ -19,17 +19,17 @@ Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
 Unix:
 
 ```bash
-curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh
+curl -fsSL https://synapsoullearn.runs-on.dev/install | sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
+irm https://synapsoullearn.runs-on.dev/install.ps1 | iex
 ```
 
 3. `synapsoul login` then `synapsoul start`
 
-4. Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort.
+4. Sign in at https://synapsoullearn.runs-on.dev/ so progress returns to the cohort.
 
 This zip is an **optional** fallback with local curriculum files. Prefer the installer above.

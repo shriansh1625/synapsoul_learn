@@ -10,9 +10,9 @@ function First-Env([string[]]$Names, [string]$Fallback) {
   return $Fallback
 }
 
-$Origin = First-Env @('SYNAPSOUL_ORIGIN', 'LEARNLAB_ORIGIN') 'https://tutor-alpha-sandy.vercel.app'
+$Origin = First-Env @('SYNAPSOUL_ORIGIN', 'LEARNLAB_ORIGIN') 'https://synapsoullearn.runs-on.dev'
 $Api = First-Env @('SYNAPSOUL_API_URL', 'LEARNLAB_API_URL') 'https://learnerslab.onrender.com'
-$Site = First-Env @('SYNAPSOUL_SITE', 'LEARNLAB_SITE') 'https://tutor-alpha-sandy.vercel.app'
+$Site = First-Env @('SYNAPSOUL_SITE', 'LEARNLAB_SITE') 'https://synapsoullearn.runs-on.dev'
 
 $homeOverride = First-Env @('SYNAPSOUL_HOME', 'LEARNLAB_HOME') ''
 $synHome = Join-Path $HOME '.synapsoul'

@@ -2,7 +2,7 @@
 name: synapsoul-learn-hub
 description: AI-taught engineering bootcamp - you are the instructor
 version: 2.1.0
-url: https://tutor-alpha-sandy.vercel.app/
+url: https://synapsoullearn.runs-on.dev/
 ---
 
 # SynapSoul Learn Hub — Instructor Protocol
@@ -24,13 +24,13 @@ Use SynapSoul Learn Hub branding only. Never mention other tutoring platforms.
    **Unix / macOS / Git Bash / WSL**
 
    ```bash
-   curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh
+   curl -fsSL https://synapsoullearn.runs-on.dev/install | sh
    ```
 
    **Windows PowerShell**
 
    ```powershell
-   irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
+   irm https://synapsoullearn.runs-on.dev/install.ps1 | iex
    ```
 
 2. Login (opens the site, or use email/password against the production API):
@@ -61,7 +61,7 @@ That is it. Three commands.
 
 After login, students start free with System Design Fundamentals (Launchpad). That gives them the app foundation the other tracks build on. Bootcamp teaching stays blocked until the student profile has name, degree, bio, and confirmation.
 
-The student should sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the production API at https://learnerslab.onrender.com. Do not ask them to paste JWTs. Do not tell them to git clone. Do not unzip a codebase as the primary path.
+The student should sign in at https://synapsoullearn.runs-on.dev/ so progress returns to the production API at https://learnerslab.onrender.com. Do not ask them to paste JWTs. Do not tell them to git clone. Do not unzip a codebase as the primary path.
 
 ### If the Student Has Already Started
 
@@ -193,7 +193,7 @@ When `status` returns `profile_required` or `onboarding: first_run`:
 2. Collect name, degree, bio via `synapsoul profile update`, then `synapsoul profile confirm`.
 3. Confirm track: node, python, go, or typescript.
 4. `synapsoul start --skill system-design-fundamentals --track <track> --json`.
-5. Point them at https://tutor-alpha-sandy.vercel.app/ to see cohort progress.
+5. Point them at https://synapsoullearn.runs-on.dev/ to see cohort progress.
 
 Keep it conversational. One question at a time.
 

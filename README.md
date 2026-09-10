@@ -4,8 +4,8 @@
 
 Paste one prompt. Get a tutor that remembers how you learn, adapts to your level, and builds proof of how you think.
 
-**Site:** https://tutor-alpha-sandy.vercel.app/
-**Protocol:** https://tutor-alpha-sandy.vercel.app/skill.md
+**Site:** https://synapsoullearn.runs-on.dev/
+**Protocol:** https://synapsoullearn.runs-on.dev/skill.md
 **API:** https://learnerslab.onrender.com
 
 ## Universal Prompt (any IDE)
@@ -15,19 +15,19 @@ Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, and any 
 The landing **Copy** button uses this exact line:
 
 ```
-Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
 ```
 
 Then install the CLI (no git clone, no zip as the main path):
 
 ```bash
-curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh
+curl -fsSL https://synapsoullearn.runs-on.dev/install | sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
+irm https://synapsoullearn.runs-on.dev/install.ps1 | iex
 ```
 
 ```bash
@@ -35,7 +35,7 @@ synapsoul login
 synapsoul start
 ```
 
-Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort API. Do **not** put `ADMIN_EMAIL`, Gmail credentials, or admin OTP details in the prompt or on the landing page.
+Sign in at https://synapsoullearn.runs-on.dev/ so progress returns to the cohort API. Do **not** put `ADMIN_EMAIL`, Gmail credentials, or admin OTP details in the prompt or on the landing page.
 
 ---
 
@@ -75,7 +75,7 @@ Then paste the universal prompt from the landing page into your IDE.
 
 ## How a friend uses SynapSoul Learn Hub
 
-1. Open https://tutor-alpha-sandy.vercel.app/ and copy the one-liner.
+1. Open https://synapsoullearn.runs-on.dev/ and copy the one-liner.
 2. Paste it in Cursor, Claude Code, VS Code Copilot, or Codex.
 3. The instructor installs the SynapSoul CLI (`curl` or `irm | iex`) and runs `synapsoul login` then `synapsoul start`.
 4. Create an account or sign in on the site (email or GitHub) so progress returns to https://learnerslab.onrender.com.
@@ -107,8 +107,8 @@ Students never see this page. It is not in public nav or on the landing page. On
    | `RESEND_API_KEY` | Resend API key (see below). **Never commit this.** |
    | `RESEND_FROM` | `SynapSoul Learn Hub <onboarding@resend.dev>` until you verify a domain |
 
-2. Register or sign in on https://tutor-alpha-sandy.vercel.app/ with **that Gmail** and **your own password**. SynapSoul does not set or invent an admin password. GitHub sign-in also works if the GitHub email is that address. `is_admin` is set automatically for that email only.
-3. Open https://tutor-alpha-sandy.vercel.app/admin (or `/#/admin`).
+2. Register or sign in on https://synapsoullearn.runs-on.dev/ with **that Gmail** and **your own password**. SynapSoul does not set or invent an admin password. GitHub sign-in also works if the GitHub email is that address. `is_admin` is set automatically for that email only.
+3. Open https://synapsoullearn.runs-on.dev/admin (or `/#/admin`).
 4. Click **Send code to Gmail**, then enter the 6-digit code. Codes expire in 10 minutes. You can request a new code at most once per 60 seconds. The code is sent over HTTPS (Resend), not SMTP; it still arrives in the Gmail inbox.
 5. After verify, the cohort dashboard loads. The OTP session lasts 12 hours or until logout.
 
@@ -139,7 +139,7 @@ If `RESEND_API_KEY` is missing, `/api/admin/otp/request` returns **503** with th
 
 The development repo (`https://github.com/shriansh1625/learnerslab`) holds the full product: API (`server/`), admin dashboard, env examples, Render/Vercel config, and live-test scripts. **Students never need that repo.**
 
-- **Students** paste one prompt, install the CLI from https://tutor-alpha-sandy.vercel.app/install, and learn against the production API. No GitHub access required.
+- **Students** paste one prompt, install the CLI from https://synapsoullearn.runs-on.dev/install, and learn against the production API. No GitHub access required.
 - **Vercel** (frontend) and **Render** (API) stay connected to this repo through the **owner's GitHub login**. Making the repository **Private** does not break deploys as long as the owner remains authorized on those services.
 - Do not add students as GitHub collaborators. The hosted protocol + installer is the student path.
 
@@ -174,7 +174,7 @@ Manual steps:
 3. Render reads `render.yaml` and creates:
    - **learnlab-db** — PostgreSQL (free tier)
    - **learnlab-api** — Node.js web service
-4. Set `FRONTEND_URL` on the API service to your Vercel URL (e.g. `https://learnerslab.vercel.app`)
+4. Set `FRONTEND_URL` on the API service to `https://synapsoullearn.runs-on.dev` (no trailing slash)
 5. `JWT_SECRET` is auto-generated; `DATABASE_URL` is wired from the database
 6. On **learnlab-api** (not Vercel), set `ADMIN_EMAIL=omshriansh16@gmail.com` and `RESEND_API_KEY` (Resend HTTPS mailer). Render blocks SMTP ports 587/465; do not rely on `GMAIL_APP_PASSWORD` in production.
 
@@ -298,7 +298,7 @@ CLI: `npm run tutor -- learning stats --json`
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `JWT_SECRET` | Yes | Random string for signing tokens |
-| `FRONTEND_URL` | Yes (prod) | Vercel URL for CORS |
+| `FRONTEND_URL` | Yes (prod) | Public site URL for CORS. Default `https://synapsoullearn.runs-on.dev`. The old Vercel alias stays allowed in CORS only. |
 | `PORT` | No | Default `3001`; Render sets automatically |
 | `LEARNLAB_LLM_ENABLED` | No | Legacy alias of `SYNAPSOUL_LLM_ENABLED`. Set `false` to disable LLM overlay (heuristics only) |
 | `SYNAPSOUL_LLM_ENABLED` | No | Set `false` to disable LLM overlay (heuristics only) |
@@ -334,7 +334,7 @@ Public hiring profiles can show a GitHub button and let builders sign in or conn
 
 1. GitHub → **Settings** → **Developer settings** → **OAuth Apps** → **New OAuth App**
 2. Application name: `SynapSoul Learn Hub`
-3. Homepage URL: your Vercel origin, e.g. `https://tutor-alpha-sandy.vercel.app`
+3. Homepage URL: `https://synapsoullearn.runs-on.dev`
 4. Authorization callback URL: `https://learnerslab.onrender.com/api/auth/github/callback` (your Render API origin + `/api/auth/github/callback`)
 5. Copy the Client ID. Generate a Client Secret.
 6. On the Render API service, set:
@@ -344,7 +344,7 @@ Public hiring profiles can show a GitHub button and let builders sign in or conn
 | `GITHUB_CLIENT_ID` | from the OAuth App |
 | `GITHUB_CLIENT_SECRET` | from the OAuth App |
 | `GITHUB_CALLBACK_URL` | `https://learnerslab.onrender.com/api/auth/github/callback` |
-| `FRONTEND_URL` | `https://tutor-alpha-sandy.vercel.app` |
+| `FRONTEND_URL` | `https://synapsoullearn.runs-on.dev` |
 
 7. Redeploy the API. Sign-in shows **Continue with GitHub**. The in-app Profile page shows **Connect GitHub**.
 
@@ -360,9 +360,9 @@ Paste a public LinkedIn URL on the Profile editor anytime (`PUT /api/profile` fi
 
 ### Public profile URLs
 
-- Canonical: `https://tutor-alpha-sandy.vercel.app/u/{username}` (Vercel rewrite → SPA)
-- Hash fallback: `https://tutor-alpha-sandy.vercel.app/#/u/{username}`
-- Copy link always copies the full origin URL (`origin/u/{username}`)
+- Canonical: `https://synapsoullearn.runs-on.dev/u/{username}` (production rewrite → SPA)
+- Hash fallback: `https://synapsoullearn.runs-on.dev/#/u/{username}`
+- Copy link always copies the current origin (`window.location.origin/u/{username}`) so both domains work
 
 Owners edit from the in-app **Profile** tab. Recruiters only see the public page.
 
@@ -473,7 +473,7 @@ Repeatable audits against **production** (or override URLs with env vars). Simul
 |----------|---------|
 | `SYNAPSOUL_API_URL` | `https://learnerslab.onrender.com` |
 | `LEARNLAB_API_URL` | Alias of `SYNAPSOUL_API_URL` (still accepted) |
-| `SYNAPSOUL_FRONTEND_URL` | `https://tutor-alpha-sandy.vercel.app` |
+| `SYNAPSOUL_FRONTEND_URL` | `https://synapsoullearn.runs-on.dev` |
 | `LEARNLAB_FRONTEND_URL` | Alias of `SYNAPSOUL_FRONTEND_URL` (still accepted) |
 
 ```bash

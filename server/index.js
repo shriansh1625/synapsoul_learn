@@ -18,13 +18,15 @@ const app = express()
 const PORT = process.env.PORT || 3001
 
 const LOCAL_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173']
+const DEFAULT_FRONTEND = 'https://synapsoullearn.runs-on.dev'
+const LEGACY_FRONTEND = 'https://tutor-alpha-sandy.vercel.app'
 
 function normalizeOrigin(origin) {
   return origin?.replace(/\/$/, '') || ''
 }
 
 function parseFrontendOrigins() {
-  return (process.env.FRONTEND_URL || '')
+  return (process.env.FRONTEND_URL || DEFAULT_FRONTEND)
     .split(',')
     .map(s => normalizeOrigin(s.trim()))
     .filter(Boolean)
@@ -34,6 +36,9 @@ function isAllowedOrigin(origin) {
   const normalized = normalizeOrigin(origin)
   if (LOCAL_ORIGINS.includes(normalized)) return true
   if (parseFrontendOrigins().includes(normalized)) return true
+  if (normalized === DEFAULT_FRONTEND) return true
+  // Keep the old Vercel alias until DNS is exclusive
+  if (normalized === LEGACY_FRONTEND) return true
   // Vercel production + preview deployments (trailing slash normalized above)
   if (/^https:\/\/tutor-alpha-sandy[\w-]*\.vercel\.app$/.test(normalized)) return true
   if (/^https:\/\/[\w-]+\.vercel\.app$/.test(normalized)) return true

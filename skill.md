@@ -2,25 +2,25 @@
 name: synapsoul-learn-hub
 description: SynapSoul Learn Hub owner workspace — students use the hosted protocol
 version: 2.1.0
-url: https://tutor-alpha-sandy.vercel.app/
+url: https://synapsoullearn.runs-on.dev/
 ---
 
 # SynapSoul Learn Hub — Workspace note
 
 If you are a **student**, ignore this file. Follow the hosted instructor protocol:
 
-**https://tutor-alpha-sandy.vercel.app/skill.md**
+**https://synapsoullearn.runs-on.dev/skill.md**
 
 Paste this in any AI editor:
 
 ```
-Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
 ```
 
 Then install the CLI (no git clone, no zip):
 
-- Unix: `curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh`
-- Windows PowerShell: `irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex`
+- Unix: `curl -fsSL https://synapsoullearn.runs-on.dev/install | sh`
+- Windows PowerShell: `irm https://synapsoullearn.runs-on.dev/install.ps1 | iex`
 
 Then: `synapsoul login` → `synapsoul start`
 

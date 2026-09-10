@@ -3,7 +3,7 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const FRONTEND = process.env.SYNAPSOUL_FRONTEND_URL || process.env.LEARNLAB_FRONTEND_URL || 'https://tutor-alpha-sandy.vercel.app'
+const FRONTEND = process.env.SYNAPSOUL_FRONTEND_URL || process.env.LEARNLAB_FRONTEND_URL || 'https://synapsoullearn.runs-on.dev'
 
 export default defineConfig({
   testDir: './e2e',

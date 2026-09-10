@@ -2,9 +2,9 @@
 # SynapSoul Learn Hub CLI installer — downloads the student CLI only. Does not clone a repo.
 set -e
 
-ORIGIN="${SYNAPSOUL_ORIGIN:-${LEARNLAB_ORIGIN:-https://tutor-alpha-sandy.vercel.app}}"
+ORIGIN="${SYNAPSOUL_ORIGIN:-${LEARNLAB_ORIGIN:-https://synapsoullearn.runs-on.dev}}"
 API="${SYNAPSOUL_API_URL:-${LEARNLAB_API_URL:-https://learnerslab.onrender.com}}"
-SITE="${SYNAPSOUL_SITE:-${LEARNLAB_SITE:-https://tutor-alpha-sandy.vercel.app}}"
+SITE="${SYNAPSOUL_SITE:-${LEARNLAB_SITE:-https://synapsoullearn.runs-on.dev}}"
 
 if [ -n "${SYNAPSOUL_HOME:-}" ]; then
   HOME_DIR="$SYNAPSOUL_HOME"

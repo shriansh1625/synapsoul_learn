@@ -1,14 +1,14 @@
 # SynapSoul Learn Hub
 
-Students: follow the hosted protocol at https://tutor-alpha-sandy.vercel.app/skill.md
+Students: follow the hosted protocol at https://synapsoullearn.runs-on.dev/skill.md
 Do not git clone. Do not unzip a kit as the main path.
 
 ```
-Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
 ```
 
-Unix: `curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh`
-Windows PowerShell: `irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex`
+Unix: `curl -fsSL https://synapsoullearn.runs-on.dev/install | sh`
+Windows PowerShell: `irm https://synapsoullearn.runs-on.dev/install.ps1 | iex`
 
 Then `synapsoul login` and `synapsoul start --json`. Production API: `https://learnerslab.onrender.com`.
 

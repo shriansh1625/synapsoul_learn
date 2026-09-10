@@ -3,13 +3,13 @@
 Copy **one** line into your AI editor:
 
 ```
-Read https://tutor-alpha-sandy.vercel.app/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
 ```
 
 Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, and any agent that can read a URL and run a terminal.
 
-Site: https://tutor-alpha-sandy.vercel.app/
-Protocol: https://tutor-alpha-sandy.vercel.app/skill.md
+Site: https://synapsoullearn.runs-on.dev/
+Protocol: https://synapsoullearn.runs-on.dev/skill.md
 API: https://learnerslab.onrender.com
 
 ## Install CLI (no git clone)
@@ -17,13 +17,13 @@ API: https://learnerslab.onrender.com
 Unix / macOS / Git Bash / WSL:
 
 ```bash
-curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh
+curl -fsSL https://synapsoullearn.runs-on.dev/install | sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex
+irm https://synapsoullearn.runs-on.dev/install.ps1 | iex
 ```
 
 Then:
@@ -33,4 +33,4 @@ synapsoul login
 synapsoul start
 ```
 
-Sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort API.
+Sign in at https://synapsoullearn.runs-on.dev/ so progress returns to the cohort API.

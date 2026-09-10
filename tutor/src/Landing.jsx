@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import leaderboardData from '../data/leaderboard.json'
-import { copyText, setPageMeta, UNIVERSAL_PROMPT, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from './siteUtils.js'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, DEFAULT_TITLE, DEFAULT_DESCRIPTION, INSTALL_UNIX, INSTALL_WINDOWS } from './siteUtils.js'
 
 const MARQUEE_ITEMS = [
   { text: 'AI Workflows', accent: true },
@@ -604,9 +604,9 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
               </button>
             </div>
             <p className="cta-cli">
-              Unix: <code>curl -fsSL https://tutor-alpha-sandy.vercel.app/install | sh</code>
+              Unix: <code>{INSTALL_UNIX}</code>
               <br />
-              Windows: <code>irm https://tutor-alpha-sandy.vercel.app/install.ps1 | iex</code>
+              Windows: <code>{INSTALL_WINDOWS}</code>
             </p>
           </div>
         </div>
