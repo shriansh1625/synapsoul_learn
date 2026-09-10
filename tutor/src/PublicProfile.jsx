@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import catalog from '../data/catalog.json'
 import { fetchPublicProfile, publicProfileUrl } from './api.js'
+import { copyText, setPageMeta, humanizeApiError } from './siteUtils.js'
 
 const EMPTY_BIO = 'Engineering learner in the LearnLab bootcamp — collecting evidence of how they design, debug, and ship.'
 
@@ -46,8 +47,12 @@ export default function PublicProfile({ username, onBack }) {
 
   const profileUrl = publicProfileUrl(username)
 
-  function copyLink() {
-    navigator.clipboard.writeText(profileUrl)
+  async function copyLink() {
+    const ok = await copyText(profileUrl)
+    if (!ok) {
+      setCopied(false)
+      return
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -59,12 +64,30 @@ export default function PublicProfile({ username, onBack }) {
         const data = await fetchPublicProfile(username)
         if (!cancelled) setProfile(data)
       } catch (e) {
-        if (!cancelled) setError(e.message || 'Profile not found')
+        if (!cancelled) setError(humanizeApiError(e, 'Profile not found'))
       }
     }
     load()
     return () => { cancelled = true }
   }, [username])
+
+  useEffect(() => {
+    if (error) {
+      setPageMeta({
+        title: 'Profile not found · LearnLab',
+        description: `No public LearnLab hiring profile for ${username}.`,
+      })
+      return
+    }
+    if (!profile) {
+      setPageMeta({ title: `${username} · LearnLab` })
+      return
+    }
+    setPageMeta({
+      title: `${profile.name || username} · LearnLab`,
+      description: profile.headline || profile.bio || `${profile.name || username} on LearnLab — evidence from built work, not certificates.`,
+    })
+  }, [error, profile, username])
 
   if (error) {
     return (
@@ -76,6 +99,7 @@ export default function PublicProfile({ username, onBack }) {
           <p className="section-eyebrow">Hiring profile</p>
           <h2 className="display-xs">Profile not found</h2>
           <p>No public LearnLab profile for <code>{username}</code>. Ask the builder to set a username and make the profile public.</p>
+          <button type="button" className="btn-secondary" onClick={onBack}>Back to LearnLab</button>
         </section>
       </div>
     )

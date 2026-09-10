@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import leaderboardData from '../data/leaderboard.json'
-
-const UNIVERSAL_PROMPT = 'Read skill.md and follow the instructions'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from './siteUtils.js'
 
 const MARQUEE_ITEMS = [
   { text: 'AI Workflows', accent: true },
@@ -174,33 +173,61 @@ function scrollTo(id) {
 
 export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  function copyPrompt() {
-    navigator.clipboard.writeText(UNIVERSAL_PROMPT)
+  useEffect(() => {
+    setPageMeta({ title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION })
+  }, [])
+
+  async function copyPrompt() {
+    setCopyError('')
+    const ok = await copyText(UNIVERSAL_PROMPT)
+    if (!ok) {
+      setCopyError('Could not copy. Select the prompt and copy it manually.')
+      return
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function goSection(id) {
+    setMenuOpen(false)
+    scrollTo(id)
   }
 
   const marqueeTrack = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS]
 
   return (
-    <div className="landing">
+    <div className="landing" id="top">
       <div className="landing-grain" aria-hidden="true" />
       <div className="landing-ambient" aria-hidden="true" />
 
       <input type="checkbox" id="theme-toggle" className="theme-toggle-input" aria-label="Toggle light mode" />
 
       <nav className="glass-nav reveal" aria-label="Main navigation">
-        <div className="glass-nav-pill">
-          <a href="#" className="glass-nav-logo" onClick={e => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
+        <div className={`glass-nav-pill ${menuOpen ? 'is-open' : ''}`}>
+          <a href="#top" className="glass-nav-logo" onClick={e => { e.preventDefault(); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
             <span className="logo-badge">LL</span>
             <span className="logo-text">LearnLab</span>
           </a>
-          <div className="glass-nav-links">
-            <button type="button" onClick={() => scrollTo('why')}>Why LearnLab</button>
-            <button type="button" onClick={() => scrollTo('how')}>How It Works</button>
-            <button type="button" onClick={() => scrollTo('skills')}>Skills</button>
-            <button type="button" onClick={() => scrollTo('leaderboard')}>Leaderboard</button>
+          <button
+            type="button"
+            className="nav-burger"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls="landing-menu"
+            onClick={() => setMenuOpen(open => !open)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <div id="landing-menu" className={`glass-nav-links ${menuOpen ? 'is-open' : ''}`}>
+            <button type="button" onClick={() => goSection('why')}>Why LearnLab</button>
+            <button type="button" onClick={() => goSection('how')}>How It Works</button>
+            <button type="button" onClick={() => goSection('skills')}>Skills</button>
+            <button type="button" onClick={() => goSection('leaderboard')}>Leaderboard</button>
           </div>
           <div className="glass-nav-actions">
             <label htmlFor="theme-toggle" className="theme-toggle" aria-hidden="true">
@@ -267,6 +294,8 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
             </button>
           </div>
           <p className="prompt-note">Works with Cursor, Claude Code, Codex, Antigravity · Free · Offline after setup</p>
+          {copyError && <p className="form-feedback is-error" role="alert">{copyError}</p>}
+          {copied && <p className="form-feedback is-success" role="status">Prompt copied to clipboard</p>}
         </div>
       </section>
 
@@ -291,7 +320,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
 
       <section className="landing-skills reveal" id="skills">
         <div className="section-head">
-          <p className="section-eyebrow">Selected work</p>
+          <p className="section-eyebrow">Curriculum</p>
           <h2 className="display-sm">Things you will <em>ship</em></h2>
           <p className="section-desc">Six modules. Real engineering judgment. Not tutorial hell.</p>
         </div>
@@ -329,8 +358,8 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
       <section className="landing-chips reveal" id="tools">
         <div className="section-head">
           <p className="section-eyebrow">Your stack</p>
-          <h2 className="display-sm">Tools I think in</h2>
-          <p className="section-desc">The daily stack across IDEs, languages, and tracks. Hover a chip — it flips.</p>
+          <h2 className="display-sm">Editors, languages, <em>tracks</em></h2>
+          <p className="section-desc">Works in the editors and runtimes you already use.</p>
         </div>
         <div className="chip-categories">
           {CHIP_CATEGORIES.map(cat => (
@@ -434,7 +463,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
         </div>
         <div className="steps-row steps-60s">
           {HOW_60_SECONDS.map((step, i) => (
-            <div key={step.title} className="step-item reveal reveal-d{i + 1}">
+            <div key={step.title} className={`step-item reveal reveal-d${(i % 3) + 1}`}>
               <span className="step-time">{step.num}</span>
               <strong>{step.title}</strong>
               <p>{step.desc}</p>
@@ -553,7 +582,12 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
       </section>
 
       <footer className="landing-footer">
-        <p>LearnLab · Local-first engineering bootcamp · <button type="button" className="link-btn" onClick={onEnterApp}>Dashboard</button></p>
+        <p>
+          LearnLab · Local-first engineering bootcamp ·{' '}
+          <button type="button" className="link-btn" onClick={onEnterApp}>Dashboard</button>
+          {' · '}
+          <a className="link-btn" href="https://github.com/shriansh1625/learnerslab" target="_blank" rel="noreferrer">GitHub</a>
+        </p>
       </footer>
     </div>
   )

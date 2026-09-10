@@ -14,6 +14,7 @@ import {
   fetchLlmHint, apiEnabled, fetchMe,
 } from './api.js'
 import { loadModuleJson } from './curriculumModules.js'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError } from './siteUtils.js'
 
 function parseRoute() {
   const path = (window.location.pathname || '/').replace(/\/+$/, '') || '/'
@@ -45,6 +46,13 @@ function parseRoute() {
   }
 
   if (hashPath === '/college' || path === '/college') return { type: 'college' }
+
+  const knownHash = !hashPath || hashPath === '/' || !hashPath.startsWith('/')
+  const knownPath = path === '/' || path === '/index.html'
+  if (!knownPath) return { type: 'notfound', path }
+  if (!knownHash && hashPath !== '/college' && !hashPath.startsWith('/u/') && hashPath !== '/auth' && hashPath !== '/auth/callback') {
+    return { type: 'notfound', path: hashPath }
+  }
   return { type: 'app' }
 }
 
@@ -166,6 +174,7 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [authUser, setAuthUser] = useState(null)
   const [liveLeaderboard, setLiveLeaderboard] = useState(null)
+  const [navOpen, setNavOpen] = useState(false)
   const prevCompletedRef = useRef(new Set(Object.keys(loadProgress().completedModules || {})))
   const syncFailuresRef = useRef(0)
   const { snapshot: brainSnapshot, observe: observeBrainEvent } = useBrain(progress, authUser)
@@ -210,6 +219,9 @@ export default function App() {
         await applyProgress(cliProgress)
       } catch {
         syncFailuresRef.current += 1
+        if (syncFailuresRef.current === 1) {
+          addToast('Could not sync progress from the cloud. Work on this device is still saved.', 'error')
+        }
       }
     }
 
@@ -251,7 +263,10 @@ export default function App() {
       } else if (r.type === 'college') {
         setShowLanding(false)
         setView('college')
+      } else if (r.type === 'notfound') {
+        setShowLanding(false)
       }
+      setNavOpen(false)
     }
     window.addEventListener('hashchange', onRouteChange)
     window.addEventListener('popstate', onRouteChange)
@@ -264,6 +279,29 @@ export default function App() {
   useEffect(() => {
     if (route.type === 'college') setView('college')
   }, [route])
+
+  useEffect(() => {
+    if (showLanding || route.type === 'public' || route.type === 'oauth') return
+    if (route.type === 'notfound') {
+      setPageMeta({
+        title: 'Page not found · LearnLab',
+        description: 'That LearnLab page does not exist. Head back to the bootcamp home.',
+      })
+      return
+    }
+    const titles = {
+      dashboard: ['Dashboard · LearnLab', 'Your LearnLab bootcamp progress, evidence, and next module.'],
+      skills: ['Skills · LearnLab', 'Six engineering skills — system design, debugging, production, AI, and communication.'],
+      portfolio: ['Portfolio · LearnLab', 'Evidence of how you design, debug, and ship — not certificates.'],
+      profile: ['Profile · LearnLab', 'Edit your recruiter-facing LearnLab hiring profile.'],
+      leaderboard: ['Leaderboard · LearnLab', 'Readiness rankings across the LearnLab bootcamp.'],
+      college: ['College · LearnLab', 'Cohort insights for college partners.'],
+      dimensions: ['Dimensions · LearnLab', 'Scored reasoning across LearnLab evidence dimensions.'],
+      glossary: ['Glossary · LearnLab', 'Engineering terms used across the LearnLab curriculum.'],
+    }
+    const pair = titles[view] || titles.dashboard
+    setPageMeta({ title: pair[0], description: pair[1] })
+  }, [showLanding, route, view])
 
   function enterApp() {
     setShowLanding(false)
@@ -293,8 +331,9 @@ export default function App() {
       setToken(token)
       setAuthUser(user)
       syncFailuresRef.current = 0
+      addToast('Account created — you can sign in on any device', 'success')
     } catch {
-      addToast('Account saved locally — cloud sync unavailable', 'welcome')
+      addToast('Account saved on this device — cloud sync unavailable', 'error')
     }
   }
 
@@ -309,7 +348,7 @@ export default function App() {
     })
     localStorage.setItem('learnlab-onboarded', '1')
     setShowOnboarding(false)
-    addToast('Welcome to LearnLab — paste the universal prompt in Cursor!', 'welcome')
+    addToast('Welcome to LearnLab — paste the universal prompt in Cursor', 'success')
   }
 
   function handleAuthSuccess({ token, user }) {
@@ -320,7 +359,7 @@ export default function App() {
     if (user) {
       setProgress(p => ({ ...p, profile: { ...p.profile, ...user } }))
     }
-    addToast(`Signed in as ${user?.name || user?.email || 'LearnLab'}`, 'welcome')
+    addToast(`Signed in as ${user?.name || user?.email || 'LearnLab'}`, 'success')
     fetchProgress()
       .then(p => setProgress(p))
       .catch(() => {})
@@ -329,7 +368,7 @@ export default function App() {
   function handleLogout() {
     setToken(null)
     setAuthUser(null)
-    addToast('Signed out — progress stays in localStorage', 'welcome')
+    addToast('Signed out — progress stays on this device', 'success')
   }
 
   function goCollege() {
@@ -397,6 +436,14 @@ export default function App() {
     )
   }
 
+  if (route.type === 'notfound') {
+    return (
+      <div className="app public-app">
+        <NotFoundView onHome={goHome} path={route.path} />
+      </div>
+    )
+  }
+
   if (showLanding) {
     return (
       <Landing
@@ -450,15 +497,27 @@ export default function App() {
             <span className="logo-text">LearnLab</span>
             <span className="version">v2</span>
           </div>
-          <nav className="nav">
-            <button type="button" className="nav-btn" onClick={goToLanding}>
+          <button
+            type="button"
+            className="nav-burger app-burger"
+            aria-label={navOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={navOpen}
+            aria-controls="app-menu"
+            onClick={() => setNavOpen(open => !open)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <nav id="app-menu" className={`nav ${navOpen ? 'is-open' : ''}`}>
+            <button type="button" className="nav-btn" onClick={() => { setNavOpen(false); goToLanding() }}>
               Home
             </button>
             {NAV.map(n => (
               <button
                 key={n.id}
                 className={`nav-btn ${view === n.id ? 'active' : ''}`}
-                onClick={() => setView(n.id)}
+                onClick={() => { setNavOpen(false); setView(n.id) }}
               >
                 {n.label}
               </button>
@@ -541,7 +600,10 @@ export default function App() {
 
       <footer className="footer">
         <p>
-          CLI: <code>npm run tutor -- status --all</code> · <code>npm run tutor -- sync --publish</code> · <code>npm run tutor -- start --skill system-design-fundamentals</code>
+          LearnLab ·{' '}
+          <button type="button" className="link-btn" onClick={goToLanding}>Home</button>
+          {' · '}
+          <a className="link-btn" href="https://github.com/shriansh1625/learnerslab" target="_blank" rel="noreferrer">GitHub</a>
         </p>
       </footer>
     </div>
@@ -702,11 +764,13 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
       )}
 
       {!session && (
-        <section className="card start-card elevated">
-          <h2 className="display-xs">Ready to <em>start?</em></h2>
-          <p>Run in terminal:</p>
-          <code className="cli-block">npm run tutor -- start --skill system-design-fundamentals --track node</code>
-          <p className="cursor-hint">Or say <code>"Start my lesson"</code> in Cursor chat.</p>
+        <section className="card start-card elevated empty-state">
+          <p className="section-eyebrow">First module</p>
+          <h2 className="display-xs">No modules completed yet</h2>
+          <p>Paste the universal prompt in Cursor to start System Design Fundamentals. Evidence lands here as you ship.</p>
+          <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+          <StartPromptCopy />
+          <p className="cursor-hint">You can also say <code>Start my lesson</code> in Cursor after the instructor boots.</p>
         </section>
       )}
 
@@ -778,7 +842,9 @@ function SkillsView({ progress, selectedSkill, onSelectSkill, skillUnlocked }) {
             <p className="section-eyebrow">Start skill</p>
             <h2 className="display-xs">{selectedSkill.title}</h2>
             <p>{selectedSkill.description}</p>
-            <h3>Start command</h3>
+            <h3>Start in your editor</h3>
+            <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+            <p className="cursor-hint">Then say <code>Start {selectedSkill.title}</code> in chat, or run:</p>
             <code className="cli-block">npm run tutor -- start --skill {selectedSkill.id}</code>
             <h3>Growth dimensions</h3>
             <div className="skills">
@@ -799,8 +865,8 @@ function PortfolioView({ portfolio }) {
       <section className="card empty-state elevated">
         <p className="section-eyebrow">Evidence</p>
         <h2 className="display-xs">Portfolio</h2>
-        <p>Complete modules and submit evaluations to build your evidence portfolio.</p>
-        <p className="cursor-hint">Portfolio items are captured during REFLECT via <code>tutor report</code>.</p>
+        <p>Complete modules and submit evaluations to build your evidence portfolio. Nothing is listed until you ship a REFLECT artifact.</p>
+        <p className="cursor-hint">Start with the universal prompt in Cursor — portfolio items appear here automatically.</p>
       </section>
     )
   }
@@ -839,7 +905,9 @@ function DimensionsView({ scores, growthAreas }) {
       </div>
       {entries.length === 0 ? (
         <section className="card empty-state elevated">
-          <p>Complete your first module REFLECT to see dimension scores.</p>
+          <p className="section-eyebrow">Scored reasoning</p>
+          <h2 className="display-xs">No dimension scores yet</h2>
+          <p>Complete your first module REFLECT to see tradeoff, debugging, and production scores.</p>
         </section>
       ) : (
         <div className="dimension-grid">
@@ -875,7 +943,13 @@ function GlossaryView({ terms, filter, onFilter }) {
         onChange={e => onFilter(e.target.value)}
       />
       <div className="glossary-list">
-        {terms.map(t => (
+        {terms.length === 0 ? (
+          <section className="card empty-state elevated">
+            <p className="section-eyebrow">Reference</p>
+            <h2 className="display-xs">No matching terms</h2>
+            <p>{filter ? `Nothing in the glossary matches “${filter}”.` : 'Glossary terms will appear here.'}</p>
+          </section>
+        ) : terms.map(t => (
           <article key={t.id} className="glossary-card card elevated">
             <h3>{t.term}</h3>
             <p>{t.definition}</p>
@@ -913,6 +987,7 @@ function oauthErrorMessage(code) {
 
 function OAuthCatch({ route, onSuccess, onSetup, onError }) {
   useEffect(() => {
+    setPageMeta({ title: 'Signing in · LearnLab', description: 'Finishing LearnLab sign-in.' })
     let cancelled = false
     async function finish() {
       try {
@@ -930,7 +1005,7 @@ function OAuthCatch({ route, onSuccess, onSetup, onError }) {
         if (route.github === 'setup' || route.linkedin === 'setup') onSetup(route)
         else onError(oauthErrorMessage(route.error))
       } catch (e) {
-        if (!cancelled) onError(e.message || 'Sign-in did not complete')
+        if (!cancelled) onError(humanizeApiError(e, 'Sign-in did not complete'))
       }
     }
     finish()
@@ -962,18 +1037,28 @@ function CompletionCeremony({ progress }) {
 }
 
 function CollegeView({ demo }) {
-  const avgReadiness = Math.round(demo.reduce((a, s) => a + s.readiness_score, 0) / demo.length)
+  const entries = demo || []
+  if (!entries.length) {
+    return (
+      <section className="card empty-state elevated">
+        <p className="section-eyebrow">College analytics</p>
+        <h2 className="display-xs">No cohort data yet</h2>
+        <p>When students publish hiring profiles, readiness and evidence will show up here for partners.</p>
+      </section>
+    )
+  }
+  const avgReadiness = Math.round(entries.reduce((a, s) => a + (s.readiness_score || 0), 0) / entries.length)
   return (
     <>
       <div className="page-header">
         <p className="section-eyebrow">College analytics</p>
         <h2 className="display-sm">Student <em>insights</em></h2>
-        <p className="section-sub">Evidence-based analytics — stub dashboard for college partners</p>
+        <p className="section-sub">Cohort readiness from published hiring profiles.</p>
       </div>
       <div className="stats-row">
         <div className="stat-card">
-          <span className="stat-value">{demo.length}</span>
-          <span className="stat-label">Demo students</span>
+          <span className="stat-value">{entries.length}</span>
+          <span className="stat-label">Students</span>
         </div>
         <div className="stat-card">
           <span className="stat-value">{avgReadiness}</span>
@@ -986,9 +1071,9 @@ function CollegeView({ demo }) {
       </div>
       <section className="card elevated">
         <h3>Cohort overview</h3>
-        <p className="section-sub">Connect GitHub OAuth and cloud sync for live cohort data (future).</p>
+        <p className="section-sub">Live data appears as students publish profiles.</p>
         <div className="leaderboard-list">
-          {demo.map(e => (
+          {entries.map(e => (
             <div key={e.username} className="leaderboard-row card elevated">
               <div className="lb-info">
                 <strong>{e.name}</strong>
@@ -1010,7 +1095,22 @@ function LeaderboardView({ progress, demo, onProfile }) {
     modules_completed: Object.keys(progress.completedModules || {}).length,
     headline: 'Your current progress',
   }
-  const entries = [local, ...demo].sort((a, b) => b.readiness_score - a.readiness_score)
+  const cloud = Array.isArray(demo) ? demo : []
+  if (!cloud.length && local.modules_completed === 0) {
+    return (
+      <>
+        <div className="page-header">
+          <p className="section-eyebrow">Rankings</p>
+          <h2 className="display-sm">Leaderboard</h2>
+        </div>
+        <section className="card empty-state elevated">
+          <h2 className="display-xs">No published rankings yet</h2>
+          <p>Readiness scores appear as learners complete modules and publish hiring profiles. Your local progress stays private until you sign in.</p>
+        </section>
+      </>
+    )
+  }
+  const entries = [local, ...cloud].sort((a, b) => b.readiness_score - a.readiness_score)
 
   return (
     <>
@@ -1026,7 +1126,7 @@ function LeaderboardView({ progress, demo, onProfile }) {
             className={`leaderboard-row card elevated ${e.name === local.name ? 'you' : ''} ${rankClass(i)}`}
           >
             <span className={`rank ${rankClass(i)}`}>
-              {i < 3 ? ['🥇', '🥈', '🥉'][i] : `#${i + 1}`}
+              #{i + 1}
             </span>
             <div className="lb-info">
               <strong>
@@ -1065,13 +1165,50 @@ function computeDimensionAverages(scores) {
   return avgs
 }
 
+function StartPromptCopy() {
+  const [copied, setCopied] = useState(false)
+  const [error, setError] = useState('')
+
+  async function copy() {
+    setError('')
+    const ok = await copyText(UNIVERSAL_PROMPT)
+    if (!ok) {
+      setError('Could not copy. Select the prompt above and copy it manually.')
+      return
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="empty-actions">
+      <button type="button" className="btn-primary" onClick={copy}>
+        {copied ? 'Prompt copied' : 'Copy universal prompt'}
+      </button>
+      {copied && <p className="form-feedback is-success" role="status">Prompt copied to clipboard</p>}
+      {error && <p className="form-feedback is-error" role="alert">{error}</p>}
+    </div>
+  )
+}
+
+function NotFoundView({ onHome, path }) {
+  return (
+    <section className="card empty-state not-found-page elevated">
+      <p className="section-eyebrow">404</p>
+      <h1 className="display-sm">This page isn’t in the bootcamp</h1>
+      <p>No LearnLab route for <code>{path || 'that URL'}</code>.</p>
+      <button type="button" className="btn-primary" onClick={onHome}>Back to LearnLab</button>
+    </section>
+  )
+}
+
 function ToastStack({ toasts }) {
   if (!toasts.length) return null
   return (
     <div className="toast-stack" aria-live="polite">
       {toasts.map(t => (
         <div key={t.id} className={`toast toast-${t.type}`}>
-          {t.type === 'skill' ? '🏆' : t.type === 'module' ? '✓' : '◈'} {t.message}
+          {t.message}
         </div>
       ))}
     </div>
@@ -1131,7 +1268,7 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
               <p className="section-sub">This unlocks your bootcamp and public hiring profile.</p>
               <label className="onboard-field">
                 Name
-                <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" />
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="Full name" />
               </label>
               <label className="onboard-field">
                 Degree
@@ -1185,10 +1322,9 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
             <>
               <p className="section-eyebrow">Step 3 of 3</p>
               <h2 className="display-xs">Start your <em>first module</em></h2>
-              <p className="section-sub">Run this in terminal, then say &quot;Continue my lesson&quot; in Cursor.</p>
-              <code className="cli-block">
-                npm run tutor -- start --skill {foundation?.id} --track {track}
-              </code>
+              <p className="section-sub">Paste this in Cursor, then say &quot;Continue my lesson&quot;.</p>
+              <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+              <p className="cursor-hint">Optional CLI: <code>npm run tutor -- start --skill {foundation?.id} --track {track}</code></p>
             </>
           )}
         </div>

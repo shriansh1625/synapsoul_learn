@@ -147,7 +147,7 @@ router.put('/', auth, async (req, res) => {
     res.json({ user: ownerUser(rows[0]) })
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Username already taken' })
-    res.status(500).json({ error: e.message })
+    res.status(500).json({ error: 'Could not save your profile. Try again.' })
   }
 })
 

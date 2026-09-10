@@ -3,6 +3,7 @@ import {
   isLoggedIn, fetchMe, updateProfile, fetchAuthProviders,
   publicProfileUrl, oauthStartUrl,
 } from './api.js'
+import { copyText } from './siteUtils.js'
 
 function computeReadiness(progress, catalog) {
   const completed = Object.keys(progress.completedModules || {}).length
@@ -109,7 +110,7 @@ export default function ProfileView({
     }
     onSaveLocal(partial)
     if (!loggedIn) {
-      addToast?.('Saved locally. Sign in to publish your hiring profile.', 'welcome')
+      addToast?.('Saved on this device. Sign in to publish your hiring profile.', 'success')
       onNeedAuth?.()
       return
     }
@@ -122,17 +123,23 @@ export default function ProfileView({
       setCloud(user)
       onAuthUser?.(user)
       onSaveLocal(user)
-      addToast?.('Hiring profile published', 'welcome')
+      addToast?.('Hiring profile saved', 'success')
     } catch (err) {
-      setError(err.message || 'Could not save profile')
+      setError(err.message || 'Could not save your profile. Try again.')
+      addToast?.('Could not save your profile. Try again.', 'error')
     } finally {
       setSaving(false)
     }
   }
 
-  function copyLink() {
-    navigator.clipboard.writeText(publicProfileUrl(handle || 'your-handle'))
+  async function copyLink() {
+    const ok = await copyText(publicProfileUrl(handle || 'your-handle'))
+    if (!ok) {
+      addToast?.('Could not copy the link. Copy it from the address bar.', 'error')
+      return
+    }
     setCopied(true)
+    addToast?.('Profile link copied', 'success')
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -162,7 +169,7 @@ export default function ProfileView({
               <div className="profile-avatar">{(form.name || 'Y')[0].toUpperCase()}</div>
             )}
             <div>
-              <h3 className="profile-name">{form.name || 'Your name'}</h3>
+              <h3 className={`profile-name ${form.name ? '' : 'is-empty'}`}>{form.name || 'Complete your profile'}</h3>
               <p className="profile-degree">
                 {[form.degree, form.college_name].filter(Boolean).join(' · ') || 'Add degree and college'}
               </p>
@@ -248,7 +255,7 @@ export default function ProfileView({
           <div className="profile-form-grid">
             <label className="onboard-field">
               Name
-              <input value={form.name} onChange={e => setField('name', e.target.value)} placeholder="Your name" />
+              <input value={form.name} onChange={e => setField('name', e.target.value)} placeholder="Full name" />
             </label>
             <label className="onboard-field">
               Username

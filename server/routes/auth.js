@@ -135,7 +135,7 @@ router.post('/register', async (req, res) => {
     res.json({ token: signToken(user), user })
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Email or username already exists' })
-    res.status(500).json({ error: e.message })
+    res.status(500).json({ error: 'Could not create your account. Try again.' })
   }
 })
 
@@ -152,7 +152,7 @@ router.post('/login', async (req, res) => {
     const user = ownerUser(rows[0])
     res.json({ token: signToken(user), user })
   } catch (e) {
-    res.status(500).json({ error: e.message })
+    res.status(500).json({ error: 'Could not sign in. Try again.' })
   }
 })
 

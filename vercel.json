@@ -1,10 +1,11 @@
 {
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
+  "buildCommand": "npm install --prefix tutor && npm run build --prefix tutor",
+  "outputDirectory": "tutor/dist",
   "rewrites": [
+    { "source": "/favicon.ico", "destination": "/favicon.svg" },
     { "source": "/u/:username", "destination": "/index.html" },
     { "source": "/auth/callback", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/college", "destination": "/index.html" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }

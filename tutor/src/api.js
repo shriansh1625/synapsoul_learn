@@ -1,3 +1,5 @@
+import { humanizeApiError, statusFallback } from './siteUtils.js'
+
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const TOKEN_KEY = 'learnlab-token'
 
@@ -24,14 +26,21 @@ export function canSyncProgress() {
 
 async function apiFetch(path, options = {}) {
   if (import.meta.env.PROD && !API_BASE) {
-    throw new Error('Cloud API not configured. Set VITE_API_URL on Vercel.')
+    throw new Error('Cloud sync is not configured yet. You can keep working locally.')
   }
   const headers = { 'Content-Type': 'application/json', ...options.headers }
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+  let res
+  try {
+    res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+  } catch (err) {
+    throw new Error(humanizeApiError(err))
+  }
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || res.statusText)
+  if (!res.ok) {
+    throw new Error(humanizeApiError({ message: data.error || '' }, statusFallback(res.status)))
+  }
   return data
 }
 

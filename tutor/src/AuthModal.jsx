@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { login, register, fetchAuthProviders, oauthStartUrl } from './api.js'
+import { humanizeApiError } from './siteUtils.js'
 
 function GitHubIcon() {
   return (
@@ -37,7 +38,9 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'login' })
         : await register({ email, password, name, username: username || email.split('@')[0] })
       onSuccess(result)
     } catch (err) {
-      setError(err.message || 'Something went wrong')
+      setError(humanizeApiError(err, mode === 'login'
+        ? 'Could not sign in. Check your email and password.'
+        : 'Could not create your account. Try a different email or username.'))
     } finally {
       setLoading(false)
     }
@@ -85,7 +88,7 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'login' })
             <>
               <label className="onboard-field">
                 Name
-                <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" required />
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="Full name" required />
               </label>
               <label className="onboard-field">
                 Username
