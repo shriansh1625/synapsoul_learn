@@ -35,6 +35,6 @@ synapsoul login --github
 synapsoul start --json
 ```
 
-The instructor must register or log in **before teaching**. Never invent CONTEXT from memory. Signing in on the website is not the CLI.
+The instructor must register or log in **before teaching**. Never invent CONTEXT from memory. Website sign-in alone is not the CLI — the CLI still needs a JWT.
 
 Sign in at https://synapsoullearn.runs-on.dev/ so website last_seen returns to the cohort API.

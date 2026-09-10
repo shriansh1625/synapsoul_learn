@@ -137,6 +137,20 @@ export async function runApiJourney() {
     return { evidence: { email: data.user?.email } }
   })
 
+  await runStep(steps, 'auth_providers', async () => {
+    const { ok, data } = await fetchJson('/api/auth/providers')
+    if (!ok || typeof data?.github !== 'boolean') throw new Error('providers missing github flag')
+    return { evidence: { github: data.github, linkedin: data.linkedin } }
+  })
+
+  await runStep(steps, 'cli_poll_pending', async () => {
+    const { ok, status, data } = await fetchJson('/api/auth/cli-poll?nonce=cli_deadbeefdeadbeefdeadbeefdeadbeef')
+    if (!ok) throw new Error(`cli-poll ${status}`)
+    if (data?.token) throw new Error('unknown nonce must not return a token')
+    if (data?.pending !== true) throw new Error('expected pending: true')
+    return { evidence: { pending: data.pending } }
+  })
+
   await runStep(steps, 'auth_me', async () => {
     const { ok, status, data } = await fetchJson('/api/auth/me', { token })
     if (!ok || !data?.email) throw new Error(`me ${status}: ${JSON.stringify(data)}`)
