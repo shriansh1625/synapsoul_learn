@@ -28,6 +28,14 @@ function publicRouteUsername(raw) {
   }
 }
 
+function pathEquals(a, b) {
+  return String(a || '').toLowerCase() === String(b || '').toLowerCase()
+}
+
+function pathStartsWith(a, prefix) {
+  return String(a || '').toLowerCase().startsWith(String(prefix).toLowerCase())
+}
+
 function parseRoute() {
   const path = (window.location.pathname || '/').replace(/\/+$/, '') || '/'
   const search = new URLSearchParams(window.location.search)
@@ -43,27 +51,34 @@ function parseRoute() {
   const provider = search.get('provider') || hashSearch.get('provider')
   const connected = search.get('connected') || hashSearch.get('connected')
 
-  const pathUser = path.match(/^\/u\/([^/]+)$/)
+  const pathUser = path.match(/^\/u\/([^/]+)$/i)
   if (pathUser) return { type: 'public', username: publicRouteUsername(pathUser[1]) }
-  const hashUser = hashPath.match(/^\/u\/(.+)$/)
+  const hashUser = hashPath.match(/^\/u\/(.+)$/i)
   if (hashUser) return { type: 'public', username: publicRouteUsername(hashUser[1]) }
 
   if (
-    path === '/auth/callback' ||
-    hashPath === '/auth/callback' ||
-    hashPath === '/auth' ||
+    pathEquals(path, '/auth/callback') ||
+    pathEquals(hashPath, '/auth/callback') ||
+    pathEquals(hashPath, '/auth') ||
     token || github === 'setup' || linkedin === 'setup' || error
   ) {
     return { type: 'oauth', token, github, linkedin, error, provider, connected }
   }
 
-  if (hashPath === '/college' || path === '/college') return { type: 'college' }
-  if (hashPath === '/admin' || path === '/admin') return { type: 'admin' }
+  if (pathEquals(hashPath, '/college') || pathEquals(path, '/college')) return { type: 'college' }
+  if (pathEquals(hashPath, '/admin') || pathEquals(path, '/admin')) return { type: 'admin' }
 
-  const knownHash = !hashPath || hashPath === '/' || !hashPath.startsWith('/')
-  const knownPath = path === '/' || path === '/index.html'
+  const knownHash = !hashPath || pathEquals(hashPath, '/') || !hashPath.startsWith('/')
+  const knownPath = pathEquals(path, '/') || pathEquals(path, '/index.html')
   if (!knownPath) return { type: 'notfound', path }
-  if (!knownHash && hashPath !== '/college' && hashPath !== '/admin' && !hashPath.startsWith('/u/') && hashPath !== '/auth' && hashPath !== '/auth/callback') {
+  if (
+    !knownHash
+    && !pathEquals(hashPath, '/college')
+    && !pathEquals(hashPath, '/admin')
+    && !pathStartsWith(hashPath, '/u/')
+    && !pathEquals(hashPath, '/auth')
+    && !pathEquals(hashPath, '/auth/callback')
+  ) {
     return { type: 'notfound', path: hashPath }
   }
   return { type: 'app' }
