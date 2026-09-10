@@ -209,7 +209,7 @@ export function requestAdminOtp() {
   return apiFetch('/api/admin/otp/request', {
     method: 'POST',
     body: JSON.stringify({}),
-    timeoutMs: 20_000,
+    timeoutMs: 30_000,
   })
 }
 

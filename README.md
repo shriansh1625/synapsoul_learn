@@ -120,7 +120,8 @@ Gmail will not accept your normal account password for SMTP. Create an App Passw
 2. Turn on **2-Step Verification** if it is not already on.
 3. Open **2-Step Verification** → **App passwords** (https://myaccount.google.com/apppasswords).
 4. App: **Mail**. Device: **Other** (name it `LearnLab`).
-5. Copy the 16-character password. Paste it into Render as `GMAIL_APP_PASSWORD`. Never commit it.
+5. Google shows the password in 4-character groups (`xxxx xxxx xxxx xxxx`). Paste **16 characters with no spaces** into Render. The API also strips spaces if you include them.
+6. Set `GMAIL_APP_PASSWORD` on the **Render API service named `learnlab-api`** (`learnerslab.onrender.com`). Gmail SMTP runs on the API, not the Vercel frontend. Env vars on Vercel do nothing for OTP email.
 
 If `GMAIL_APP_PASSWORD` is missing, `/api/admin/otp/request` returns a clear error to the admin UI only. Students never see that message.
 
@@ -153,7 +154,7 @@ Manual steps:
    - **learnlab-api** — Node.js web service
 4. Set `FRONTEND_URL` on the API service to your Vercel URL (e.g. `https://learnerslab.vercel.app`)
 5. `JWT_SECRET` is auto-generated; `DATABASE_URL` is wired from the database
-6. Set `ADMIN_EMAIL=omshriansh16@gmail.com`, `GMAIL_USER=omshriansh16@gmail.com`, and `GMAIL_APP_PASSWORD` (Google App Password) on the API service
+6. On **learnlab-api** (not Vercel), set `ADMIN_EMAIL=omshriansh16@gmail.com`, `GMAIL_USER=omshriansh16@gmail.com`, and `GMAIL_APP_PASSWORD` (16-character Google App Password, no spaces)
 
 Alternatively deploy manually:
 
@@ -290,7 +291,7 @@ CLI: `npm run tutor -- learning stats --json`
 | `LINKEDIN_CALLBACK_URL` | No | e.g. `https://learnerslab.onrender.com/api/auth/linkedin/callback` |
 | `ADMIN_EMAIL` | Yes (prod, for cohort admin) | Hard-locked default: `omshriansh16@gmail.com`. Server-only. Never put this in `VITE_*`. |
 | `GMAIL_USER` | Yes (prod, for admin OTP) | `omshriansh16@gmail.com`. SMTP username. |
-| `GMAIL_APP_PASSWORD` | Yes (prod, for admin OTP) | Google App Password. **Never commit this.** |
+| `GMAIL_APP_PASSWORD` | Yes (prod, for admin OTP) | 16-character Google App Password, **no spaces**. Set on Render `learnlab-api` only — not Vercel. **Never commit this.** |
 
 ### Frontend (Vercel)
 

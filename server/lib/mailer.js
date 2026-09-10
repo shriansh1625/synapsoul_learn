@@ -2,15 +2,29 @@ import nodemailer from 'nodemailer'
 import { LOCKED_ADMIN_EMAIL } from './adminConstants.js'
 
 const SMTP_TIMEOUT_MS = 10_000
-const GMAIL_NOT_CONFIGURED_MESSAGE =
-  'Gmail App Password is not configured. Set GMAIL_APP_PASSWORD on the Render API service (Google Account → Security → 2-Step Verification → App passwords).'
+const GMAIL_HOST = 'smtp.gmail.com'
+export const GMAIL_NOT_CONFIGURED_MESSAGE =
+  'GMAIL_APP_PASSWORD is missing on Render learnlab-api (learnerslab.onrender.com). Vercel env vars are not used. Use a 16-character App Password with no spaces.'
+
+export function sanitizeGmailAppPassword(raw) {
+  return String(raw ?? '')
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .replace(/^['"`]+|['"`]+$/g, '')
+    .replace(/[\s\u200B-\u200D\uFEFF]/g, '')
+}
 
 export function gmailUser() {
-  return (process.env.GMAIL_USER || LOCKED_ADMIN_EMAIL).trim() || LOCKED_ADMIN_EMAIL
+  const raw = String(process.env.GMAIL_USER || LOCKED_ADMIN_EMAIL)
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .replace(/^['"`]+|['"`]+$/g, '')
+    .replace(/\s+/g, '')
+  return raw || LOCKED_ADMIN_EMAIL
 }
 
 export function gmailAppPassword() {
-  return (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '')
+  return sanitizeGmailAppPassword(process.env.GMAIL_APP_PASSWORD)
 }
 
 export function gmailConfigured() {
@@ -26,7 +40,7 @@ function gmailNotConfiguredError() {
 
 function smtpTransport({ port, secure }) {
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    host: GMAIL_HOST,
     port,
     secure,
     requireTLS: !secure,
@@ -41,19 +55,66 @@ function smtpTransport({ port, secure }) {
   })
 }
 
-function isAuthError(err) {
-  const code = String(err?.code || '')
-  const msg = String(err?.message || '')
-  return code === 'EAUTH' || /invalid login|username and password|\b535\b/i.test(msg)
+function smtpResponseCode(err) {
+  const fromField = Number(err?.responseCode)
+  if (Number.isFinite(fromField) && fromField > 0) return fromField
+  const text = `${err?.response || ''} ${err?.message || ''}`
+  const match = text.match(/\b(535|534|454|421)\b/)
+  return match ? Number(match[1]) : 0
 }
 
-function isTimeoutError(err) {
+export function isAuthError(err) {
+  const code = String(err?.code || '')
+  const msg = String(err?.message || '')
+  const response = String(err?.response || '')
+  const smtpCode = smtpResponseCode(err)
+  return (
+    code === 'EAUTH' ||
+    smtpCode === 535 ||
+    smtpCode === 534 ||
+    /invalid login|username and password|badcredentials|application-specific password/i.test(
+      `${msg} ${response}`
+    )
+  )
+}
+
+export function isTimeoutError(err) {
   const code = String(err?.code || '')
   const msg = String(err?.message || '')
   return (
-    /ETIMEDOUT|ESOCKET|ECONNECTION|ETLS|EPROTOCOL/i.test(code) ||
+    /ETIMEDOUT|ETIMEOUT|ESOCKETTIMEDOUT/i.test(code) ||
     /timeout|timed out|greeting never received/i.test(msg)
   )
+}
+
+export function isConnectionError(err) {
+  const code = String(err?.code || '')
+  const msg = String(err?.message || '')
+  return (
+    /ECONNRESET|ECONNREFUSED|ECONNECTION|ENOTFOUND|EDNS|ESOCKET|ETLS|EPROTOCOL|EHOSTUNREACH|ENETUNREACH/i.test(
+      code
+    ) || /connect(ion)? (failed|refused)|socket closed|network is unreachable/i.test(msg)
+  )
+}
+
+export function publicSmtpErrorMessage(err) {
+  if (isAuthError(err)) {
+    return 'Gmail rejected the login (SMTP 535). Set a 16-character App Password on Render learnlab-api — no spaces. Not Vercel.'
+  }
+  if (isTimeoutError(err)) {
+    return 'Gmail SMTP timed out on smtp.gmail.com:587. Set GMAIL_APP_PASSWORD on Render learnlab-api, or outbound SMTP may be blocked.'
+  }
+  if (isConnectionError(err)) {
+    return 'Could not reach smtp.gmail.com:587. Set GMAIL_USER and GMAIL_APP_PASSWORD on Render learnlab-api, not Vercel.'
+  }
+  return 'Could not send the admin code. Check GMAIL_USER and GMAIL_APP_PASSWORD on Render learnlab-api, not Vercel.'
+}
+
+function sendFailedError(cause) {
+  const err = new Error(publicSmtpErrorMessage(cause))
+  err.code = 'GMAIL_SEND_FAILED'
+  err.status = 503
+  return err
 }
 
 export async function sendAdminOtpEmail(code) {
@@ -79,20 +140,15 @@ export async function sendAdminOtpEmail(code) {
       return
     } catch (e) {
       lastErr = e
+      console.warn('Admin OTP email failed:', {
+        port: attempt.port,
+        code: e?.code || 'SMTP_ERROR',
+        responseCode: smtpResponseCode(e) || undefined,
+        command: e?.command,
+      })
       if (isAuthError(e)) break
     }
   }
 
-  console.warn('Admin OTP email failed:', lastErr?.code || 'SMTP_ERROR')
-
-  const err = new Error(
-    isAuthError(lastErr)
-      ? 'Gmail rejected the login. Set a valid GMAIL_APP_PASSWORD on the Render API service.'
-      : isTimeoutError(lastErr)
-        ? 'Gmail SMTP timed out. Set GMAIL_APP_PASSWORD on Render, or smtp.gmail.com ports 587/465 may be blocked.'
-        : 'Could not send the admin code to Gmail. Check GMAIL_USER and GMAIL_APP_PASSWORD on Render.'
-  )
-  err.code = 'GMAIL_SEND_FAILED'
-  err.status = 503
-  throw err
+  throw sendFailedError(lastErr)
 }

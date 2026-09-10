@@ -72,17 +72,19 @@ export default function AdminGate({ onHome }) {
 }
 
 function otpRequestErrorMessage(err) {
+  const serverText = String(err?.apiError || '').trim()
+  if (serverText) return serverText
   const code = err?.code
-  const text = err?.apiError || err?.message || ''
+  const text = String(err?.message || '').trim()
   if (code === 'OTP_RATE_LIMITED') return text || 'Wait 60 seconds before requesting another code.'
   if (code === 'GMAIL_NOT_CONFIGURED') {
-    return text || 'Gmail is not configured. Set GMAIL_APP_PASSWORD on the Render API service.'
+    return 'GMAIL_APP_PASSWORD is missing on Render learnlab-api. Vercel env vars are not used for Gmail SMTP.'
   }
   if (code === 'GMAIL_SEND_FAILED') {
-    return text || 'Could not send the code. Check GMAIL_APP_PASSWORD on Render, or Gmail SMTP may be blocked.'
+    return 'Could not send the code. Set GMAIL_APP_PASSWORD on Render learnlab-api (16 characters, no spaces).'
   }
   if (code === 'TIMEOUT' || /timed out|aborted/i.test(text)) {
-    return 'Sending timed out. Gmail SMTP may be hanging on Render. Set GMAIL_APP_PASSWORD, or smtp.gmail.com:587 may be blocked.'
+    return 'Sending timed out. Gmail SMTP may be hanging on Render. Set GMAIL_APP_PASSWORD on learnlab-api, or smtp.gmail.com:587 may be blocked.'
   }
   if (!text || /failed to fetch|network|could not reach/i.test(text)) {
     return 'Could not reach LearnLab. Check your connection and try again.'
