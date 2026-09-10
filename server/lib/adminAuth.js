@@ -1,38 +1,26 @@
-import { timingSafeEqual } from 'crypto'
 import jwt from 'jsonwebtoken'
 import { pool } from '../db/pool.js'
+import { LOCKED_ADMIN_EMAIL } from './adminConstants.js'
+import { loadValidAdminSession } from './adminOtp.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
+
+export { LOCKED_ADMIN_EMAIL }
 
 export function notFound(res) {
   return res.status(404).json({ error: 'Not found' })
 }
 
 export function adminEmail() {
-  return (process.env.ADMIN_EMAIL || '').trim().toLowerCase()
+  return LOCKED_ADMIN_EMAIL
 }
 
 export function emailIsAdmin(email) {
-  const configured = adminEmail()
-  return Boolean(configured && email && String(email).trim().toLowerCase() === configured)
-}
-
-export function adminSecretMatches(provided) {
-  const expected = process.env.ADMIN_SECRET || ''
-  if (!expected || provided == null) return false
-  const a = Buffer.from(String(provided))
-  const b = Buffer.from(String(expected))
-  if (a.length !== b.length) return false
-  try {
-    return timingSafeEqual(a, b)
-  } catch {
-    return false
-  }
+  return Boolean(email && String(email).trim().toLowerCase() === adminEmail())
 }
 
 export function isAdminRecord(user) {
-  if (!user) return false
-  return Boolean(user.is_admin) || emailIsAdmin(user.email)
+  return emailIsAdmin(user?.email)
 }
 
 export async function loadAdminUser(id) {
@@ -45,10 +33,17 @@ export async function loadAdminUser(id) {
 
 export async function promoteIfAdminEmail(user) {
   if (!user) return user
-  if (user.is_admin) return user
-  if (!emailIsAdmin(user.email)) return user
-  await pool.query('UPDATE users SET is_admin = true WHERE id = $1', [user.id])
-  user.is_admin = true
+  if (emailIsAdmin(user.email)) {
+    if (!user.is_admin) {
+      await pool.query('UPDATE users SET is_admin = true WHERE id = $1', [user.id])
+      user.is_admin = true
+    }
+    return user
+  }
+  if (user.is_admin) {
+    await pool.query('UPDATE users SET is_admin = false WHERE id = $1', [user.id])
+    user.is_admin = false
+  }
   return user
 }
 
@@ -73,6 +68,26 @@ export async function requireAdmin(req, res, next) {
     next()
   } catch {
     return notFound(res)
+  }
+}
+
+export async function requireAdminOtp(req, res, next) {
+  try {
+    const raw = req.headers['x-admin-session']
+    const session = await loadValidAdminSession(req.user?.id, raw)
+    if (!session) {
+      return res.status(401).json({
+        error: 'Admin verification required',
+        code: 'OTP_REQUIRED',
+      })
+    }
+    req.adminSession = session
+    next()
+  } catch {
+    return res.status(401).json({
+      error: 'Admin verification required',
+      code: 'OTP_REQUIRED',
+    })
   }
 }
 

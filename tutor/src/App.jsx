@@ -12,7 +12,7 @@ import { BrainPanel } from './BrainPanel.jsx'
 import { useBrain } from './brain/useBrain.js'
 import {
   isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, canSyncProgress,
-  fetchLlmHint, apiEnabled, fetchMe,
+  fetchLlmHint, apiEnabled, fetchMe, logoutAdminOtp,
 } from './api.js'
 import { loadModuleJson } from './curriculumModules.js'
 import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
@@ -375,7 +375,12 @@ export default function App() {
       .catch(() => {})
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    try {
+      await logoutAdminOtp()
+    } catch {
+      /* local session still clears */
+    }
     setToken(null)
     setAuthUser(null)
     addToast('Signed out — progress stays on this device', 'success')

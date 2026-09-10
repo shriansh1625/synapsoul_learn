@@ -4,7 +4,9 @@ import {
   fetchAdminOverview,
   fetchAdminStudents,
   fetchAdminStudent,
-  elevateAdmin,
+  requestAdminOtp,
+  verifyAdminOtp,
+  setAdminOtp,
 } from './api.js'
 import { setPageMeta } from './siteUtils.js'
 
@@ -17,19 +19,31 @@ function formatWhen(value) {
   }
 }
 
+function NotFoundAdmin({ onHome }) {
+  return (
+    <section className="card empty-state not-found-page elevated">
+      <p className="section-eyebrow">404</p>
+      <h1 className="display-sm">This page isn’t in the bootcamp</h1>
+      <p>No LearnLab route for <code>/admin</code>.</p>
+      <button type="button" className="btn-primary" onClick={onHome}>Back to LearnLab</button>
+    </section>
+  )
+}
+
 export default function AdminGate({ onHome }) {
   const [phase, setPhase] = useState('loading')
   const [overview, setOverview] = useState(null)
-  const [secret, setSecret] = useState('')
-  const [elevateError, setElevateError] = useState('')
-  const [elevating, setElevating] = useState(false)
 
   async function loadOverview() {
     try {
       const data = await fetchAdminOverview()
       setOverview(data)
       setPhase('admin')
-    } catch {
+    } catch (err) {
+      if (err?.code === 'OTP_REQUIRED') {
+        setPhase('otp')
+        return
+      }
       setPhase('denied')
     }
   }
@@ -42,60 +56,104 @@ export default function AdminGate({ onHome }) {
     loadOverview()
   }, [])
 
-  async function handleElevate(e) {
-    e.preventDefault()
-    setElevateError('')
-    setElevating(true)
-    try {
-      await elevateAdmin(secret)
-      setSecret('')
-      await loadOverview()
-    } catch {
-      setElevateError('That did not work.')
-      setPhase('denied')
-    } finally {
-      setElevating(false)
-    }
-  }
-
   if (phase === 'loading') {
-    return (
-      <section className="card empty-state not-found-page elevated">
-        <p className="section-eyebrow">404</p>
-        <h1 className="display-sm">This page isn’t in the bootcamp</h1>
-      </section>
-    )
+    return <NotFoundAdmin onHome={onHome} />
   }
 
   if (phase === 'admin') {
     return <AdminDashboard overview={overview} onHome={onHome} />
   }
 
+  if (phase === 'otp') {
+    return <AdminOtpChallenge onVerified={loadOverview} onHome={onHome} />
+  }
+
+  return <NotFoundAdmin onHome={onHome} />
+}
+
+function AdminOtpChallenge({ onVerified, onHome }) {
+  const [code, setCode] = useState('')
+  const [error, setError] = useState('')
+  const [sending, setSending] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined
+    const timer = setTimeout(() => setCooldown(n => Math.max(0, n - 1)), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
+
+  async function sendCode() {
+    setError('')
+    setSending(true)
+    try {
+      const data = await requestAdminOtp()
+      setSent(true)
+      setCooldown(Number(data.retryAfter) || 60)
+    } catch (err) {
+      if (err?.code === 'OTP_RATE_LIMITED') {
+        setSent(true)
+        setCooldown(Number(err.retryAfter) || 60)
+        setError(err.apiError || err.message)
+      } else {
+        setError(err.apiError || err.message || 'Could not send the code.')
+      }
+    } finally {
+      setSending(false)
+    }
+  }
+
+  async function handleVerify(e) {
+    e.preventDefault()
+    setError('')
+    setVerifying(true)
+    try {
+      const data = await verifyAdminOtp(code)
+      setAdminOtp(data.token)
+      setCode('')
+      await onVerified()
+    } catch (err) {
+      setError(err.apiError || err.message || 'Invalid code.')
+    } finally {
+      setVerifying(false)
+    }
+  }
+
   return (
-    <section className="card empty-state not-found-page elevated">
-      <p className="section-eyebrow">404</p>
-      <h1 className="display-sm">This page isn’t in the bootcamp</h1>
-      <p>No LearnLab route for <code>/admin</code>.</p>
-      <button type="button" className="btn-primary" onClick={onHome}>Back to LearnLab</button>
-      {isLoggedIn() && (
-        <details className="admin-setup">
-          <summary>Setup</summary>
-          <form onSubmit={handleElevate}>
-            <label className="field-label" htmlFor="setup-token">Setup token</label>
-            <input
-              id="setup-token"
-              type="password"
-              autoComplete="off"
-              value={secret}
-              onChange={e => setSecret(e.target.value)}
-            />
-            <button type="submit" className="btn-secondary" disabled={!secret || elevating}>
-              {elevating ? 'Checking…' : 'Continue'}
-            </button>
-            {elevateError && <p className="form-feedback is-error" role="alert">{elevateError}</p>}
-          </form>
-        </details>
-      )}
+    <section className="card empty-state not-found-page elevated admin-otp">
+      <p className="section-eyebrow">Admin verification</p>
+      <h1 className="display-sm">Confirm it’s you</h1>
+      <p>Send a 6-digit code to Gmail, then enter it here. Codes expire in 10 minutes.</p>
+      <div className="admin-otp-actions">
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={sendCode}
+          disabled={sending || cooldown > 0}
+        >
+          {sending ? 'Sending…' : cooldown > 0 ? `Resend in ${cooldown}s` : sent ? 'Resend code to Gmail' : 'Send code to Gmail'}
+        </button>
+      </div>
+      <form className="admin-otp-form" onSubmit={handleVerify}>
+        <label className="field-label" htmlFor="admin-otp-code">6-digit code</label>
+        <input
+          id="admin-otp-code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{6}"
+          maxLength={6}
+          value={code}
+          onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          placeholder="000000"
+        />
+        <button type="submit" className="btn-secondary" disabled={code.length !== 6 || verifying}>
+          {verifying ? 'Checking…' : 'Verify'}
+        </button>
+      </form>
+      {error && <p className="form-feedback is-error" role="alert">{error}</p>}
+      <button type="button" className="btn-secondary" onClick={onHome}>Back to LearnLab</button>
     </section>
   )
 }
@@ -114,7 +172,10 @@ function AdminDashboard({ overview, onHome }) {
     })
     fetchAdminStudents()
       .then(data => setStudents(data.students || []))
-      .catch(() => setError('Could not load cohort.'))
+      .catch(err => {
+        if (err?.code === 'OTP_REQUIRED') setError('Admin verification expired. Refresh and enter a new code.')
+        else setError('Could not load cohort.')
+      })
   }, [])
 
   async function openStudent(id) {

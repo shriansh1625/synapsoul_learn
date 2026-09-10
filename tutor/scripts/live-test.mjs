@@ -163,6 +163,17 @@ export async function runApiJourney() {
     return { evidence: { status } }
   })
 
+  await runStep(steps, 'admin_elevate_removed', async () => {
+    const { status, data } = await fetchJson('/api/admin/elevate', {
+      method: 'POST',
+      token,
+      body: { secret: 'not-a-real-secret' },
+    })
+    if (status !== 404) throw new Error(`expected 404, got ${status}`)
+    if (data?.code === 'OTP_REQUIRED') throw new Error('elevate advertised OTP')
+    return { evidence: { status } }
+  })
+
   await runStep(steps, 'progress_get', async () => {
     const { ok, status, data } = await fetchJson('/api/progress', { token })
     if (!ok) throw new Error(`progress ${status}: ${JSON.stringify(data)}`)

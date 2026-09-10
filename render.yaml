@@ -33,6 +33,8 @@ services:
       - key: LINKEDIN_CALLBACK_URL
         sync: false
       - key: ADMIN_EMAIL
+        value: omshriansh16@gmail.com
+      - key: GMAIL_USER
+        value: omshriansh16@gmail.com
+      - key: GMAIL_APP_PASSWORD
         sync: false
-      - key: ADMIN_SECRET
-        generateValue: true

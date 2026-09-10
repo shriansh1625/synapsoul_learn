@@ -2802,6 +2802,25 @@ a.link-btn {
   display: inline;
 }
 
+.admin-otp {
+  text-align: left;
+}
+.admin-otp-actions {
+  margin: 16px 0 20px;
+}
+.admin-otp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+.admin-otp-form input {
+  letter-spacing: 0.28em;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
 .admin-setup {
   margin-top: 28px;
   text-align: left;

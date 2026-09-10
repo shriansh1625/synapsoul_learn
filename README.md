@@ -31,7 +31,7 @@ Then open that folder as the project.
 5. Never write full BUILD solutions. One step at a time.
 ```
 
-Do **not** put `ADMIN_SECRET` or `ADMIN_EMAIL` in the prompt or on the landing page.
+Do **not** put `ADMIN_EMAIL`, Gmail credentials, or admin OTP details in the prompt or on the landing page.
 
 ---
 
@@ -89,16 +89,38 @@ People who never sign in are not silently tracked. Public hiring profiles stay o
 
 ## Admin cohort dashboard (private)
 
-Students never see this page. It is not in public nav or on the landing page.
+Students never see this page. It is not in public nav or on the landing page. Only `omshriansh16@gmail.com` can be admin.
 
-1. On the Render API service, set `ADMIN_EMAIL` to your login email and `ADMIN_SECRET` to a long random token (Render can generate `ADMIN_SECRET`).
-2. Sign in on https://tutor-alpha-sandy.vercel.app/ with that email.
+1. On the Render API service, set:
+
+   | Variable | Value |
+   |----------|-------|
+   | `ADMIN_EMAIL` | `omshriansh16@gmail.com` |
+   | `GMAIL_USER` | `omshriansh16@gmail.com` |
+   | `GMAIL_APP_PASSWORD` | Google App Password (see below) |
+
+2. Register or sign in on https://tutor-alpha-sandy.vercel.app/ with **that Gmail** and **your own password**. LearnLab does not set or invent an admin password. GitHub sign-in also works if the GitHub email is that address. `is_admin` is set automatically for that email only.
 3. Open https://tutor-alpha-sandy.vercel.app/admin (or `/#/admin`).
-4. If your email matches `ADMIN_EMAIL`, the cohort table loads. Otherwise, expand **Setup** and enter `ADMIN_SECRET` once — that sets `is_admin` on your user.
+4. Click **Send code to Gmail**, then enter the 6-digit code. Codes expire in 10 minutes. You can request a new code at most once per 60 seconds.
+5. After verify, the cohort dashboard loads. The OTP session lasts 12 hours or until logout.
 
-The dashboard lists every student (name, email, username, last seen, modules, track, readiness, GitHub) and opens private progress, brain, and profile. Password hashes are never returned.
+Anyone else who opens `/admin` sees the same 404 as an unknown page. There is no `ADMIN_SECRET` elevate path.
 
-Unauthenticated or non-admin callers of `/api/admin/*` receive **404 Not found** (not 403).
+The dashboard lists every student (name, email, username, last seen, modules, track, readiness, GitHub) and opens private progress, brain, and profile. Password hashes are never returned. OTP codes are stored hashed; plaintext is never saved.
+
+Unauthenticated or non-admin callers of `/api/admin/*` receive **404 Not found** (not 403). If the JWT is the admin email but OTP is not verified, admin APIs return **401** with `{ "code": "OTP_REQUIRED" }`.
+
+### Google App Password (Gmail SMTP)
+
+Gmail will not accept your normal account password for SMTP. Create an App Password:
+
+1. Open [Google Account](https://myaccount.google.com/) → **Security**.
+2. Turn on **2-Step Verification** if it is not already on.
+3. Open **2-Step Verification** → **App passwords** (https://myaccount.google.com/apppasswords).
+4. App: **Mail**. Device: **Other** (name it `LearnLab`).
+5. Copy the 16-character password. Paste it into Render as `GMAIL_APP_PASSWORD`. Never commit it.
+
+If `GMAIL_APP_PASSWORD` is missing, `/api/admin/otp/request` returns a clear error to the admin UI only. Students never see that message.
 
 ---
 
@@ -129,6 +151,7 @@ Manual steps:
    - **learnlab-api** — Node.js web service
 4. Set `FRONTEND_URL` on the API service to your Vercel URL (e.g. `https://learnerslab.vercel.app`)
 5. `JWT_SECRET` is auto-generated; `DATABASE_URL` is wired from the database
+6. Set `ADMIN_EMAIL=omshriansh16@gmail.com`, `GMAIL_USER=omshriansh16@gmail.com`, and `GMAIL_APP_PASSWORD` (Google App Password) on the API service
 
 Alternatively deploy manually:
 
@@ -151,6 +174,8 @@ Schema auto-applies on first API boot via `server/db/schema.sql`.
 | `scores` | Dimension scores and narrative per module |
 | `portfolio` | Evidence artifacts from REFLECT |
 | `student_memory` | Adaptive tutor memory (JSON) |
+| `admin_otps` | Hashed Gmail OTP codes for the single admin (never plaintext) |
+| `admin_sessions` | OTP-verified admin sessions (hashed token, 12h) |
 
 Works with **Render Postgres** or **Supabase** — both use standard `DATABASE_URL`.
 
@@ -261,8 +286,9 @@ CLI: `npm run tutor -- learning stats --json`
 | `LINKEDIN_CLIENT_ID` | No | Optional LinkedIn OAuth. Pasted LinkedIn URLs always work without this |
 | `LINKEDIN_CLIENT_SECRET` | No | LinkedIn OAuth secret. **Never commit this.** |
 | `LINKEDIN_CALLBACK_URL` | No | e.g. `https://learnerslab.onrender.com/api/auth/linkedin/callback` |
-| `ADMIN_EMAIL` | Yes (prod, for cohort admin) | Owner login email. Server-only. Never put this in `VITE_*`. |
-| `ADMIN_SECRET` | Yes (prod, for first-time elevate) | Random token. Server-only. Never commit it or put it in the prompt. |
+| `ADMIN_EMAIL` | Yes (prod, for cohort admin) | Hard-locked default: `omshriansh16@gmail.com`. Server-only. Never put this in `VITE_*`. |
+| `GMAIL_USER` | Yes (prod, for admin OTP) | `omshriansh16@gmail.com`. SMTP username. |
+| `GMAIL_APP_PASSWORD` | Yes (prod, for admin OTP) | Google App Password. **Never commit this.** |
 
 ### Frontend (Vercel)
 
@@ -345,10 +371,12 @@ The public slug is the **`username` field saved on the server** (via **Save publ
 | GET | `/api/learning/stats` | optional JWT | Self-learning stats |
 | POST | `/api/learning/consolidate` | JWT | Trigger pattern distillation |
 | PUT | `/api/progress/sync` | JWT | Bulk CLI/web progress + brain upsert |
-| GET | `/api/admin/overview` | JWT + admin | Cohort counts (404 if not admin) |
-| GET | `/api/admin/students` | JWT + admin | Student list, no password hashes |
-| GET | `/api/admin/students/:id` | JWT + admin | Private progress, brain, events, profile |
-| POST | `/api/admin/elevate` | JWT + `ADMIN_SECRET` | One-time `is_admin` promotion |
+| GET | `/api/admin/overview` | JWT + admin OTP session | Cohort counts (404 if not admin; 401 `OTP_REQUIRED` if OTP missing) |
+| GET | `/api/admin/students` | JWT + admin OTP session | Student list, no password hashes |
+| GET | `/api/admin/students/:id` | JWT + admin OTP session | Private progress, brain, events, profile |
+| POST | `/api/admin/otp/request` | JWT + admin email | Email a unique 6-digit Gmail OTP (60s rate limit) |
+| POST | `/api/admin/otp/verify` | JWT + admin email | Verify OTP; returns 12h session token |
+| POST | `/api/admin/otp/logout` | JWT + admin email | Invalidate the current OTP session |
 
 ---
 

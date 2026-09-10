@@ -141,3 +141,26 @@ CREATE INDEX IF NOT EXISTS idx_llm_interactions_skill ON llm_interactions(skill_
 CREATE INDEX IF NOT EXISTS idx_llm_interactions_user ON llm_interactions(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_llm_reactions_interaction ON llm_reactions(interaction_id);
 CREATE INDEX IF NOT EXISTS idx_llm_patterns_category ON llm_learned_patterns(category, skill_id);
+
+CREATE TABLE IF NOT EXISTS admin_otps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_otps_code_hash ON admin_otps (code_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_otps_unused_hash ON admin_otps (code_hash) WHERE used_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_admin_otps_email_created ON admin_otps (email, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS admin_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  verified_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_user ON admin_sessions (user_id, expires_at);

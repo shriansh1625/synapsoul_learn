@@ -16,7 +16,7 @@ import {
   exchangeGithubCode,
   exchangeLinkedInCode,
 } from '../lib/oauth.js'
-import { touchLastSeen, promoteIfAdminEmail } from '../lib/adminAuth.js'
+import { touchLastSeen, promoteIfAdminEmail, emailIsAdmin } from '../lib/adminAuth.js'
 
 const router = Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
@@ -53,8 +53,8 @@ async function createGithubUser(profile) {
   const { rows } = await pool.query(
     `INSERT INTO users (
        email, password_hash, name, bio, username, location, website,
-       github_id, github_username, github_avatar, avatar_url, profile_confirmed, profile_public
-     ) VALUES ($1,NULL,$2,$3,$4,$5,$6,$7,$8,$9,$9,true,true)
+       github_id, github_username, github_avatar, avatar_url, profile_confirmed, profile_public, is_admin
+     ) VALUES ($1,NULL,$2,$3,$4,$5,$6,$7,$8,$9,$9,true,true,$10)
      RETURNING ${OWNER_COLUMNS}`,
     [
       profile.email,
@@ -66,6 +66,7 @@ async function createGithubUser(profile) {
       profile.github_id,
       profile.github_username,
       profile.github_avatar || '',
+      emailIsAdmin(profile.email),
     ]
   )
   await pool.query(
@@ -124,9 +125,9 @@ router.post('/register', async (req, res) => {
     const hash = await bcrypt.hash(password, 10)
     const handle = await uniqueUsername(username || email.split('@')[0])
     const { rows } = await pool.query(
-      `INSERT INTO users (email, password_hash, name, degree, bio, username, college_name, track, profile_confirmed, profile_public)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,true) RETURNING ${OWNER_COLUMNS}`,
-      [email, hash, name || '', degree || '', bio || '', handle, college || '', track || 'node']
+      `INSERT INTO users (email, password_hash, name, degree, bio, username, college_name, track, profile_confirmed, profile_public, is_admin)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,true,$9) RETURNING ${OWNER_COLUMNS}`,
+      [email, hash, name || '', degree || '', bio || '', handle, college || '', track || 'node', emailIsAdmin(email)]
     )
     const user = ownerUser(rows[0])
     await pool.query(
@@ -302,9 +303,9 @@ router.get('/linkedin/callback', async (req, res) => {
     if (!user && profile.email) {
       const username = await uniqueUsername(profile.email.split('@')[0])
       const { rows } = await pool.query(
-        `INSERT INTO users (email, password_hash, name, username, avatar_url, linkedin_url, profile_confirmed, profile_public)
-         VALUES ($1,NULL,$2,$3,$4,$5,true,true) RETURNING ${OWNER_COLUMNS}`,
-        [profile.email, profile.name || '', username, profile.avatar_url || '', profile.linkedin_url || '']
+        `INSERT INTO users (email, password_hash, name, username, avatar_url, linkedin_url, profile_confirmed, profile_public, is_admin)
+         VALUES ($1,NULL,$2,$3,$4,$5,true,true,$6) RETURNING ${OWNER_COLUMNS}`,
+        [profile.email, profile.name || '', username, profile.avatar_url || '', profile.linkedin_url || '', emailIsAdmin(profile.email)]
       )
       await pool.query(
         'INSERT INTO student_memory (user_id, memory) VALUES ($1, $2) ON CONFLICT DO NOTHING',

@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import { readFileSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
+import { LOCKED_ADMIN_EMAIL } from '../lib/adminConstants.js'
 
 dotenv.config()
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -108,13 +109,39 @@ export async function ensureProfileColumns() {
   await pool.query(
     'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_github_id ON users (github_id) WHERE github_id IS NOT NULL'
   )
-  const adminEmail = (process.env.ADMIN_EMAIL || '').trim()
-  if (adminEmail) {
-    await pool.query(
-      'UPDATE users SET is_admin = true WHERE lower(email) = lower($1)',
-      [adminEmail]
+  const adminEmail = LOCKED_ADMIN_EMAIL
+  await pool.query(
+    'UPDATE users SET is_admin = (lower(email) = lower($1))',
+    [adminEmail]
+  )
+  return true
+}
+
+export async function ensureAdminOtpTables() {
+  if (!process.env.DATABASE_URL) return false
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS admin_otps (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      email TEXT NOT NULL,
+      code_hash TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ
     )
-  }
+  `)
+  await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_otps_code_hash ON admin_otps (code_hash)')
+  await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_admin_otps_unused_hash ON admin_otps (code_hash) WHERE used_at IS NULL')
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_admin_otps_email_created ON admin_otps (email, created_at DESC)')
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS admin_sessions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      verified_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL
+    )
+  `)
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_admin_sessions_user ON admin_sessions (user_id, expires_at)')
   return true
 }
 
@@ -135,5 +162,10 @@ export async function initDb() {
   } catch (e) {
     console.warn('LLM table migration warning:', e.message)
     throw e
+  }
+  try {
+    await ensureAdminOtpTables()
+  } catch (e) {
+    console.warn('Admin OTP table migration warning:', e.message)
   }
 }

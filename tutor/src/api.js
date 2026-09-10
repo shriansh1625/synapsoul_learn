@@ -2,6 +2,7 @@ import { humanizeApiError, statusFallback, slugifyUsername, isValidPublicUsernam
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const TOKEN_KEY = 'learnlab-token'
+const ADMIN_OTP_KEY = 'learnlab-admin-otp'
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY)
@@ -9,7 +10,23 @@ export function getToken() {
 
 export function setToken(token) {
   if (token) localStorage.setItem(TOKEN_KEY, token)
-  else localStorage.removeItem(TOKEN_KEY)
+  else {
+    localStorage.removeItem(TOKEN_KEY)
+    clearAdminOtp()
+  }
+}
+
+export function getAdminOtp() {
+  return localStorage.getItem(ADMIN_OTP_KEY)
+}
+
+export function setAdminOtp(token) {
+  if (token) localStorage.setItem(ADMIN_OTP_KEY, token)
+  else localStorage.removeItem(ADMIN_OTP_KEY)
+}
+
+export function clearAdminOtp() {
+  localStorage.removeItem(ADMIN_OTP_KEY)
 }
 
 export function isLoggedIn() {
@@ -31,6 +48,8 @@ async function apiFetch(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...options.headers }
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
+  const adminOtp = getAdminOtp()
+  if (adminOtp) headers['X-Admin-Session'] = adminOtp
   let res
   try {
     res = await fetch(`${API_BASE}${path}`, { ...options, headers })
@@ -39,7 +58,13 @@ async function apiFetch(path, options = {}) {
   }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(humanizeApiError({ message: data.error || '' }, statusFallback(res.status)))
+    const fallback = statusFallback(res.status)
+    const err = new Error(humanizeApiError({ message: data.error || '' }, fallback))
+    err.status = res.status
+    err.code = data.code
+    err.apiError = data.error || err.message
+    err.retryAfter = data.retryAfter
+    throw err
   }
   return data
 }
@@ -161,6 +186,22 @@ export function fetchAdminStudent(id) {
   return apiFetch(`/api/admin/students/${encodeURIComponent(id)}`)
 }
 
-export function elevateAdmin(secret) {
-  return apiFetch('/api/admin/elevate', { method: 'POST', body: JSON.stringify({ secret }) })
+export function requestAdminOtp() {
+  return apiFetch('/api/admin/otp/request', { method: 'POST', body: JSON.stringify({}) })
+}
+
+export function verifyAdminOtp(code) {
+  return apiFetch('/api/admin/otp/verify', { method: 'POST', body: JSON.stringify({ code }) })
+}
+
+export function logoutAdminOtp() {
+  const token = getAdminOtp()
+  if (!getToken() || !token) {
+    clearAdminOtp()
+    return Promise.resolve()
+  }
+  return apiFetch('/api/admin/otp/logout', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  }).finally(() => clearAdminOtp())
 }

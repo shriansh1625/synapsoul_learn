@@ -5,10 +5,10 @@ import {
   notFound,
   requireAdminJwt,
   requireAdmin,
-  adminSecretMatches,
-  loadAdminUser,
+  requireAdminOtp,
   readinessScore,
 } from '../lib/adminAuth.js'
+import { adminOtpError, requestAdminOtp, revokeAdminSession, verifyAdminOtp } from '../lib/adminOtp.js'
 import { ownerUser } from '../lib/userFields.js'
 
 const router = Router()
@@ -31,18 +31,42 @@ function studentPublic(row) {
   }
 }
 
-router.post('/elevate', requireAdminJwt, async (req, res) => {
+router.post('/otp/request', requireAdminJwt, requireAdmin, async (_req, res) => {
   try {
-    if (!adminSecretMatches(req.body?.secret)) return notFound(res)
-    await pool.query('UPDATE users SET is_admin = true WHERE id = $1', [req.user.id])
-    const row = await loadAdminUser(req.user.id)
-    res.json({ ok: true, user: { id: row?.id, email: row?.email, is_admin: true } })
-  } catch {
-    return notFound(res)
+    const result = await requestAdminOtp()
+    res.json({
+      ok: true,
+      retryAfter: result.retryAfter,
+      expiresInSeconds: 600,
+    })
+  } catch (e) {
+    return adminOtpError(res, e)
   }
 })
 
-router.use(requireAdminJwt, requireAdmin)
+router.post('/otp/verify', requireAdminJwt, requireAdmin, async (req, res) => {
+  try {
+    const result = await verifyAdminOtp(req.user.id, req.body?.code)
+    res.json({
+      ok: true,
+      token: result.token,
+      expiresAt: result.expiresAt,
+    })
+  } catch (e) {
+    return adminOtpError(res, e)
+  }
+})
+
+router.post('/otp/logout', requireAdminJwt, requireAdmin, async (req, res) => {
+  try {
+    await revokeAdminSession(req.user.id, req.headers['x-admin-session'] || req.body?.token)
+    res.json({ ok: true })
+  } catch {
+    res.json({ ok: true })
+  }
+})
+
+router.use(requireAdminJwt, requireAdmin, requireAdminOtp)
 
 router.get('/overview', async (_req, res) => {
   try {
