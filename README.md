@@ -106,6 +106,8 @@ Students never see this page. It is not in public nav or on the landing page. On
 
 Anyone else who opens `/admin` sees the same 404 as an unknown page. There is no `ADMIN_SECRET` elevate path.
 
+To free `UNIQUE(email)` after a mistaken signup (owner-only, not an HTTP endpoint): paste the Render Postgres URL into `server/.env`, then `cd server` and `$env:EMAIL="omshriansh16@gmail.com"; node scripts/delete-user.mjs` (bash: `EMAIL=omshriansh16@gmail.com node scripts/delete-user.mjs`). Never commit `.env`.
+
 The dashboard lists every student (name, email, username, last seen, modules, track, readiness, GitHub) and opens private progress, brain, and profile. Password hashes are never returned. OTP codes are stored hashed; plaintext is never saved.
 
 Unauthenticated or non-admin callers of `/api/admin/*` receive **404 Not found** (not 403). If the JWT is the admin email but OTP is not verified, admin APIs return **401** with `{ "code": "OTP_REQUIRED" }`.
