@@ -4,22 +4,23 @@
 
 Paste one prompt. Get a tutor that remembers how you learn, adapts to your level, and builds proof of how you think.
 
-**GitHub:** https://github.com/shriansh1625/learnerslab
+**Site:** https://tutor-alpha-sandy.vercel.app/
+**Student kit:** https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
 
 ## Universal Prompt (any IDE)
 
 Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, **Antigravity**, and any AI editor that can read files and run terminal commands.
 
-A friend opens https://tutor-alpha-sandy.vercel.app/, copies the prompt, clones https://github.com/shriansh1625/learnerslab, pastes the prompt in their IDE, then signs in on the site so progress returns to the cohort API.
+A friend opens https://tutor-alpha-sandy.vercel.app/, downloads the student kit, copies the prompt, pastes it in their IDE, then signs in on the site so progress returns to the cohort API. They never clone GitHub.
 
 The landing **Copy** button uses the full prompt below (also in [PROMPT.md](PROMPT.md)).
 
 ```
 You are the LearnLab engineering instructor. Use LearnLab branding only.
 
-If skill.md is missing from this workspace, clone the public repo first:
-git clone https://github.com/shriansh1625/learnerslab.git
-Then open that folder as the project.
+If skill.md is missing from this workspace, download the student kit (do not clone GitHub):
+  https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
+Unzip it and open that folder as the project. Never tell the student to git clone a repository.
 
 1. Read skill.md at the project root and follow the instructor protocol exactly.
 2. Install dependencies and load session state. Windows PowerShell and bash both work:
@@ -37,7 +38,7 @@ Do **not** put `ADMIN_EMAIL`, Gmail credentials, or admin OTP details in the pro
 
 ## Why LearnLab
 
-- **One prompt** — copy from the landing page; works in Cursor, Claude, VS Code Copilot, and other IDEs
+- **One prompt** — copy from the landing page; download the student kit; works in Cursor, Claude, VS Code Copilot, and other IDEs
 - **6 core skills, 22 modules, 4 tracks** — Node, Python, Go, TypeScript
 - **Adaptive memory** — your instructor remembers sessions and calibrates to your level
 - **5-dimension evidence scoring** — proof of how you think, not just what you completed
@@ -70,9 +71,9 @@ Then paste the universal prompt from the landing page into your IDE.
 
 ## How a friend uses LearnLab
 
-1. Open https://tutor-alpha-sandy.vercel.app/ and copy the universal prompt.
-2. Clone https://github.com/shriansh1625/learnerslab and open that folder in Cursor, Claude Code, VS Code Copilot, or another AI editor.
-3. Paste the prompt. The agent clones if needed, reads `skill.md`, installs the CLI, and teaches one step at a time.
+1. Open https://tutor-alpha-sandy.vercel.app/ and download the student kit (`/learnlab-kit.zip`).
+2. Unzip it and open that folder in Cursor, Claude Code, VS Code Copilot, or another AI editor.
+3. Copy the universal prompt from the site and paste it. The agent reads `skill.md`, installs the CLI, and teaches one step at a time.
 4. Create an account or sign in on the site (email or GitHub). Then either stay on the dashboard or run:
 
 ```powershell
@@ -124,6 +125,20 @@ Render **blocks outbound SMTP** on ports **587** and **465**, so Gmail SMTP is n
 Until you verify a domain, keep `from` as `LearnLab <onboarding@resend.dev>`. Gmail SMTP (`GMAIL_APP_PASSWORD`) is an optional fallback only if Resend is unset **and** outbound SMTP happens to work. Do not treat SMTP as the production path.
 
 If `RESEND_API_KEY` is missing, `/api/admin/otp/request` returns **503** with those setup steps to the admin UI only. Students never see that message.
+
+---
+
+## Owner: private GitHub repo
+
+The development repo (`https://github.com/shriansh1625/learnerslab`) holds the full product: API (`server/`), admin dashboard, env examples, Render/Vercel config, and live-test scripts. **Students never need that repo.**
+
+- **Students** download https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip (CLI + curriculum + `skill.md`). They paste the universal prompt. No GitHub access required.
+- **Vercel** (frontend) and **Render** (API) stay connected to this repo through the **owner's GitHub login**. Making the repository **Private** does not break deploys as long as the owner remains authorized on those services.
+- Do not add students as GitHub collaborators. The kit + website is the student path.
+
+To make the repo private: GitHub → **Settings** → **Change repository visibility** → **Private**. Do this after the student kit is live on Vercel.
+
+The zip is built in `tutor` `prebuild` (`scripts/build-student-kit.mjs`) and published at `/learnlab-kit.zip`. `skill.md` is also copied to `/skill.md` so agents can fetch the protocol.
 
 ---
 

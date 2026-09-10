@@ -7,7 +7,7 @@ alwaysApply: true
 
 When the user wants to learn or pasted the universal prompt:
 
-1. If `skill.md` is missing, clone https://github.com/shriansh1625/learnerslab.git and open that folder first.
+1. If `skill.md` is missing, download https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip, unzip it, and open that folder first. Do not clone GitHub.
 2. Read `skill.md` at project root and follow the instructor protocol.
 3. Run `cd tutor && npm install` then `node cli/index.mjs status --json` (Windows PowerShell-safe).
 4. When `LEARNLAB_API_URL` or `VITE_API_URL` is set to `https://learnerslab.onrender.com`, CLI sync posts to the production cohort API.
@@ -15,4 +15,4 @@ When the user wants to learn or pasted the universal prompt:
 6. Use CLI for all progression — never invent curriculum.
 7. One step per turn. Never write full BUILD solutions.
 
-Universal prompt: copy from the LearnLab landing page (self-contained clone + CLI + production sync instructions).
+Universal prompt: copy from the LearnLab landing page (download kit + CLI + production sync). Never tell students to git clone.

@@ -1,8 +1,11 @@
+export const KIT_ZIP_PATH = '/learnlab-kit.zip'
+export const KIT_ZIP_URL = 'https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip'
+
 export const UNIVERSAL_PROMPT = `You are the LearnLab engineering instructor. Use LearnLab branding only.
 
-If skill.md is missing from this workspace, clone the public repo first:
-git clone https://github.com/shriansh1625/learnerslab.git
-Then open that folder as the project.
+If skill.md is missing from this workspace, download the student kit (do not clone GitHub):
+  https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
+Unzip it and open that folder as the project. Never tell the student to git clone a repository.
 
 1. Read skill.md at the project root and follow the instructor protocol exactly.
 2. Install dependencies and load session state. Windows PowerShell and bash both work:

@@ -2,7 +2,7 @@
 name: learnlab-bootcamp
 description: AI-taught engineering bootcamp - private instructor in your IDE
 version: 2.0.0
-url: https://github.com/shriansh1625/learnerslab
+url: https://tutor-alpha-sandy.vercel.app/
 ---
 
 # LearnLab Bootcamp — Instructor Protocol
@@ -15,11 +15,11 @@ Use LearnLab branding only.
 
 ## Bootstrap (run first, every session)
 
-If `skill.md` is missing from this workspace, clone the public repo first, then open that folder as the project:
+If `skill.md` is missing from this workspace, download the student kit (do not clone GitHub), unzip it, and open that folder as the project:
 
-```bash
-git clone https://github.com/shriansh1625/learnerslab.git
-```
+https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
+
+The protocol is also at https://tutor-alpha-sandy.vercel.app/skill.md
 
 Install and load session state. Windows PowerShell and bash both work:
 
@@ -99,7 +99,7 @@ When `status` returns `profile_required` or `onboarding: first_run`:
 3. **Pretest** (optional) — Offer `tutor pretest`. After answers: `tutor pretest submit --answers "1A,2A,3A,4A,5A"`.
 4. **Track** — Confirm stack: node, python, go, or typescript.
 5. **Start** — `tutor start --skill system-design-fundamentals --track <track>`.
-6. **Dashboard** — Mention `npm run dev` for live progress at localhost:5173.
+6. **Dashboard** — Direct them to sign in at https://tutor-alpha-sandy.vercel.app/ to see progress. Do not start a local web server from this kit.
 
 Keep it conversational. One question at a time.
 

@@ -15,7 +15,7 @@ import {
   fetchLlmHint, apiEnabled, fetchMe, logoutAdminOtp,
 } from './api.js'
 import { loadModuleJson } from './curriculumModules.js'
-import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, KIT_ZIP_PATH, humanizeApiError, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
 
 function publicRouteUsername(raw) {
   try {
@@ -628,7 +628,7 @@ export default function App() {
           LearnLab ·{' '}
           <button type="button" className="link-btn" onClick={goToLanding}>Home</button>
           {' · '}
-          <a className="link-btn" href="https://github.com/shriansh1625/learnerslab" target="_blank" rel="noreferrer">GitHub</a>
+          <a className="link-btn" href={KIT_ZIP_PATH} download="learnlab-kit.zip">Download kit</a>
         </p>
       </footer>
     </div>
@@ -1210,6 +1210,9 @@ function StartPromptCopy() {
       <button type="button" className="btn-primary" onClick={copy}>
         {copied ? 'Prompt copied' : 'Copy universal prompt'}
       </button>
+      <a className="btn-secondary" href={KIT_ZIP_PATH} download="learnlab-kit.zip">
+        Download student kit
+      </a>
       {copied && <p className="form-feedback is-success" role="status">Prompt copied to clipboard</p>}
       {error && <p className="form-feedback is-error" role="alert">{error}</p>}
     </div>

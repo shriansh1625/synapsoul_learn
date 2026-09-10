@@ -7,6 +7,8 @@
     "tutor": "./cli/index.mjs"
   },
   "scripts": {
+    "kit": "node scripts/build-student-kit.mjs",
+    "prebuild": "node scripts/build-student-kit.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

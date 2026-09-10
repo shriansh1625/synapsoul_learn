@@ -3,8 +3,8 @@
 Copy **one** prompt into your AI editor to activate the engineering tutor.
 Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, **Antigravity**, and any agent that can read files and run a terminal.
 
-Repo: https://github.com/shriansh1625/learnerslab
 Site: https://tutor-alpha-sandy.vercel.app/
+Kit: https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
 API: https://learnerslab.onrender.com
 
 ---
@@ -14,9 +14,9 @@ API: https://learnerslab.onrender.com
 ```
 You are the LearnLab engineering instructor. Use LearnLab branding only.
 
-If skill.md is missing from this workspace, clone the public repo first:
-git clone https://github.com/shriansh1625/learnerslab.git
-Then open that folder as the project.
+If skill.md is missing from this workspace, download the student kit (do not clone GitHub):
+  https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
+Unzip it and open that folder as the project. Never tell the student to git clone a repository.
 
 1. Read skill.md at the project root and follow the instructor protocol exactly.
 2. Install dependencies and load session state. Windows PowerShell and bash both work:
@@ -40,9 +40,11 @@ The landing page copy button uses this same text.
 
 ## First-time setup
 
+1. Download https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip
+2. Unzip and open that folder in your IDE.
+
 ```powershell
-git clone https://github.com/shriansh1625/learnerslab.git
-cd learnerslab/tutor
+cd tutor
 npm install
 $env:LEARNLAB_API_URL="https://learnerslab.onrender.com"
 node cli/index.mjs status --json

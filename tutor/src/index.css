@@ -883,6 +883,13 @@ code {
   font-size: 0.92rem;
   transition: all var(--transition);
 }
+a.btn-primary, a.btn-secondary {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
 .copy-btn, .btn-primary {
   background: var(--accent);
   color: white;

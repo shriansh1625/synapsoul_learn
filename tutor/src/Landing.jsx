@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import leaderboardData from '../data/leaderboard.json'
-import { copyText, setPageMeta, UNIVERSAL_PROMPT, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from './siteUtils.js'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, KIT_ZIP_PATH, DEFAULT_TITLE, DEFAULT_DESCRIPTION } from './siteUtils.js'
 
 const MARQUEE_ITEMS = [
   { text: 'AI Workflows', accent: true },
@@ -37,7 +37,7 @@ const VALUE_PROPS = [
   },
   {
     title: 'One prompt, full bootcamp',
-    desc: 'Copy one prompt from this site. Clone the public repo. Paste it in Cursor, Claude, VS Code Copilot, or any AI editor.',
+    desc: 'Copy one prompt from this site. Download the student kit. Paste it in Cursor, Claude, VS Code Copilot, or any AI editor.',
   },
 ]
 
@@ -148,14 +148,14 @@ const HOW_60_SECONDS = [
 
 const HOW_IT_WORKS = [
   { num: '01', title: 'Open your AI editor', desc: 'Cursor, Claude Code, VS Code Copilot, Codex, or Antigravity — any editor that can read files and run a terminal.' },
-  { num: '02', title: 'Clone, then paste one prompt', desc: 'Clone the public GitHub repo if you do not have skill.md yet. The copied prompt tells the agent exactly how to boot the tutor.' },
+  { num: '02', title: 'Download the kit, then paste one prompt', desc: 'Download the student kit zip if you do not have skill.md yet. The copied prompt tells the agent exactly how to boot the tutor.' },
   { num: '03', title: 'Learn by doing', desc: 'CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT. Real engineering, not tutorial hell.' },
   { num: '04', title: 'Sign in so progress returns', desc: 'Create a LearnLab account on this site. Progress and brain sync to the cohort API when you use that account — public hiring profiles stay opt-in.' },
 ]
 
 const ANY_IDE_STEPS = [
-  { num: '01', title: 'Copy the prompt', desc: 'Use the button above. The full instructor protocol is in the clipboard — no extra docs required.' },
-  { num: '02', title: 'Clone the repo', desc: 'git clone https://github.com/shriansh1625/learnerslab.git and open that folder in your editor.' },
+  { num: '01', title: 'Download the kit', desc: 'Get learnlab-kit.zip from this site. Unzip it and open that folder in your editor — no GitHub clone.' },
+  { num: '02', title: 'Copy the prompt', desc: 'Use the button above. The full instructor protocol is in the clipboard — no extra docs required.' },
   { num: '03', title: 'Paste in any IDE', desc: 'Cursor, Claude Code, VS Code Copilot, Codex, Antigravity — any agent that can read skill.md and run a terminal.' },
   { num: '04', title: 'Sign in on this site', desc: 'Register or log in here (email or GitHub) so your progress returns to the cohort API.' },
 ]
@@ -169,8 +169,8 @@ const CONVERSATION = [
 
 const FAQ = [
   { q: 'Is this just another AI chatbot?', a: 'No. Your instructor remembers sessions, tracks concepts, scores reasoning across five dimensions, and builds an evidence-backed profile.' },
-  { q: 'What IDE does it work with?', a: 'Any AI editor: Cursor, Claude Code, VS Code Copilot, Codex, Antigravity — anything that can read skill.md and run terminal commands.' },
-  { q: 'Where does my progress go?', a: 'It stays in your local clone first. When you register or sign in on this site, progress and brain sync to the LearnLab API. Public hiring profiles stay opt-in. People who never create an account are not silently tracked.' },
+  { q: 'What IDE does it work with?', a: 'Any AI editor: Cursor, Claude Code, VS Code Copilot, Codex, Antigravity — anything that can read skill.md and run terminal commands. Download the student kit from this site; you do not clone GitHub.' },
+  { q: 'Where does my progress go?', a: 'It stays in your local kit folder first. When you register or sign in on this site, progress and brain sync to the LearnLab API. Public hiring profiles stay opt-in. People who never create an account are not silently tracked.' },
   { q: 'The agent assumes I know something. What do I do?', a: 'Say "I don\'t know — explain from scratch." The instructor adapts to your level.' },
   { q: 'How do I get the most out of this?', a: 'Challenge it: "Why this approach?" "What breaks if I skip this?" "Score my reasoning."' },
 ]
@@ -279,9 +279,9 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
           <button type="button" className="btn-primary btn-gradient btn-lg" onClick={onEnterApp}>
             Start Learning
           </button>
-          <button type="button" className="btn-secondary" onClick={copyPrompt}>
-            {copied ? 'Prompt copied!' : 'Copy universal prompt'}
-          </button>
+          <a className="btn-secondary" href={KIT_ZIP_PATH} download="learnlab-kit.zip">
+            Download student kit
+          </a>
         </div>
 
         <div className="hero-stats reveal reveal-d5">
@@ -302,7 +302,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <p className="prompt-note">Works in Cursor, Claude Code, VS Code Copilot, Codex, Antigravity · clone the public repo · sign in here so progress returns</p>
+          <p className="prompt-note">Works in any IDE · download the student kit · sign in here so progress returns</p>
           {copyError && <p className="form-feedback is-error" role="alert">{copyError}</p>}
           {copied && <p className="form-feedback is-success" role="status">Prompt copied to clipboard</p>}
         </div>
@@ -311,9 +311,9 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
       <section className="landing-any-ide reveal" id="any-ide">
         <div className="section-head">
           <p className="section-eyebrow">Works in any IDE</p>
-          <h2 className="display-sm">Share the site. Paste one prompt. <em>Same tutor.</em></h2>
+          <h2 className="display-sm">Share the site. Download the kit. Paste one prompt. <em>Same tutor.</em></h2>
           <p className="section-desc">
-            A friend opens this page on any device, copies the prompt, clones the public repo,
+            A friend opens this page on any device, downloads the student kit, copies the prompt,
             and pastes it in Cursor, Claude, VS Code Copilot, or another AI editor.
             After they sign in here, progress returns to the cohort — not to a private local-only silo.
           </p>
@@ -617,7 +617,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
           LearnLab · Local-first engineering bootcamp ·{' '}
           <button type="button" className="link-btn" onClick={onEnterApp}>Dashboard</button>
           {' · '}
-          <a className="link-btn" href="https://github.com/shriansh1625/learnerslab" target="_blank" rel="noreferrer">GitHub</a>
+          <a className="link-btn" href={KIT_ZIP_PATH} download="learnlab-kit.zip">Download kit</a>
         </p>
       </footer>
     </div>
