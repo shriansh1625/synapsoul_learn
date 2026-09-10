@@ -40,7 +40,10 @@ const command = args[0] || 'status'
 
 function getFlag(name) {
   const idx = args.indexOf(name)
-  return idx !== -1 ? args[idx + 1] : undefined
+  if (idx === -1) return undefined
+  const value = args[idx + 1]
+  if (!value || String(value).startsWith('--')) return undefined
+  return value
 }
 
 function getMultiFlag(name) {
@@ -114,7 +117,7 @@ async function main() {
     return
   }
   if (args.includes('--version') || command === 'version' || args.includes('-v')) {
-    console.log('synapsoul 2.1.0')
+    console.log('synapsoul 2.1.2')
     return
   }
 

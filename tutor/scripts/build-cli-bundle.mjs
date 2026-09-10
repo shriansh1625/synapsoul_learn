@@ -40,7 +40,7 @@ const FORBIDDEN_TEXT = [
 
 const STUDENT_PACKAGE_JSON = {
   name: 'synapsoul',
-  version: '2.1.0',
+  version: '2.1.2',
   private: true,
   type: 'module',
   bin: { synapsoul: './cli/index.mjs', learnlab: './cli/index.mjs' },
