@@ -89,19 +89,21 @@ export function annotateCliAuth(result) {
   result.cli_logged_in = loggedIn
   if (!loggedIn) {
     result.login_required = true
-    result.login_message = `Sign in so cohort admin can see IDE activity. Run: ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`
+    result.login_message = `Sign in so cohort admin can see IDE activity. Run: ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json  or  ${CLI_NAME} login --github --json. Or register at ${PRODUCTION_SITE} then ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`
     const extra = Array.isArray(result.prompt_suggestions) ? result.prompt_suggestions : []
     result.prompt_suggestions = [
+      `${CLI_NAME} register --email YOUR_EMAIL --password YOUR_PASSWORD --name "Your Name" --json`,
       `${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
-      `Open ${PRODUCTION_SITE}`,
-      ...extra.filter(s => !/login/i.test(String(s))),
+      `${CLI_NAME} login --github --json`,
+      `Or register at ${PRODUCTION_SITE} then ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+      ...extra.filter(s => !/login|register/i.test(String(s))),
     ]
   }
   return result
 }
 
 export function loginReminderText() {
-  return `\n\nSign in to attach this session to your cohort account:\n  ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD`
+  return `\n\nSign in to attach this session to your cohort account:\n  ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD\n  ${CLI_NAME} login --github\n  Or register at ${PRODUCTION_SITE} then ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD`
 }
 
 export async function emitTutorCliEvent(command, result, sessionBefore) {

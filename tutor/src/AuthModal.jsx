@@ -57,7 +57,7 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'login' })
         <button type="button" className="modal-close" onClick={onClose}>×</button>
         <p className="section-eyebrow">{mode === 'login' ? 'Welcome back' : 'Create account'}</p>
         <h2 className="display-xs">{mode === 'login' ? 'Sign in' : 'Register'}</h2>
-        <p className="section-sub">Sync progress and publish a recruiter-facing hiring profile.</p>
+        <p className="section-sub">Same account as the IDE CLI. After this, run synapsoul login --email … so IDE events attach to you.</p>
 
         <div className="auth-tabs">
           <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>Login</button>
@@ -73,13 +73,14 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'login' })
               onClick={startGithub}
             >
               <GitHubIcon />
-              {githubReady ? 'Continue with GitHub' : 'GitHub setup required'}
+              {githubReady ? 'Continue with GitHub' : 'GitHub unavailable — use email'}
             </button>
             {!githubReady && (
               <p className="field-hint">
-                GitHub sign-in needs GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET on the API host. Email sign-in still works.
+                GitHub sign-in is not available on the API right now. Register with email here, then in the IDE run synapsoul login --email … 
               </p>
             )}
+            <p className="auth-or">or email</p>
           </div>
         )}
 
@@ -109,6 +110,10 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'login' })
             {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
+        <p className="auth-cli-hint">
+          IDE: <code>synapsoul register --email … --password … --name …</code> or <code>synapsoul login --github</code>.
+          Or register here, then <code>synapsoul login --email …</code>
+        </p>
       </div>
     </div>
   )
