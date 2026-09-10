@@ -4,6 +4,7 @@ import { auth } from '../middleware/auth.js'
 import { AdaptiveEngine, hydrateFromProgress } from '../lib/brain/index.js'
 import { maybeCoachNote } from '../lib/llm/coachService.js'
 import { linkOutcome } from '../lib/learning/implicitSignals.js'
+import { touchLastSeen } from '../lib/adminAuth.js'
 
 const router = Router()
 
@@ -29,6 +30,7 @@ function engineFrom(memory, progress) {
 router.get('/', auth, async (req, res) => {
   try {
     const memory = await loadMemory(req.user.id)
+    await touchLastSeen(req.user.id)
     const engine = engineFrom(memory)
     res.json({
       state: engine.state,
@@ -49,6 +51,7 @@ router.put('/', auth, async (req, res) => {
     const memory = await loadMemory(req.user.id)
     memory.brain = incoming
     await saveMemory(req.user.id, memory)
+    await touchLastSeen(req.user.id)
     const engine = engineFrom(memory)
     res.json({ ok: true, snapshot: engine.snapshot() })
   } catch (e) {

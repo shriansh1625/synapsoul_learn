@@ -8,23 +8,40 @@ Paste one prompt. Get a tutor that remembers how you learn, adapts to your level
 
 ## Universal Prompt (any IDE)
 
+Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, **Antigravity**, and any AI editor that can read files and run terminal commands.
+
+A friend opens https://tutor-alpha-sandy.vercel.app/, copies the prompt, clones https://github.com/shriansh1625/learnerslab, pastes the prompt in their IDE, then signs in on the site so progress returns to the cohort API.
+
+The landing **Copy** button uses the full prompt below (also in [PROMPT.md](PROMPT.md)).
+
 ```
-Read skill.md and follow the instructions
+You are the LearnLab engineering instructor. Use LearnLab branding only.
+
+If skill.md is missing from this workspace, clone the public repo first:
+git clone https://github.com/shriansh1625/learnerslab.git
+Then open that folder as the project.
+
+1. Read skill.md at the project root and follow the instructor protocol exactly.
+2. Install dependencies and load session state. Windows PowerShell and bash both work:
+     cd tutor
+     npm install
+     node cli/index.mjs status --json
+3. Point CLI sync at production: LEARNLAB_API_URL=https://learnerslab.onrender.com
+4. The student should create an account or sign in at https://tutor-alpha-sandy.vercel.app/
+5. Never write full BUILD solutions. One step at a time.
 ```
 
-Works with **Cursor**, **Claude Code**, **Codex**, **Antigravity**, and any AI editor that can read files and run terminal commands.
-
-See [PROMPT.md](PROMPT.md) for IDE-specific variants.
+Do **not** put `ADMIN_SECRET` or `ADMIN_EMAIL` in the prompt or on the landing page.
 
 ---
 
 ## Why LearnLab
 
-- **One prompt** — paste `Read skill.md and follow the instructions` in any AI editor
+- **One prompt** — copy from the landing page; works in Cursor, Claude, VS Code Copilot, and other IDEs
 - **6 core skills, 22 modules, 4 tracks** — Node, Python, Go, TypeScript
 - **Adaptive memory** — your instructor remembers sessions and calibrates to your level
 - **5-dimension evidence scoring** — proof of how you think, not just what you completed
-- **Local-first with cloud sync** — works offline; register to sync progress across devices
+- **Local-first with cloud sync** — works offline; register on the site so progress returns to the cohort API
 - **Custom modules** — extend the curriculum with JSON files
 
 ---
@@ -47,11 +64,41 @@ npm install
 npm run dev            # API at localhost:3001
 ```
 
-Then paste in your IDE:
+Then paste the universal prompt from the landing page into your IDE.
 
+---
+
+## How a friend uses LearnLab
+
+1. Open https://tutor-alpha-sandy.vercel.app/ and copy the universal prompt.
+2. Clone https://github.com/shriansh1625/learnerslab and open that folder in Cursor, Claude Code, VS Code Copilot, or another AI editor.
+3. Paste the prompt. The agent clones if needed, reads `skill.md`, installs the CLI, and teaches one step at a time.
+4. Create an account or sign in on the site (email or GitHub). Then either stay on the dashboard or run:
+
+```powershell
+cd tutor
+$env:LEARNLAB_API_URL="https://learnerslab.onrender.com"
+node cli/index.mjs sync --email you@example.com --password your-password --json
 ```
-Read skill.md and follow the instructions
-```
+
+The website is the source of truth for the cohort. Do not paste JWTs into chat.
+
+People who never sign in are not silently tracked. Public hiring profiles stay opt-in public.
+
+---
+
+## Admin cohort dashboard (private)
+
+Students never see this page. It is not in public nav or on the landing page.
+
+1. On the Render API service, set `ADMIN_EMAIL` to your login email and `ADMIN_SECRET` to a long random token (Render can generate `ADMIN_SECRET`).
+2. Sign in on https://tutor-alpha-sandy.vercel.app/ with that email.
+3. Open https://tutor-alpha-sandy.vercel.app/admin (or `/#/admin`).
+4. If your email matches `ADMIN_EMAIL`, the cohort table loads. Otherwise, expand **Setup** and enter `ADMIN_SECRET` once — that sets `is_admin` on your user.
+
+The dashboard lists every student (name, email, username, last seen, modules, track, readiness, GitHub) and opens private progress, brain, and profile. Password hashes are never returned.
+
+Unauthenticated or non-admin callers of `/api/admin/*` receive **404 Not found** (not 403).
 
 ---
 
@@ -214,6 +261,8 @@ CLI: `npm run tutor -- learning stats --json`
 | `LINKEDIN_CLIENT_ID` | No | Optional LinkedIn OAuth. Pasted LinkedIn URLs always work without this |
 | `LINKEDIN_CLIENT_SECRET` | No | LinkedIn OAuth secret. **Never commit this.** |
 | `LINKEDIN_CALLBACK_URL` | No | e.g. `https://learnerslab.onrender.com/api/auth/linkedin/callback` |
+| `ADMIN_EMAIL` | Yes (prod, for cohort admin) | Owner login email. Server-only. Never put this in `VITE_*`. |
+| `ADMIN_SECRET` | Yes (prod, for first-time elevate) | Random token. Server-only. Never commit it or put it in the prompt. |
 
 ### Frontend (Vercel)
 
@@ -295,6 +344,11 @@ The public slug is the **`username` field saved on the server** (via **Save publ
 | POST | `/api/learning/react` | optional JWT | Rate an instructor interaction |
 | GET | `/api/learning/stats` | optional JWT | Self-learning stats |
 | POST | `/api/learning/consolidate` | JWT | Trigger pattern distillation |
+| PUT | `/api/progress/sync` | JWT | Bulk CLI/web progress + brain upsert |
+| GET | `/api/admin/overview` | JWT + admin | Cohort counts (404 if not admin) |
+| GET | `/api/admin/students` | JWT + admin | Student list, no password hashes |
+| GET | `/api/admin/students/:id` | JWT + admin | Private progress, brain, events, profile |
+| POST | `/api/admin/elevate` | JWT + `ADMIN_SECRET` | One-time `is_admin` promotion |
 
 ---
 
@@ -313,6 +367,7 @@ npm run tutor -- pretest
 npm run tutor -- pretest submit --answers "1A,2A,3A,4A,5A"
 npm run tutor -- leaderboard
 npm run tutor -- sync --publish
+npm run tutor -- sync --email you@example.com --password your-password --json
 npm run tutor -- feedback --summary "..."
 npm run tutor -- learning stats --json
 ```

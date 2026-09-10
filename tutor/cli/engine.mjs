@@ -10,6 +10,16 @@ import {
 import { maybeCoachNote } from '../lib/llm/coachService.js'
 import { getLearnLabLLM } from '../lib/llm/LearnLabLLM.js'
 import { getExperienceStore } from '../lib/learning/ExperienceStore.js'
+import {
+  getApiBase,
+  resolveSyncApiBase,
+  loadSavedToken,
+  saveToken,
+  loginToApi,
+  pushProgressAndBrain,
+  PRODUCTION_API,
+  PRODUCTION_SITE,
+} from './cloud.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = join(__dirname, '..', 'data')
@@ -131,6 +141,15 @@ function computeBadges(progress, catalog) {
 
 export function saveProgress(progress) {
   writeJson(progressPath(), progress)
+  const apiBase = getApiBase()
+  const token = loadSavedToken()
+  if (!apiBase || !token) return
+  pushProgressAndBrain({
+    apiBase,
+    token,
+    progress,
+    brain: progress?.studentMemory?.brain || null,
+  }).catch(() => {})
 }
 
 export function loadCatalog() {
@@ -913,7 +932,7 @@ export function cmdStatusAll({ json }) {
   ).join('\n')
 }
 
-export function cmdSync({ publish, json }) {
+export async function cmdSync({ publish, json, email, password }) {
   const progress = loadProgress()
   const catalog = loadCatalog()
   const syncDir = join(DATA_DIR, 'sync')
@@ -923,7 +942,7 @@ export function cmdSync({ publish, json }) {
     synced_at: new Date().toISOString(),
     progress,
     public_profile: buildPublicProfile(progress, catalog),
-    brain: attachBrain(progress),
+    brain: attachBrain(progress, undefined, { persist: false }),
   }
   const syncPath = join(syncDir, 'latest.json')
   writeJson(syncPath, exportData)
@@ -940,18 +959,69 @@ export function cmdSync({ publish, json }) {
     if (!existsSync(publicDir)) mkdirSync(publicDir, { recursive: true })
     const publicProfile = buildPublicProfile(progress, catalog)
     writeJson(join(publicDir, `${username}.json`), publicProfile)
-    publishedUrl = `http://localhost:5173/#/u/${username}`
+    publishedUrl = `${PRODUCTION_SITE}/u/${username}`
   }
 
+  let cloud = { attempted: false }
+  const loginRequested = Boolean(email && password)
+  const apiBase = resolveSyncApiBase({ login: loginRequested })
+  try {
+    if (loginRequested) {
+      const auth = await loginToApi(email, password, apiBase || PRODUCTION_API)
+      saveToken(auth.token, email)
+      cloud = await pushProgressAndBrain({
+        apiBase: auth.apiBase,
+        token: auth.token,
+        progress,
+        brain: exportData.brain,
+      })
+      cloud.attempted = true
+      cloud.via = 'email'
+    } else if (apiBase && loadSavedToken()) {
+      cloud = await pushProgressAndBrain({
+        apiBase,
+        token: loadSavedToken(),
+        progress,
+        brain: exportData.brain,
+      })
+      cloud.attempted = true
+      cloud.via = 'saved_token'
+    } else if (!apiBase) {
+      cloud = {
+        attempted: false,
+        skipped: `Set LEARNLAB_API_URL=${PRODUCTION_API} then re-run sync, or sign in at ${PRODUCTION_SITE}`,
+      }
+    } else {
+      cloud = {
+        attempted: false,
+        skipped: `Sign in at ${PRODUCTION_SITE} or run: node cli/index.mjs sync --email you@example.com --password your-password --json`,
+      }
+    }
+  } catch (e) {
+    cloud = { attempted: true, ok: false, error: e.message }
+  }
+
+  const cloudOk = cloud.ok === true
   const result = {
-    status: 'synced',
-    message: publish ? 'Progress synced and public profile published.' : 'Progress synced to data/sync/latest.json',
+    status: cloud.attempted && !cloudOk ? 'sync_partial' : 'synced',
+    message: cloudOk
+      ? `Progress synced locally and to ${cloud.api || apiBase}.`
+      : publish
+        ? 'Progress synced locally and public profile published.'
+        : cloud.skipped
+          ? `Progress saved locally. ${cloud.skipped}`
+          : cloud.error
+            ? `Progress saved locally. Cloud sync failed: ${cloud.error}`
+            : 'Progress synced to data/sync/latest.json',
     sync_path: syncPath,
-    profile_url: publishedUrl || (progress.profile?.username ? `http://localhost:5173/#/u/${progress.profile.username}` : null),
+    cloud,
+    profile_url: publishedUrl || (progress.profile?.username ? `${PRODUCTION_SITE}/u/${progress.profile.username}` : null),
     readiness_score: exportData.public_profile.readiness_score,
-    prompt_suggestions: publish
-      ? ['tutor profile', 'Open profile URL in browser']
-      : ['tutor sync --publish', 'tutor status'],
+    prompt_suggestions: cloudOk
+      ? ['tutor status', `Open ${PRODUCTION_SITE}`]
+      : loginRequested
+        ? ['tutor status']
+        : [`node cli/index.mjs sync --email you@example.com --password your-password --json`, `Sign in at ${PRODUCTION_SITE}`],
   }
   return json ? result : result.message
 }

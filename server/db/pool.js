@@ -91,6 +91,8 @@ const PROFILE_COLUMNS = [
   ['website', 'TEXT'],
   ['avatar_url', 'TEXT'],
   ['profile_public', 'BOOLEAN DEFAULT true'],
+  ['is_admin', 'BOOLEAN DEFAULT false'],
+  ['last_seen', 'TIMESTAMPTZ'],
 ]
 
 export async function ensureProfileColumns() {
@@ -106,6 +108,13 @@ export async function ensureProfileColumns() {
   await pool.query(
     'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_github_id ON users (github_id) WHERE github_id IS NOT NULL'
   )
+  const adminEmail = (process.env.ADMIN_EMAIL || '').trim()
+  if (adminEmail) {
+    await pool.query(
+      'UPDATE users SET is_admin = true WHERE lower(email) = lower($1)',
+      [adminEmail]
+    )
+  }
   return true
 }
 

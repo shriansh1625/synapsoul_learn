@@ -6,6 +6,7 @@
     { "source": "/u/:username", "destination": "/index.html" },
     { "source": "/auth/callback", "destination": "/index.html" },
     { "source": "/college", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }

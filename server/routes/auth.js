@@ -16,6 +16,7 @@ import {
   exchangeGithubCode,
   exchangeLinkedInCode,
 } from '../lib/oauth.js'
+import { touchLastSeen, promoteIfAdminEmail } from '../lib/adminAuth.js'
 
 const router = Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
@@ -132,6 +133,8 @@ router.post('/register', async (req, res) => {
       'INSERT INTO student_memory (user_id, memory) VALUES ($1, $2) ON CONFLICT DO NOTHING',
       [user.id, JSON.stringify({ effective_level: 'beginner' })]
     )
+    await promoteIfAdminEmail(user)
+    await touchLastSeen(user.id)
     res.json({ token: signToken(user), user })
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Email or username already exists' })
@@ -150,6 +153,8 @@ router.post('/login', async (req, res) => {
     const ok = await bcrypt.compare(password, rows[0].password_hash)
     if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
     const user = ownerUser(rows[0])
+    await promoteIfAdminEmail(user)
+    await touchLastSeen(user.id)
     res.json({ token: signToken(user), user })
   } catch (e) {
     res.status(500).json({ error: 'Could not sign in. Try again.' })
@@ -157,7 +162,12 @@ router.post('/login', async (req, res) => {
 })
 
 router.get('/me', auth, async (req, res) => {
-  res.json(await loadOwnerById(req.user.id))
+  const user = await loadOwnerById(req.user.id)
+  if (user) {
+    await promoteIfAdminEmail(user)
+    await touchLastSeen(user.id)
+  }
+  res.json(user)
 })
 
 router.get('/github', (req, res) => {
@@ -224,6 +234,8 @@ router.get('/github/callback', async (req, res) => {
       }
     }
     const token = signToken(user)
+    await promoteIfAdminEmail(user)
+    await touchLastSeen(user.id)
     return res.redirect(frontendRedirect({
       token,
       provider: 'github',
@@ -313,6 +325,8 @@ router.get('/linkedin/callback', async (req, res) => {
     }
 
     const token = signToken(user)
+    await promoteIfAdminEmail(user)
+    await touchLastSeen(user.id)
     return res.redirect(frontendRedirect({
       token,
       provider: 'linkedin',

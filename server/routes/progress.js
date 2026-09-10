@@ -2,11 +2,13 @@ import { Router } from 'express'
 import { pool } from '../db/pool.js'
 import { auth } from '../middleware/auth.js'
 import { AdaptiveEngine } from '../lib/brain/index.js'
+import { touchLastSeen } from '../lib/adminAuth.js'
 
 const router = Router()
 
 router.get('/', auth, async (req, res) => {
   const uid = req.user.id
+  await touchLastSeen(uid)
   const [user, session, completed, decisions, scores, portfolio, memory] = await Promise.all([
     pool.query(
       `SELECT id, email, name, degree, bio, username, college_name, track, profile_confirmed,
@@ -64,6 +66,7 @@ router.put('/session', auth, async (req, res) => {
      ON CONFLICT (user_id) DO UPDATE SET skill_id=$2, module_id=$3, step=$4, track=$5, hints_used=$6, started_at=NOW()`,
     [req.user.id, skillId, moduleId, step, track || 'node', hintsUsed || 0]
   )
+  await touchLastSeen(req.user.id)
   res.json({ ok: true })
 })
 
@@ -139,7 +142,119 @@ router.post('/module-complete', auth, async (req, res) => {
     /* brain is best-effort */
   }
 
+  await touchLastSeen(uid)
   res.json({ ok: true })
+})
+
+function parseCompletedMap(raw) {
+  if (!raw || typeof raw !== 'object') return []
+  return Object.entries(raw).map(([key, value]) => {
+    const [skillId, moduleId] = String(key).split(':')
+    const row = value && typeof value === 'object' ? value : {}
+    return {
+      skillId: row.skill_id || row.skillId || skillId,
+      moduleId: row.module_id || row.moduleId || moduleId,
+      score: row.score ?? row.overall ?? null,
+      track: row.track || 'node',
+    }
+  }).filter(r => r.skillId && r.moduleId)
+}
+
+router.put('/sync', auth, async (req, res) => {
+  const uid = req.user.id
+  const body = req.body || {}
+  const session = body.session
+  const completed = parseCompletedMap(body.completedModules)
+  const decisions = body.decisions && typeof body.decisions === 'object' ? body.decisions : {}
+  const scores = body.scores && typeof body.scores === 'object' ? body.scores : {}
+  const portfolio = Array.isArray(body.portfolio) ? body.portfolio : []
+  const studentMemory = body.studentMemory && typeof body.studentMemory === 'object' ? body.studentMemory : {}
+  const brain = body.brain
+
+  try {
+    if (session?.skillId && session?.moduleId) {
+      await pool.query(
+        `INSERT INTO user_sessions (user_id, skill_id, module_id, step, track, hints_used)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         ON CONFLICT (user_id) DO UPDATE SET skill_id=$2, module_id=$3, step=$4, track=$5, hints_used=$6, started_at=NOW()`,
+        [uid, session.skillId, session.moduleId, session.step || 'CONTEXT', session.track || 'node', session.hintsUsed || 0]
+      )
+    }
+
+    for (const row of completed) {
+      await pool.query(
+        `INSERT INTO completed_modules (user_id, skill_id, module_id, score, track)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (user_id, skill_id, module_id) DO UPDATE SET score=$4, track=$5, completed_at=NOW()`,
+        [uid, row.skillId, row.moduleId, row.score, row.track]
+      )
+    }
+
+    for (const [key, value] of Object.entries(decisions)) {
+      const [skillId, moduleId] = String(key).split(':')
+      if (!skillId || !moduleId) continue
+      const choice = typeof value === 'object' ? (value.choice || value) : value
+      const reasoning = typeof value === 'object' ? (value.reasoning || '') : ''
+      if (!choice) continue
+      await pool.query(
+        `INSERT INTO decisions (user_id, skill_id, module_id, choice, reasoning)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (user_id, skill_id, module_id) DO UPDATE SET choice=$4, reasoning=$5`,
+        [uid, skillId, moduleId, String(choice), reasoning]
+      )
+    }
+
+    for (const [key, value] of Object.entries(scores)) {
+      const [skillId, moduleId] = String(key).split(':')
+      if (!skillId || !moduleId || !value || typeof value !== 'object') continue
+      const { overall, narrative, ...rest } = value
+      const dimensions = value.dimensions || rest
+      await pool.query(
+        `INSERT INTO scores (user_id, skill_id, module_id, overall, dimensions, narrative)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         ON CONFLICT (user_id, skill_id, module_id) DO UPDATE SET overall=$4, dimensions=$5, narrative=$6`,
+        [uid, skillId, moduleId, overall ?? null, JSON.stringify(dimensions || {}), narrative || '']
+      )
+    }
+
+    if (portfolio.length) {
+      const existing = await pool.query('SELECT COUNT(*)::int AS count FROM portfolio WHERE user_id = $1', [uid])
+      if ((existing.rows[0]?.count || 0) === 0) {
+        for (const item of portfolio.slice(0, 50)) {
+          await pool.query(
+            `INSERT INTO portfolio (user_id, skill_id, module_id, artifact, student_action, technical_detail, proof, ability, confidence)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            [
+              uid,
+              item.skill_id || item.skillId || null,
+              item.module_id || item.moduleId || null,
+              item.artifact || '',
+              item.student_action || '',
+              item.technical_detail || '',
+              item.proof || '',
+              item.ability || '',
+              item.confidence || '',
+            ]
+          )
+        }
+      }
+    }
+
+    const memory = { ...studentMemory }
+    if (brain && typeof brain === 'object') {
+      memory.brain = brain.state || brain
+    }
+    await pool.query(
+      `INSERT INTO student_memory (user_id, memory) VALUES ($1, $2::jsonb)
+       ON CONFLICT (user_id) DO UPDATE SET memory = $2::jsonb`,
+      [uid, JSON.stringify(memory)]
+    )
+
+    await touchLastSeen(uid)
+    res.json({ ok: true, synced: true })
+  } catch (e) {
+    res.status(500).json({ error: 'Could not sync progress' })
+  }
 })
 
 export default router

@@ -148,3 +148,19 @@ export function reactToInteraction(interactionId, reaction) {
 export function fetchLearningStats() {
   return apiFetch('/api/learning/stats')
 }
+
+export function fetchAdminOverview() {
+  return apiFetch('/api/admin/overview')
+}
+
+export function fetchAdminStudents() {
+  return apiFetch('/api/admin/students')
+}
+
+export function fetchAdminStudent(id) {
+  return apiFetch(`/api/admin/students/${encodeURIComponent(id)}`)
+}
+
+export function elevateAdmin(secret) {
+  return apiFetch('/api/admin/elevate', { method: 'POST', body: JSON.stringify({ secret }) })
+}

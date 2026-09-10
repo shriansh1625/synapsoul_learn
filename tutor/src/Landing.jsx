@@ -37,7 +37,7 @@ const VALUE_PROPS = [
   },
   {
     title: 'One prompt, full bootcamp',
-    desc: 'Paste one universal prompt in Cursor, Claude Code, Codex, or Antigravity — your private instructor boots instantly.',
+    desc: 'Copy one prompt from this site. Clone the public repo. Paste it in Cursor, Claude, VS Code Copilot, or any AI editor.',
   },
 ]
 
@@ -134,7 +134,7 @@ const SKILLS = [
 ]
 
 const CHIP_CATEGORIES = [
-  { label: 'IDEs', chips: ['Cursor', 'Claude Code', 'Codex', 'Antigravity'] },
+  { label: 'IDEs', chips: ['Cursor', 'Claude Code', 'VS Code Copilot', 'Codex'] },
   { label: 'Languages', chips: ['Node', 'Python', 'Go', 'TypeScript'] },
   { label: 'Tracks', chips: ['System Design', 'Debugging', 'Production', 'AI Engineering'] },
 ]
@@ -147,10 +147,17 @@ const HOW_60_SECONDS = [
 ]
 
 const HOW_IT_WORKS = [
-  { num: '01', title: 'Open your AI editor', desc: 'Cursor, Claude Code, Codex, or Antigravity — any editor that reads skill.md and runs terminal commands.' },
-  { num: '02', title: 'Paste one prompt', desc: 'One universal prompt bootstraps your private instructor. No signup, no cloud lock-in.' },
+  { num: '01', title: 'Open your AI editor', desc: 'Cursor, Claude Code, VS Code Copilot, Codex, or Antigravity — any editor that can read files and run a terminal.' },
+  { num: '02', title: 'Clone, then paste one prompt', desc: 'Clone the public GitHub repo if you do not have skill.md yet. The copied prompt tells the agent exactly how to boot the tutor.' },
   { num: '03', title: 'Learn by doing', desc: 'CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT. Real engineering, not tutorial hell.' },
-  { num: '04', title: 'Build your evidence', desc: 'Five dimensions scored with quotes. A portfolio that proves how you think.' },
+  { num: '04', title: 'Sign in so progress returns', desc: 'Create a LearnLab account on this site. Progress and brain sync to the cohort API when you use that account — public hiring profiles stay opt-in.' },
+]
+
+const ANY_IDE_STEPS = [
+  { num: '01', title: 'Copy the prompt', desc: 'Use the button above. The full instructor protocol is in the clipboard — no extra docs required.' },
+  { num: '02', title: 'Clone the repo', desc: 'git clone https://github.com/shriansh1625/learnerslab.git and open that folder in your editor.' },
+  { num: '03', title: 'Paste in any IDE', desc: 'Cursor, Claude Code, VS Code Copilot, Codex, Antigravity — any agent that can read skill.md and run a terminal.' },
+  { num: '04', title: 'Sign in on this site', desc: 'Register or log in here (email or GitHub) so your progress returns to the cohort API.' },
 ]
 
 const CONVERSATION = [
@@ -162,7 +169,8 @@ const CONVERSATION = [
 
 const FAQ = [
   { q: 'Is this just another AI chatbot?', a: 'No. Your instructor remembers sessions, tracks concepts, scores reasoning across five dimensions, and builds an evidence-backed profile.' },
-  { q: 'What IDE does it work with?', a: 'Cursor, Claude Code, Codex, Antigravity — any AI editor that can read skill.md and run terminal commands.' },
+  { q: 'What IDE does it work with?', a: 'Any AI editor: Cursor, Claude Code, VS Code Copilot, Codex, Antigravity — anything that can read skill.md and run terminal commands.' },
+  { q: 'Where does my progress go?', a: 'It stays in your local clone first. When you register or sign in on this site, progress and brain sync to the LearnLab API. Public hiring profiles stay opt-in. People who never create an account are not silently tracked.' },
   { q: 'The agent assumes I know something. What do I do?', a: 'Say "I don\'t know — explain from scratch." The instructor adapts to your level.' },
   { q: 'How do I get the most out of this?', a: 'Challenge it: "Why this approach?" "What breaks if I skip this?" "Score my reasoning."' },
 ]
@@ -225,6 +233,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
           </button>
           <div id="landing-menu" className={`glass-nav-links ${menuOpen ? 'is-open' : ''}`}>
             <button type="button" onClick={() => goSection('why')}>Why LearnLab</button>
+            <button type="button" onClick={() => goSection('any-ide')}>Any IDE</button>
             <button type="button" onClick={() => goSection('how')}>How It Works</button>
             <button type="button" onClick={() => goSection('skills')}>Skills</button>
             <button type="button" onClick={() => goSection('leaderboard')}>Leaderboard</button>
@@ -287,15 +296,37 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
         <div className="prompt-box premium reveal reveal-d5">
           <div className="prompt-glow" aria-hidden="true" />
           <p className="prompt-label">Universal prompt — paste in your AI editor</p>
-          <div className="prompt-row">
-            <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+          <div className="prompt-row prompt-row-stack">
+            <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
             <button type="button" className="copy-btn" onClick={copyPrompt}>
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <p className="prompt-note">Works with Cursor, Claude Code, Codex, Antigravity · Free · Offline after setup</p>
+          <p className="prompt-note">Works in Cursor, Claude Code, VS Code Copilot, Codex, Antigravity · clone the public repo · sign in here so progress returns</p>
           {copyError && <p className="form-feedback is-error" role="alert">{copyError}</p>}
           {copied && <p className="form-feedback is-success" role="status">Prompt copied to clipboard</p>}
+        </div>
+      </section>
+
+      <section className="landing-any-ide reveal" id="any-ide">
+        <div className="section-head">
+          <p className="section-eyebrow">Works in any IDE</p>
+          <h2 className="display-sm">Share the site. Paste one prompt. <em>Same tutor.</em></h2>
+          <p className="section-desc">
+            A friend opens this page on any device, copies the prompt, clones the public repo,
+            and pastes it in Cursor, Claude, VS Code Copilot, or another AI editor.
+            After they sign in here, progress returns to the cohort — not to a private local-only silo.
+          </p>
+        </div>
+        <div className="steps-row steps-60s any-ide-steps">
+          {ANY_IDE_STEPS.map((step, i) => (
+            <div key={step.title} className={`step-item reveal reveal-d${(i % 3) + 1}`}>
+              <span className="step-time">{step.num}</span>
+              <strong>{step.title}</strong>
+              <p>{step.desc}</p>
+              {i < ANY_IDE_STEPS.length - 1 && <span className="step-divider" aria-hidden="true" />}
+            </div>
+          ))}
         </div>
       </section>
 
@@ -564,7 +595,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
             <span className="contact-label">Universal prompt</span>
             <div className="prompt-box premium compact">
               <div className="prompt-glow" aria-hidden="true" />
-              <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+              <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
             </div>
             <div className="cta-actions">
               <button type="button" className="btn-primary btn-gradient btn-lg" onClick={onEnterApp}>

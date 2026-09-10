@@ -7,6 +7,7 @@ import Landing from './Landing.jsx'
 import PublicProfile from './PublicProfile.jsx'
 import ProfileView from './ProfileView.jsx'
 import AuthModal from './AuthModal.jsx'
+import AdminGate from './AdminDashboard.jsx'
 import { BrainPanel } from './BrainPanel.jsx'
 import { useBrain } from './brain/useBrain.js'
 import {
@@ -54,11 +55,12 @@ function parseRoute() {
   }
 
   if (hashPath === '/college' || path === '/college') return { type: 'college' }
+  if (hashPath === '/admin' || path === '/admin') return { type: 'admin' }
 
   const knownHash = !hashPath || hashPath === '/' || !hashPath.startsWith('/')
   const knownPath = path === '/' || path === '/index.html'
   if (!knownPath) return { type: 'notfound', path }
-  if (!knownHash && hashPath !== '/college' && !hashPath.startsWith('/u/') && hashPath !== '/auth' && hashPath !== '/auth/callback') {
+  if (!knownHash && hashPath !== '/college' && hashPath !== '/admin' && !hashPath.startsWith('/u/') && hashPath !== '/auth' && hashPath !== '/auth/callback') {
     return { type: 'notfound', path: hashPath }
   }
   return { type: 'app' }
@@ -271,7 +273,7 @@ export default function App() {
       } else if (r.type === 'college') {
         setShowLanding(false)
         setView('college')
-      } else if (r.type === 'notfound') {
+      } else if (r.type === 'notfound' || r.type === 'admin') {
         setShowLanding(false)
       }
       setNavOpen(false)
@@ -290,7 +292,7 @@ export default function App() {
 
   useEffect(() => {
     if (showLanding || route.type === 'public' || route.type === 'oauth') return
-    if (route.type === 'notfound') {
+    if (route.type === 'notfound' || route.type === 'admin') {
       setPageMeta({
         title: 'Page not found · LearnLab',
         description: 'That LearnLab page does not exist. Head back to the bootcamp home.',
@@ -450,6 +452,14 @@ export default function App() {
     return (
       <div className="app public-app">
         <NotFoundView onHome={goHome} path={route.path} />
+      </div>
+    )
+  }
+
+  if (route.type === 'admin') {
+    return (
+      <div className="app public-app">
+        <AdminGate onHome={goHome} />
       </div>
     )
   }
@@ -778,7 +788,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
           <p className="section-eyebrow">First module</p>
           <h2 className="display-xs">No modules completed yet</h2>
           <p>Paste the universal prompt in Cursor to start System Design Fundamentals. Evidence lands here as you ship.</p>
-          <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+          <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
           <StartPromptCopy />
           <p className="cursor-hint">You can also say <code>Start my lesson</code> in Cursor after the instructor boots.</p>
         </section>
@@ -853,7 +863,7 @@ function SkillsView({ progress, selectedSkill, onSelectSkill, skillUnlocked }) {
             <h2 className="display-xs">{selectedSkill.title}</h2>
             <p>{selectedSkill.description}</p>
             <h3>Start in your editor</h3>
-            <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+            <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
             <p className="cursor-hint">Then say <code>Start {selectedSkill.title}</code> in chat, or run:</p>
             <code className="cli-block">npm run tutor -- start --skill {selectedSkill.id}</code>
             <h3>Growth dimensions</h3>
@@ -1333,7 +1343,7 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
               <p className="section-eyebrow">Step 3 of 3</p>
               <h2 className="display-xs">Start your <em>first module</em></h2>
               <p className="section-sub">Paste this in Cursor, then say &quot;Continue my lesson&quot;.</p>
-              <code className="prompt-code">{UNIVERSAL_PROMPT}</code>
+              <pre className="prompt-code multiline">{UNIVERSAL_PROMPT}</pre>
               <p className="cursor-hint">Optional CLI: <code>npm run tutor -- start --skill {foundation?.id} --track {track}</code></p>
             </>
           )}

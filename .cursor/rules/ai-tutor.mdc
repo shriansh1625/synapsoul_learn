@@ -7,9 +7,12 @@ alwaysApply: true
 
 When the user wants to learn or pasted the universal prompt:
 
-1. Read `skill.md` at project root and follow the instructor protocol.
-2. Run `cd tutor && npm run tutor -- status --json` for session state.
-3. Use CLI for all progression — never invent curriculum.
-4. One step per turn. Never write full BUILD solutions.
+1. If `skill.md` is missing, clone https://github.com/shriansh1625/learnerslab.git and open that folder first.
+2. Read `skill.md` at project root and follow the instructor protocol.
+3. Run `cd tutor && npm install` then `node cli/index.mjs status --json` (Windows PowerShell-safe).
+4. When `LEARNLAB_API_URL` or `VITE_API_URL` is set to `https://learnerslab.onrender.com`, CLI sync posts to the production cohort API.
+5. Student should sign in at https://tutor-alpha-sandy.vercel.app/ so progress returns to the cohort.
+6. Use CLI for all progression — never invent curriculum.
+7. One step per turn. Never write full BUILD solutions.
 
-Universal prompt: `Read skill.md and follow the instructions`
+Universal prompt: copy from the LearnLab landing page (self-contained clone + CLI + production sync instructions).

@@ -11,6 +11,9 @@ router.get('/', async (_req, res) => {
       (SELECT COUNT(*)::int FROM portfolio p WHERE p.user_id = u.id) AS portfolio_count
     FROM users u
     LEFT JOIN completed_modules cm ON cm.user_id = u.id
+    WHERE u.profile_public IS NOT FALSE
+      AND u.username IS NOT NULL
+      AND u.username <> ''
     GROUP BY u.id
     ORDER BY modules_completed DESC, avg_score DESC
     LIMIT 20

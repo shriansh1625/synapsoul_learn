@@ -143,6 +143,26 @@ export async function runApiJourney() {
     return { evidence: { email: data.email } }
   })
 
+  await runStep(steps, 'admin_hidden_unauth', async () => {
+    const { status, data } = await fetchJson('/api/admin/overview')
+    if (status !== 404) throw new Error(`expected 404, got ${status}`)
+    const msg = String(data?.error || '').toLowerCase()
+    if (msg.includes('forbidden') || msg.includes('admin')) {
+      throw new Error('admin route advertised itself')
+    }
+    return { evidence: { status } }
+  })
+
+  await runStep(steps, 'admin_hidden_student', async () => {
+    const { status, data } = await fetchJson('/api/admin/students', { token })
+    if (status !== 404) throw new Error(`expected 404, got ${status}`)
+    const msg = String(data?.error || '').toLowerCase()
+    if (msg.includes('forbidden') || msg.includes('admin')) {
+      throw new Error('admin route advertised itself')
+    }
+    return { evidence: { status } }
+  })
+
   await runStep(steps, 'progress_get', async () => {
     const { ok, status, data } = await fetchJson('/api/progress', { token })
     if (!ok) throw new Error(`progress ${status}: ${JSON.stringify(data)}`)

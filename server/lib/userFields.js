@@ -1,7 +1,8 @@
 export const OWNER_COLUMNS = `
   id, email, name, degree, bio, username, college_name, track,
   github_id, github_username, github_avatar, linkedin_url,
-  headline, location, website, avatar_url, profile_public, profile_confirmed
+  headline, location, website, avatar_url, profile_public, profile_confirmed,
+  is_admin, last_seen
 `.replace(/\s+/g, ' ').trim()
 
 export function ownerUser(row) {
@@ -25,6 +26,8 @@ export function ownerUser(row) {
     avatar_url: row.avatar_url || '',
     profile_public: row.profile_public !== false,
     profile_confirmed: Boolean(row.profile_confirmed),
+    is_admin: Boolean(row.is_admin),
+    last_seen: row.last_seen || null,
   }
 }
 

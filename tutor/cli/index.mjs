@@ -47,7 +47,12 @@ async function main() {
       result = args.includes('--all') ? cmdStatusAll({ json }) : cmdStatus(json)
       break
     case 'sync':
-      result = cmdSync({ publish: args.includes('--publish'), json })
+      result = await cmdSync({
+        publish: args.includes('--publish'),
+        json,
+        email: getFlag('--email'),
+        password: getFlag('--password'),
+      })
       break
     case 'catalog':
       result = cmdCatalog(json)
@@ -123,7 +128,7 @@ async function main() {
 
 Commands:
   tutor status [--json] [--all]
-  tutor sync [--publish] [--json]
+  tutor sync [--publish] [--email <email> --password <password>] [--json]
   tutor catalog [--json]
   tutor start [--skill <id>] [--track <track>] [--json]
   tutor next --summary "..." --evidence "..."
@@ -140,8 +145,13 @@ Commands:
   tutor share [--json]
   tutor learning stats [--json]
 
+Cloud sync:
+  Set LEARNLAB_API_URL=https://learnerslab.onrender.com
+  Sign in at https://tutor-alpha-sandy.vercel.app/ then:
+  node cli/index.mjs sync --email you@example.com --password your-password --json
+
 Universal IDE prompt:
-  Read skill.md and follow the instructions`)
+  Copy from https://tutor-alpha-sandy.vercel.app/ (clone repo if skill.md is missing)`)
       process.exit(0)
   }
 
