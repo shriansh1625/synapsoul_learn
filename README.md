@@ -263,6 +263,8 @@ Paste a public LinkedIn URL on the Profile editor anytime (`PUT /api/profile` fi
 
 Owners edit from the in-app **Profile** tab. Recruiters only see the public page.
 
+The public slug is the **`username` field saved on the server** (via **Save public profile**), not your display name or unsaved form text. GitHub sign-in assigns an auto username (often from your GitHub handle); change it in the editor and save to publish `/u/your-slug`. Until save, `/u/{old-username}` may still work while `/u/{draft}` returns 404.
+
 ---
 
 ## API endpoints

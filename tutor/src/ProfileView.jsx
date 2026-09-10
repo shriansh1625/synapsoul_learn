@@ -64,8 +64,12 @@ export default function ProfileView({
     const count = Object.keys(progress.completedModules || {}).filter(k => k.startsWith(`${s.id}:`)).length
     return count >= (s.moduleCount || 1)
   })
-  const handle = slugifyUsername(form.username || cloud?.username || profile.username)
-  const publicUrl = handle && isValidPublicUsername(handle) ? publicProfileUrl(handle) : null
+  /** Public links must match GET /api/profile/:slug — only the saved server username counts. */
+  const savedHandle = slugifyUsername(loggedIn ? (cloud?.username || '') : (cloud?.username || profile.username || ''))
+  const draftHandle = slugifyUsername(form.username)
+  const handle = isValidPublicUsername(savedHandle) ? savedHandle : null
+  const publicUrl = handle ? publicProfileUrl(handle) : null
+  const usernamePending = loggedIn && isValidPublicUsername(draftHandle) && draftHandle !== savedHandle
   const avatar = cloud?.avatar_url || cloud?.github_avatar || profile.avatar_url
   const githubConnected = Boolean(cloud?.github_id || cloud?.github_username)
 
@@ -97,10 +101,10 @@ export default function ProfileView({
   async function handleSave(e) {
     e.preventDefault()
     setError('')
-    const username = form.username.trim() ? slugifyUsername(form.username) : ''
-    if (form.username.trim() && !isValidPublicUsername(username)) {
+    const username = slugifyUsername(form.username)
+    if (!isValidPublicUsername(username)) {
       setError('Username must be 2–32 letters, numbers, hyphens, or underscores.')
-      addToast?.('Choose a valid username (e.g. shriansh-singh), then save.', 'error')
+      addToast?.('Choose a public username (e.g. shriansh-singh), then click Save public profile.', 'error')
       return
     }
     const partial = {
@@ -115,9 +119,9 @@ export default function ProfileView({
       linkedin_url: form.linkedin_url,
       github_username: form.github_username,
     }
-    onSaveLocal(partial)
-    setForm(f => ({ ...f, ...partial }))
     if (!loggedIn) {
+      onSaveLocal(partial)
+      setForm(f => ({ ...f, ...partial }))
       addToast?.('Saved on this device. Sign in to publish your hiring profile.', 'success')
       onNeedAuth?.()
       return
@@ -127,12 +131,13 @@ export default function ProfileView({
       const { user } = await updateProfile({
         ...partial,
         college: form.college_name,
+        profile_public: true,
       })
       setCloud(user)
       onAuthUser?.(user)
       onSaveLocal(user)
       setForm(f => formFrom({ ...f, ...user }, user))
-      addToast?.('Hiring profile saved', 'success')
+      addToast?.('Hiring profile saved — your public link is live', 'success')
     } catch (err) {
       setError(err.message || 'Could not save your profile. Try again.')
       addToast?.('Could not save your profile. Try again.', 'error')
@@ -216,6 +221,16 @@ export default function ProfileView({
             Public URL: <code>{publicUrl}</code>
           </p>
         )}
+        {usernamePending && (
+          <p className="field-hint profile-setup-hint">
+            You typed <code>/u/{draftHandle}</code> but it is not live yet — click <strong>Save public profile</strong> to publish that username.
+          </p>
+        )}
+        {loggedIn && !publicUrl && isValidPublicUsername(draftHandle) && (
+          <p className="field-hint profile-setup-hint">
+            Save your profile to activate <code>/u/{draftHandle}</code>.
+          </p>
+        )}
         <div className="profile-preview-actions">
           <button type="button" className="btn-secondary share-profile-btn" onClick={copyLink}>
             {copied ? 'Link copied' : 'Copy profile link'}
@@ -233,7 +248,7 @@ export default function ProfileView({
         <h3 className="display-xs">Edit your <em>hiring profile</em></h3>
         <p className="section-sub">
           {loggedIn
-            ? 'Saved to your public page immediately. GitHub and LinkedIn are optional.'
+            ? 'Recruiters see your page only after you click Save public profile. GitHub and LinkedIn are optional.'
             : 'Sign in to publish. Until then, edits stay on this device.'}
         </p>
 

@@ -76,7 +76,7 @@ router.put('/', auth, async (req, res) => {
     if (!currentRows[0]) return res.status(404).json({ error: 'Not found' })
 
     let username = currentRows[0].username
-    if (body.username != null && String(body.username).trim()) {
+    if (body.username != null) {
       const next = sanitizeHandle(body.username)
       if (!next || next.length < 2) {
         return res.status(400).json({ error: 'Username must be 2–32 letters, numbers, hyphens, or underscores' })
@@ -84,6 +84,8 @@ router.put('/', auth, async (req, res) => {
       const taken = await pool.query('SELECT id FROM users WHERE username = $1 AND id <> $2', [next, req.user.id])
       if (taken.rows[0]) return res.status(409).json({ error: 'Username already taken' })
       username = next
+    } else if (!String(username || '').trim()) {
+      return res.status(400).json({ error: 'Choose a public username before saving your profile' })
     }
 
     const linkedin_url = body.linkedin_url != null
