@@ -539,7 +539,7 @@ export default function App() {
       <header className="header">
         <div className="header-inner">
           <div className="logo">
-            <span className="logo-icon">◈</span>
+            <img className="logo-mark" src="/brand/synapsoul-mark.png" alt="SynapSoul" width="32" height="32" />
             <span className="logo-text">SynapSoul</span>
             <span className="version">v2</span>
           </div>

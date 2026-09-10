@@ -217,7 +217,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
       <nav className="glass-nav reveal" aria-label="Main navigation">
         <div className={`glass-nav-pill ${menuOpen ? 'is-open' : ''}`}>
           <a href="#top" className="glass-nav-logo" onClick={e => { e.preventDefault(); setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
-            <span className="logo-badge">SS</span>
+            <img className="logo-mark" src="/brand/synapsoul-mark.png" alt="SynapSoul" width="36" height="36" />
             <span className="logo-text">SynapSoul</span>
           </a>
           <button

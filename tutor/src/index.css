@@ -182,8 +182,15 @@ code {
   flex-wrap: wrap;
 }
 
-.logo { display: flex; align-items: center; gap: 8px; }
-.logo-icon { font-size: 1.4rem; color: var(--accent-bright); }
+.logo { display: flex; align-items: center; gap: 6px; }
+.logo-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
 .logo-text { font-family: var(--serif); font-size: 1.25rem; }
 .version {
   font-size: 0.65rem;
@@ -1012,24 +1019,14 @@ a.btn-primary, a.btn-secondary {
 .glass-nav-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   text-decoration: none;
   color: var(--text);
 }
 
-.logo-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-bright));
-  font-family: var(--sans-display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: white;
-  letter-spacing: -0.02em;
+.glass-nav-logo .logo-mark {
+  width: 36px;
+  height: 36px;
 }
 
 .glass-nav-logo .logo-text {
