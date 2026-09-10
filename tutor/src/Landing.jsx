@@ -140,24 +140,24 @@ const CHIP_CATEGORIES = [
 ]
 
 const HOW_60_SECONDS = [
-  { num: '15s', title: 'Paste prompt', desc: 'One line in Cursor boots your private instructor.' },
-  { num: '15s', title: 'Set up profile', desc: 'Name, track, and calibration — 3 quick steps.' },
-  { num: '20s', title: 'Build with tutor', desc: 'CONTEXT → DECIDE → BUILD — real engineering, not videos.' },
+  { num: '15s', title: 'Paste prompt', desc: 'One line. The hosted protocol tells the instructor to run the CLI first.' },
+  { num: '15s', title: 'Login + start', desc: 'synapsoul login, then synapsoul start --json. No CLI = no lesson, no admin tracking.' },
+  { num: '20s', title: 'Teach from JSON', desc: 'CONTEXT comes from CLI output — never from the model’s memory.' },
   { num: '10s', title: 'Earn evidence', desc: 'Five dimensions scored with quotes recruiters read.' },
 ]
 
 const HOW_IT_WORKS = [
   { num: '01', title: 'Open your AI editor', desc: 'Cursor, Claude Code, VS Code Copilot, Codex, or Antigravity — any editor that can read a URL and run a terminal.' },
-  { num: '02', title: 'Paste one prompt', desc: 'Copy the line below. Your instructor reads the hosted protocol and installs the SynapSoul CLI — no zip, no git clone.' },
-  { num: '03', title: 'Learn by doing', desc: 'CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT. Real engineering, not tutorial hell.' },
-  { num: '04', title: 'Sign in so progress returns', desc: 'Create a SynapSoul account on this site. Progress and brain sync to the cohort API when you use that account — public hiring profiles stay opt-in.' },
+  { num: '02', title: 'Paste one prompt', desc: 'Copy the line below. Your instructor must read the hosted protocol and run the SynapSoul CLI before teaching — no zip, no git clone, no invented CONTEXT.' },
+  { num: '03', title: 'Learn by doing', desc: 'CONTEXT → DECIDE → BUILD → VERIFY → BREAK → FIX → REFLECT. Curriculum comes from CLI JSON only.' },
+  { num: '04', title: 'Website login is separate', desc: 'Create a SynapSoul account on this site so last_seen returns to the cohort. That is a website session, not IDE CLI. Progress events need synapsoul login in the IDE.' },
 ]
 
 const ANY_IDE_STEPS = [
-  { num: '01', title: 'Paste the prompt', desc: 'Copy the one-liner into Cursor, Claude Code, VS Code Copilot, or Codex. The hosted protocol does the rest.' },
+  { num: '01', title: 'Paste the prompt', desc: 'Copy the one-liner. skill.md forbids teaching until the CLI has run — never invent CONTEXT from memory.' },
   { num: '02', title: 'Install the CLI', desc: 'Unix: curl installer. Windows: irm | iex. The CLI talks to the production API — no GitHub clone.' },
-  { num: '03', title: 'Login and start', desc: 'synapsoul login, then synapsoul start. Curriculum comes from the API, not from a zip of the codebase.' },
-  { num: '04', title: 'Sign in on this site', desc: 'Register or log in here (email or GitHub) so your progress returns to the cohort API.' },
+  { num: '03', title: 'Login and start', desc: 'Required before any lesson: synapsoul login, then synapsoul start --json. Curriculum comes from that JSON, not from training data.' },
+  { num: '04', title: 'Website sign-in is separate', desc: 'Register here so last_seen shows a website session. Dashboard login is not CLI and does not create IDE events.' },
 ]
 
 const CONVERSATION = [
@@ -170,7 +170,8 @@ const CONVERSATION = [
 const FAQ = [
   { q: 'Is this just another AI chatbot?', a: 'No. Your instructor remembers sessions, tracks concepts, scores reasoning across five dimensions, and builds an evidence-backed profile.' },
   { q: 'What IDE does it work with?', a: 'Any AI editor: Cursor, Claude Code, VS Code Copilot, Codex, Antigravity — paste one prompt and follow the hosted protocol. You do not clone GitHub.' },
-  { q: 'Where does my progress go?', a: 'It stays in ~/.synapsoul first. When you register or sign in on this site, progress and brain sync to the SynapSoul API. Public hiring profiles stay opt-in. People who never create an account are not silently tracked.' },
+  { q: 'Where does my progress go?', a: 'CLI progress stays in ~/.synapsoul first, then syncs to the API when the instructor has run synapsoul login. Signing in on this site is a website session (last_seen). It is not IDE CLI. People who never create an account are not silently tracked.' },
+  { q: 'The AI started teaching without installing the CLI. Does that count?', a: 'No. That is invented CONTEXT from memory. Cohort admin only sees real CLI events. The instructor must run synapsoul login then synapsoul start --json before teaching.' },
   { q: 'The agent assumes I know something. What do I do?', a: 'Say "I don\'t know — explain from scratch." The instructor adapts to your level.' },
   { q: 'How do I get the most out of this?', a: 'Challenge it: "Why this approach?" "What breaks if I skip this?" "Score my reasoning."' },
 ]
@@ -301,7 +302,10 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <p className="prompt-note">Works with Cursor, Claude Code, VS Code Copilot, Codex.</p>
+          <p className="prompt-note">
+            Instructor must run <code>synapsoul login</code> then <code>synapsoul start --json</code> before teaching.
+            Never invent CONTEXT from memory. Website sign-in is not the CLI.
+          </p>
           {copyError && <p className="form-feedback is-error" role="alert">{copyError}</p>}
           {copied && <p className="form-feedback is-success" role="status">Prompt copied to clipboard</p>}
         </div>
@@ -312,8 +316,8 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
           <p className="section-eyebrow">Works in any IDE</p>
           <h2 className="display-sm">Share the site. Paste one prompt. <em>Same tutor.</em></h2>
           <p className="section-desc">
-            A friend opens this page, copies the one-liner, and pastes it in Cursor, Claude, VS Code Copilot, or Codex.
-            After they sign in here, progress returns to the cohort — not to a private local-only silo.
+            A friend opens this page, copies the one-liner, and pastes it in Cursor, Claude, VS Code Copilot, Codex, or Antigravity.
+            The instructor must run synapsoul login then synapsoul start before teaching. Website sign-in is a separate channel — not IDE CLI.
           </p>
         </div>
         <div className="steps-row steps-60s any-ide-steps">
@@ -588,7 +592,7 @@ export default function Landing({ onEnterApp, onCollege, onPublicProfile }) {
         <div className="cta-inner">
           <p className="section-eyebrow">Ready when you are</p>
           <h2 className="display-sm">Your private instructor is one prompt <em>away</em></h2>
-          <p className="cta-sub">Open your AI editor, paste the universal prompt, and start building job-ready engineering proof today.</p>
+          <p className="cta-sub">Open your AI editor, paste the prompt, then the instructor must run synapsoul login and synapsoul start --json before teaching.</p>
           <div className="contact-prompt-box">
             <span className="contact-label">Universal prompt</span>
             <div className="prompt-box premium compact">

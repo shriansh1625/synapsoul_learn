@@ -12,10 +12,10 @@ Paste one prompt. Get a tutor that remembers how you learn, adapts to your level
 
 Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, and any AI editor that can read a URL and run terminal commands.
 
-The landing **Copy** button uses this exact line:
+The landing **Copy** button uses this exact prompt:
 
 ```
-Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions. Run synapsoul login then synapsoul start --json before teaching. Never invent CONTEXT from memory.
 ```
 
 Then install the CLI (no git clone, no zip as the main path):

@@ -3,14 +3,14 @@ import { pool } from '../db/pool.js'
 import { auth } from '../middleware/auth.js'
 import { AdaptiveEngine } from '../lib/brain/index.js'
 import { touchLastSeen } from '../lib/adminAuth.js'
-import { insertCliEvent, mapCliEventRow, normalizeCliEvent } from '../lib/cliEvents.js'
+import { insertCliEvent, mapCliEventRow, normalizeCliEvent, classifyLearnerActivity } from '../lib/cliEvents.js'
 
 const router = Router()
 
 router.get('/', auth, async (req, res) => {
   const uid = req.user.id
   await touchLastSeen(uid)
-  const [user, session, completed, decisions, scores, portfolio, memory] = await Promise.all([
+  const [user, session, completed, decisions, scores, portfolio, memory, cliMeta] = await Promise.all([
     pool.query(
       `SELECT id, email, name, degree, bio, username, college_name, track, profile_confirmed,
               github_id, github_username, github_avatar, linkedin_url, headline, location,
@@ -18,12 +18,18 @@ router.get('/', auth, async (req, res) => {
        FROM users WHERE id = $1`,
       [uid]
     ),
-    pool.query('SELECT skill_id, module_id, step, track, hints_used, started_at FROM user_sessions WHERE user_id = $1', [uid]),
+    pool.query('SELECT skill_id, module_id, step, track, hints_used, started_at, source FROM user_sessions WHERE user_id = $1', [uid])
+      .catch(() => pool.query('SELECT skill_id, module_id, step, track, hints_used, started_at FROM user_sessions WHERE user_id = $1', [uid])),
     pool.query('SELECT skill_id, module_id, score, track, completed_at FROM completed_modules WHERE user_id = $1', [uid]),
     pool.query('SELECT skill_id, module_id, choice, reasoning FROM decisions WHERE user_id = $1', [uid]),
     pool.query('SELECT skill_id, module_id, overall, dimensions, narrative FROM scores WHERE user_id = $1', [uid]),
     pool.query('SELECT artifact, student_action, technical_detail, proof, ability, confidence, skill_id, module_id FROM portfolio WHERE user_id = $1 ORDER BY recorded_at DESC', [uid]),
     pool.query('SELECT memory FROM student_memory WHERE user_id = $1', [uid]),
+    pool.query(
+      `SELECT COUNT(*)::int AS count, MAX(created_at) AS last_cli_at
+       FROM cli_events WHERE user_id = $1`,
+      [uid]
+    ).catch(() => ({ rows: [{ count: 0, last_cli_at: null }] })),
   ])
 
   const completedModules = {}
@@ -40,35 +46,51 @@ router.get('/', auth, async (req, res) => {
   })
 
   const sess = session.rows[0]
+  const cliCount = cliMeta.rows[0]?.count || 0
+  const lastCliAt = cliMeta.rows[0]?.last_cli_at || null
+  const sessionPayload = sess ? {
+    skillId: sess.skill_id,
+    moduleId: sess.module_id,
+    step: sess.step,
+    track: sess.track,
+    hintsUsed: sess.hints_used,
+    startedAt: sess.started_at,
+    source: sess.source || null,
+  } : null
+  const activity = classifyLearnerActivity({
+    cliEventCount: cliCount,
+    lastCliAt,
+    lastSeen: true,
+    session: sessionPayload,
+  })
   res.json({
     version: 2,
     profile: user.rows[0],
-    session: sess ? {
-      skillId: sess.skill_id,
-      moduleId: sess.module_id,
-      step: sess.step,
-      track: sess.track,
-      hintsUsed: sess.hints_used,
-      startedAt: sess.started_at,
-    } : null,
+    session: sessionPayload,
     completedModules,
     decisions: decisionsMap,
     scores: scoresMap,
     portfolio: portfolio.rows,
     studentMemory: memory.rows[0]?.memory || {},
+    channel: 'website',
+    cli_event_count: cliCount,
+    last_cli_at: lastCliAt,
+    has_cli: activity.has_cli,
+    session_kind: activity.session_kind,
   })
 })
 
 router.put('/session', auth, async (req, res) => {
   const { skillId, moduleId, step, track, hintsUsed } = req.body
+  if (!skillId || !moduleId) return res.status(400).json({ error: 'skillId and moduleId required' })
   await pool.query(
-    `INSERT INTO user_sessions (user_id, skill_id, module_id, step, track, hints_used)
-     VALUES ($1,$2,$3,$4,$5,$6)
-     ON CONFLICT (user_id) DO UPDATE SET skill_id=$2, module_id=$3, step=$4, track=$5, hints_used=$6, started_at=NOW()`,
+    `INSERT INTO user_sessions (user_id, skill_id, module_id, step, track, hints_used, source)
+     VALUES ($1,$2,$3,$4,$5,$6,'website')
+     ON CONFLICT (user_id) DO UPDATE SET skill_id=$2, module_id=$3, step=$4, track=$5, hints_used=$6, started_at=NOW(), source='website'`,
     [req.user.id, skillId, moduleId, step, track || 'node', hintsUsed || 0]
   )
   await touchLastSeen(req.user.id)
-  res.json({ ok: true })
+  res.json({ ok: true, source: 'website' })
 })
 
 router.post('/module-complete', auth, async (req, res) => {
@@ -174,11 +196,12 @@ router.put('/sync', auth, async (req, res) => {
 
   try {
     if (session?.skillId && session?.moduleId) {
+      const source = body.source === 'website' ? 'website' : 'cli'
       await pool.query(
-        `INSERT INTO user_sessions (user_id, skill_id, module_id, step, track, hints_used)
-         VALUES ($1,$2,$3,$4,$5,$6)
-         ON CONFLICT (user_id) DO UPDATE SET skill_id=$2, module_id=$3, step=$4, track=$5, hints_used=$6, started_at=NOW()`,
-        [uid, session.skillId, session.moduleId, session.step || 'CONTEXT', session.track || 'node', session.hintsUsed || 0]
+        `INSERT INTO user_sessions (user_id, skill_id, module_id, step, track, hints_used, source)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)
+         ON CONFLICT (user_id) DO UPDATE SET skill_id=$2, module_id=$3, step=$4, track=$5, hints_used=$6, started_at=NOW(), source=$7`,
+        [uid, session.skillId, session.moduleId, session.step || 'CONTEXT', session.track || 'node', session.hintsUsed || 0, source]
       )
     }
 

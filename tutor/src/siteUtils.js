@@ -5,7 +5,7 @@ export const SKILL_MD_URL = `${SITE_ORIGIN}/skill.md`
 export const INSTALL_UNIX = `curl -fsSL ${SITE_ORIGIN}/install | sh`
 export const INSTALL_WINDOWS = `irm ${SITE_ORIGIN}/install.ps1 | iex`
 
-export const UNIVERSAL_PROMPT = `Read ${SITE_ORIGIN}/skill.md and follow the instructions`
+export const UNIVERSAL_PROMPT = `Read ${SITE_ORIGIN}/skill.md and follow the instructions. Run synapsoul login then synapsoul start --json before teaching. Never invent CONTEXT from memory.`
 
 export const DEFAULT_TITLE = 'SynapSoul Learn Hub — The Open Engineering Bootcamp in Your IDE'
 export const DEFAULT_DESCRIPTION =

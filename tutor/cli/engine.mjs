@@ -16,6 +16,13 @@ import {
   loadSavedToken,
   saveToken,
   loginToApi,
+  registerToApi,
+  loginWithToken,
+  fetchAuthProviders,
+  generateCliNonce,
+  githubCliStartUrl,
+  pollCliAuth,
+  websiteRegisterHint,
   pushProgressAndBrain,
   PRODUCTION_API,
   PRODUCTION_SITE,
@@ -940,7 +947,58 @@ export function cmdStatusAll({ json }) {
   ).join('\n')
 }
 
-export async function cmdLogin({ email, password, json }) {
+export async function cmdLogin({ email, password, json, github, token }) {
+  const siteHint = websiteRegisterHint()
+
+  if (token) {
+    try {
+      const auth = await loginWithToken(token)
+      saveToken(auth.token, auth.user?.email)
+      return loggedInResult(auth, json)
+    } catch (err) {
+      return error('login_failed', err.message, json, [
+        `Open ${PRODUCTION_SITE}`,
+        `${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+        `${CLI_NAME} login --github --json`,
+      ])
+    }
+  }
+
+  if (github) {
+    try {
+      const apiBase = resolveSyncApiBase({ login: true }) || PRODUCTION_API
+      const providers = await fetchAuthProviders(apiBase)
+      if (!providers?.github) {
+        const result = {
+          status: 'login_required',
+          login_required: true,
+          message: `GitHub OAuth is not configured. Use the website: ${PRODUCTION_SITE}. ${siteHint}`,
+          site: PRODUCTION_SITE,
+          api: apiBase,
+          prompt_suggestions: [
+            `${CLI_NAME} register --email YOUR_EMAIL --password YOUR_PASSWORD --name "Your Name" --json`,
+            `${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+            `Open ${PRODUCTION_SITE}`,
+          ],
+        }
+        return json ? result : result.message
+      }
+      const nonce = generateCliNonce()
+      const url = githubCliStartUrl(nonce, apiBase)
+      console.error(`Complete GitHub sign-in in the browser:\n  ${url}\nIf the CLI is still waiting, paste the token from the site:\n  ${CLI_NAME} login --token YOUR_TOKEN`)
+      openSite(url)
+      const auth = await pollCliAuth(nonce, apiBase)
+      saveToken(auth.token, auth.user?.email)
+      return loggedInResult(auth, json)
+    } catch (err) {
+      return error('login_failed', err.message, json, [
+        `Open ${PRODUCTION_SITE}`,
+        `${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+        `${CLI_NAME} login --token YOUR_TOKEN --json`,
+      ])
+    }
+  }
+
   let userEmail = email
   let userPassword = password
   if (!userEmail || !userPassword) {
@@ -951,11 +1009,14 @@ export async function cmdLogin({ email, password, json }) {
     } else {
       const result = {
         status: 'login_required',
-        message: `Sign in at ${PRODUCTION_SITE} (create an account if needed), then run: ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+        login_required: true,
+        message: `Sign in before teaching. IDE: ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json  or  ${CLI_NAME} login --github --json. ${siteHint}`,
         site: PRODUCTION_SITE,
         api: resolveSyncApiBase({ login: true }) || PRODUCTION_API,
         prompt_suggestions: [
+          `${CLI_NAME} register --email YOUR_EMAIL --password YOUR_PASSWORD --name "Your Name" --json`,
           `${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+          `${CLI_NAME} login --github --json`,
           `Open ${PRODUCTION_SITE}`,
         ],
       }
@@ -965,22 +1026,68 @@ export async function cmdLogin({ email, password, json }) {
   try {
     const auth = await loginToApi(userEmail, userPassword)
     saveToken(auth.token, userEmail)
-    const result = {
-      status: 'logged_in',
-      message: `Logged in. Progress will sync to ${auth.apiBase}.`,
-      user: auth.user
-        ? { email: auth.user.email, name: auth.user.name, username: auth.user.username }
-        : { email: userEmail },
-      api: auth.apiBase,
-      prompt_suggestions: [`${CLI_NAME} start --json`, `${CLI_NAME} status --json`],
-    }
-    return json ? result : result.message
+    return loggedInResult(auth, json, userEmail)
   } catch (err) {
     return error('login_failed', err.message, json, [
       `Open ${PRODUCTION_SITE}`,
       `${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+      `${CLI_NAME} login --github --json`,
     ])
   }
+}
+
+export async function cmdRegister({ email, password, name, json }) {
+  const siteHint = websiteRegisterHint()
+  let userEmail = email
+  let userPassword = password
+  let userName = name
+  if (!userEmail || !userPassword || !userName) {
+    if (process.stdin.isTTY) {
+      userName = userName || await askLine('Name: ')
+      userEmail = userEmail || await askLine('Email: ')
+      userPassword = userPassword || await askLine('Password: ')
+    } else {
+      const result = {
+        status: 'register_required',
+        login_required: true,
+        message: `Register in the IDE or on the website before teaching. ${siteHint}`,
+        site: PRODUCTION_SITE,
+        api: resolveSyncApiBase({ login: true }) || PRODUCTION_API,
+        prompt_suggestions: [
+          `${CLI_NAME} register --email YOUR_EMAIL --password YOUR_PASSWORD --name "Your Name" --json`,
+          `${CLI_NAME} login --github --json`,
+          `Open ${PRODUCTION_SITE}`,
+        ],
+      }
+      return json ? result : result.message
+    }
+  }
+  try {
+    const auth = await registerToApi({ email: userEmail, password: userPassword, name: userName })
+    saveToken(auth.token, userEmail)
+    return loggedInResult(auth, json, userEmail)
+  } catch (err) {
+    return error('register_failed', err.message, json, [
+      `Open ${PRODUCTION_SITE}`,
+      `${CLI_NAME} register --email YOUR_EMAIL --password YOUR_PASSWORD --name "Your Name" --json`,
+      `${CLI_NAME} login --github --json`,
+    ])
+  }
+}
+
+function loggedInResult(auth, json, fallbackEmail) {
+  const result = {
+    status: 'logged_in',
+    cli_logged_in: true,
+    login_required: false,
+    message: `Logged in. Progress will sync to ${auth.apiBase}.`,
+    user: auth.user
+      ? { email: auth.user.email, name: auth.user.name, username: auth.user.username }
+      : { email: fallbackEmail || null },
+    api: auth.apiBase,
+    prompt_suggestions: [`${CLI_NAME} start --json`, `${CLI_NAME} status --json`],
+  }
+  return json ? result : result.message
 }
 
 function askLine(question) {

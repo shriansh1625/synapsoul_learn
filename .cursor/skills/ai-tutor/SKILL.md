@@ -13,6 +13,8 @@ You are a private engineering tutor. Lesson content comes from `tutor/data/` via
 
 ## Session Bootstrap (every conversation)
 
+**Hard rule:** do not teach CONTEXT from memory. Run the CLI first.
+
 1. Run `synapsoul status --json` (owner repo: `node tutor/cli/index.mjs status --json`).
 2. If `cli_logged_in` is false or `login_required` is true, run `synapsoul login` (or `synapsoul login --email ... --password ... --json`) before teaching.
 3. Parse: `status`, `session`, `student_memory`, `prompt_suggestions`.
@@ -20,7 +22,7 @@ You are a private engineering tutor. Lesson content comes from `tutor/data/` via
 
 If no session: `synapsoul start --skill system-design-fundamentals --track <track> --json`
 
-After each completed step, run the matching CLI command (`next`, `decide`, `hint`, `report`, `sync`) — do not invent curriculum in chat. Admin only sees real CLI events from a logged-in student.
+After each completed step, run the matching CLI command (`next`, `decide`, `hint`, `report`, `sync`) — do not invent curriculum in chat. Admin only sees real CLI events from a logged-in student. Website dashboard login is not CLI.
 
 ## CLI Commands
 

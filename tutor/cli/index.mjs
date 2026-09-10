@@ -20,6 +20,7 @@ import {
   cmdStatusAll,
   cmdSync,
   cmdLogin,
+  cmdRegister,
   cmdLearningStats,
 } from './engine.mjs'
 import { ensureCurriculum } from './curriculumApi.mjs'
@@ -54,7 +55,10 @@ function helpText() {
   return `SynapSoul Learn Hub CLI
 
 Commands:
+  ${CLI_NAME} register --email <email> --password <password> --name "<name>" [--json]
   ${CLI_NAME} login [--email <email> --password <password>] [--json]
+  ${CLI_NAME} login --github [--json]
+  ${CLI_NAME} login --token <jwt> [--json]
   ${CLI_NAME} status [--json] [--all]
   ${CLI_NAME} sync [--publish] [--email <email> --password <password>] [--json]
   ${CLI_NAME} catalog [--json]
@@ -77,12 +81,31 @@ Production:
   API  ${PRODUCTION_API}
   Site ${PRODUCTION_SITE}
   Protocol ${PRODUCTION_SITE}/skill.md
-  Login required so cohort admin can see start / next / hint / decide / complete / sync.
+  Login or register first so the CLI has a JWT. Teaching commands stay blocked until then.
 
 Install (students — no git clone):
   Unix:    curl -fsSL ${PRODUCTION_SITE}/install | sh
   Windows: irm ${PRODUCTION_SITE}/install.ps1 | iex
 `
+}
+
+const REQUIRES_JWT = new Set(['start', 'next', 'decide', 'hint', 'report', 'pretest', 'score'])
+
+function loginRequiredPayload() {
+  return {
+    status: 'login_required',
+    login_required: true,
+    cli_logged_in: false,
+    message: `Register or log in before teaching. IDE: ${CLI_NAME} register --email YOUR_EMAIL --password YOUR_PASSWORD --name "Your Name" --json  or  ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json  or  ${CLI_NAME} login --github --json. Or register at ${PRODUCTION_SITE} then ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+    site: PRODUCTION_SITE,
+    api: PRODUCTION_API,
+    prompt_suggestions: [
+      `${CLI_NAME} register --email YOUR_EMAIL --password YOUR_PASSWORD --name "Your Name" --json`,
+      `${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+      `${CLI_NAME} login --github --json`,
+      `Or register at ${PRODUCTION_SITE} then ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD --json`,
+    ],
+  }
 }
 
 async function main() {
@@ -95,8 +118,16 @@ async function main() {
     return
   }
 
+  if (REQUIRES_JWT.has(command) && !isCliLoggedIn()) {
+    let result = loginRequiredPayload()
+    result = annotateCliAuth(result)
+    if (json || typeof result === 'object') console.log(JSON.stringify(result, null, 2))
+    else console.log(result.message)
+    process.exit(1)
+  }
+
   await ensureCurriculum().catch(err => {
-    if (command !== 'login' && command !== 'help') {
+    if (command !== 'login' && command !== 'register' && command !== 'help') {
       console.error(JSON.stringify({ status: 'error', message: `Curriculum unavailable: ${err.message}` }))
       process.exit(1)
     }
@@ -113,6 +144,16 @@ async function main() {
       result = await cmdLogin({
         email: getFlag('--email'),
         password: getFlag('--password'),
+        token: getFlag('--token'),
+        github: args.includes('--github'),
+        json,
+      })
+      break
+    case 'register':
+      result = await cmdRegister({
+        email: getFlag('--email'),
+        password: getFlag('--password'),
+        name: getFlag('--name'),
         json,
       })
       break

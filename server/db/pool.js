@@ -150,6 +150,25 @@ export async function ensureAdminOtpTables() {
   return true
 }
 
+export async function ensureCliAuthPendingTable() {
+  if (!process.env.DATABASE_URL) return false
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS cli_auth_pending (
+      nonce TEXT PRIMARY KEY,
+      token TEXT,
+      email TEXT,
+      name TEXT,
+      username TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL
+    )
+  `)
+  await pool.query(
+    'CREATE INDEX IF NOT EXISTS idx_cli_auth_pending_expires ON cli_auth_pending (expires_at)'
+  )
+  return true
+}
+
 export async function ensureCliEventsTable() {
   if (!process.env.DATABASE_URL) return false
   await pool.query(`
@@ -170,6 +189,7 @@ export async function ensureCliEventsTable() {
   await pool.query(
     'CREATE INDEX IF NOT EXISTS idx_cli_events_created ON cli_events (created_at DESC)'
   )
+  await pool.query('ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS source TEXT')
   return true
 }
 
@@ -200,5 +220,10 @@ export async function initDb() {
     await ensureCliEventsTable()
   } catch (e) {
     console.warn('CLI events table migration warning:', e.message)
+  }
+  try {
+    await ensureCliAuthPendingTable()
+  } catch (e) {
+    console.warn('CLI auth pending table migration warning:', e.message)
   }
 }

@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { spawn } from 'child_process'
+import { randomBytes } from 'crypto'
 import {
   PRODUCTION_API,
   PRODUCTION_SITE,
@@ -9,6 +10,7 @@ import {
   learnlabHome,
   defaultApiBase,
   envFirst,
+  CLI_NAME,
 } from './paths.mjs'
 
 export { PRODUCTION_API, PRODUCTION_SITE }
@@ -124,6 +126,59 @@ export async function loginToApi(email, password, apiBase) {
   return { token: data.token, user: data.user, apiBase: base }
 }
 
+export async function registerToApi({ email, password, name, apiBase } = {}) {
+  const base = apiBase || resolveSyncApiBase({ login: true })
+  if (!base) {
+    throw new Error(`Set SYNAPSOUL_API_URL=${PRODUCTION_API} or register at ${PRODUCTION_SITE}`)
+  }
+  const data = await apiFetch(base, '/api/auth/register', {
+    method: 'POST',
+    body: { email, password, name: name || '' },
+  })
+  if (!data.token) throw new Error('Register did not return a token')
+  return { token: data.token, user: data.user, apiBase: base }
+}
+
+export async function loginWithToken(token, apiBase) {
+  const base = apiBase || resolveSyncApiBase({ login: true }) || PRODUCTION_API
+  if (!token) throw new Error('Token is required')
+  const user = await apiFetch(base, '/api/auth/me', { token })
+  if (!user?.id && !user?.email) throw new Error('Token was not accepted')
+  return { token, user, apiBase: base }
+}
+
+export async function fetchAuthProviders(apiBase) {
+  const base = apiBase || resolveSyncApiBase({ login: true }) || PRODUCTION_API
+  return apiFetch(base, '/api/auth/providers')
+}
+
+export function generateCliNonce() {
+  return `cli_${randomBytes(24).toString('hex')}`
+}
+
+export function githubCliStartUrl(nonce, apiBase) {
+  const base = (apiBase || resolveSyncApiBase({ login: true }) || PRODUCTION_API).replace(/\/$/, '')
+  const q = new URLSearchParams({ cli: '1', nonce })
+  return `${base}/api/auth/github?${q}`
+}
+
+export function websiteRegisterHint() {
+  return `Or register at ${PRODUCTION_SITE} then ${CLI_NAME} login --email YOUR_EMAIL --password YOUR_PASSWORD`
+}
+
+export async function pollCliAuth(nonce, apiBase, { timeoutMs = 5 * 60 * 1000, intervalMs = 2000 } = {}) {
+  const base = apiBase || resolveSyncApiBase({ login: true }) || PRODUCTION_API
+  const started = Date.now()
+  while (Date.now() - started < timeoutMs) {
+    const data = await apiFetch(base, `/api/auth/cli-poll?nonce=${encodeURIComponent(nonce)}`)
+    if (data?.token) return { token: data.token, user: data.user, apiBase: base }
+    await new Promise(resolve => setTimeout(resolve, intervalMs))
+  }
+  throw new Error(
+    `Timed out waiting for GitHub. Complete sign-in at ${PRODUCTION_SITE}, then run: ${CLI_NAME} login --token YOUR_TOKEN`
+  )
+}
+
 export async function pushProgressAndBrain({ apiBase, token, progress, brain }) {
   const base = apiBase || getApiBase()
   if (!base) throw new Error('SYNAPSOUL_API_URL is not set')
@@ -135,6 +190,7 @@ export async function pushProgressAndBrain({ apiBase, token, progress, brain }) 
     token,
     body: {
       session: progress?.session || null,
+      source: 'cli',
       completedModules: progress?.completedModules || {},
       decisions: progress?.decisions || {},
       scores: progress?.scores || {},

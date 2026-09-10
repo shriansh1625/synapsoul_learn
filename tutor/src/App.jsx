@@ -50,6 +50,8 @@ function parseRoute() {
   const error = search.get('error') || hashSearch.get('error')
   const provider = search.get('provider') || hashSearch.get('provider')
   const connected = search.get('connected') || hashSearch.get('connected')
+  const cli = search.get('cli') || hashSearch.get('cli')
+  const nonce = search.get('nonce') || hashSearch.get('nonce')
 
   const pathUser = path.match(/^\/u\/([^/]+)$/i)
   if (pathUser) return { type: 'public', username: publicRouteUsername(pathUser[1]) }
@@ -62,7 +64,7 @@ function parseRoute() {
     pathEquals(hashPath, '/auth') ||
     token || github === 'setup' || linkedin === 'setup' || error
   ) {
-    return { type: 'oauth', token, github, linkedin, error, provider, connected }
+    return { type: 'oauth', token, github, linkedin, error, provider, connected, cli, nonce }
   }
 
   if (pathEquals(hashPath, '/college') || pathEquals(path, '/college')) return { type: 'college' }
@@ -438,6 +440,7 @@ export default function App() {
           route={route}
           onSuccess={result => {
             handleAuthSuccess(result)
+            if (route.cli === '1') return
             setView('profile')
             setRoute({ type: 'app' })
           }}
@@ -664,6 +667,14 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
   const profile = progress?.profile
   const [hintState, setHintState] = useState(null)
   const [hintLoading, setHintLoading] = useState(false)
+  const loggedIn = isLoggedIn()
+  const hasCli = Boolean(progress?.has_cli)
+  const sessionKind = progress?.session_kind || (session ? (hasCli ? 'cli_sync' : (loggedIn ? 'website' : 'local')) : 'none')
+  const sessionBadge = !loggedIn
+    ? 'Local demo — not IDE CLI'
+    : hasCli
+      ? 'Cloud snapshot (last CLI sync)'
+      : 'Website session — not IDE CLI'
 
   const requestHint = useCallback(async () => {
     if (!session) return
@@ -771,7 +782,7 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
 
       {session && (
         <section className="current-session card elevated">
-          <div className="card-badge pulse">Active session</div>
+          <div className={`card-badge ${loggedIn && !hasCli ? '' : 'pulse'}`}>{sessionBadge}</div>
           <h2 className="session-title">
             {skillTitle} · {moduleLabel}
           </h2>
@@ -800,7 +811,9 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
             </div>
           )}
           <p className="cursor-hint">
-            In Cursor chat: <code>"Continue my lesson"</code> · Step: <strong>{session.step}</strong>
+            This site is not the CLI. Instructors must run <code>synapsoul login</code> then
+            {' '}<code>synapsoul start --json</code> before teaching — never invent CONTEXT from memory.
+            {sessionKind === 'website' && loggedIn && ' Website login does not create IDE CLI events.'}
             {session.hintsUsed > 0 && <span className="hint-penalty"> · {session.hintsUsed} hint(s) used</span>}
           </p>
         </section>
@@ -810,10 +823,10 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
         <section className="card start-card elevated empty-state">
           <p className="section-eyebrow">First module</p>
           <h2 className="display-xs">No modules completed yet</h2>
-          <p>Paste the universal prompt in Cursor to start System Design Fundamentals. Evidence lands here as you ship.</p>
+          <p>Paste the universal prompt in your AI editor. The instructor must run <code>synapsoul login</code> then <code>synapsoul start --json</code> before teaching — never invent CONTEXT from memory.</p>
           <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
           <StartPromptCopy />
-          <p className="cursor-hint">You can also say <code>Start my lesson</code> in Cursor after the instructor boots.</p>
+          <p className="cursor-hint">This dashboard is not the CLI. Evidence lands here after logged-in CLI commands sync.</p>
         </section>
       )}
 
@@ -1029,6 +1042,9 @@ function oauthErrorMessage(code) {
 }
 
 function OAuthCatch({ route, onSuccess, onSetup, onError }) {
+  const [cliCopy, setCliCopy] = useState(null)
+  const [copied, setCopied] = useState(false)
+
   useEffect(() => {
     setPageMeta({ title: 'Signing in · SynapSoul', description: 'Finishing SynapSoul sign-in.' })
     let cancelled = false
@@ -1038,6 +1054,12 @@ function OAuthCatch({ route, onSuccess, onSetup, onError }) {
           setToken(route.token)
           const user = await fetchMe()
           if (cancelled) return
+          if (route.cli === '1') {
+            window.history.replaceState({}, '', '/#/auth/callback?cli=1')
+            setCliCopy({ token: route.token, user })
+            onSuccess({ token: route.token, user })
+            return
+          }
           window.history.replaceState({}, '', '/')
           if (window.location.hash) window.location.hash = ''
           onSuccess({ token: route.token, user })
@@ -1054,6 +1076,44 @@ function OAuthCatch({ route, onSuccess, onSetup, onError }) {
     finish()
     return () => { cancelled = true }
   }, [])
+
+  if (cliCopy) {
+    const tokenCmd = `synapsoul login --token ${cliCopy.token}`
+    return (
+      <section className="card elevated auth-cli-complete" style={{ margin: '48px auto', maxWidth: 560 }}>
+        <p className="section-eyebrow">CLI sign-in</p>
+        <h2 className="display-xs">GitHub connected</h2>
+        <p className="section-sub">
+          Return to the IDE. <code>synapsoul login --github</code> should finish on its own.
+          If it is still waiting, paste this token:
+        </p>
+        <pre className="cli-token-box">{tokenCmd}</pre>
+        <div className="profile-preview-actions">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={async () => {
+              const ok = await copyText(cliCopy.token)
+              setCopied(ok)
+            }}
+          >
+            {copied ? 'Token copied' : 'Copy token'}
+          </button>
+          <button
+            type="button"
+            className="btn-primary btn-gradient"
+            onClick={() => {
+              window.history.replaceState({}, '', '/')
+              if (window.location.hash) window.location.hash = ''
+              window.location.reload()
+            }}
+          >
+            Continue on the website
+          </button>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="card empty-state" style={{ margin: '48px auto', maxWidth: 480 }}>
@@ -1368,9 +1428,9 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
             <>
               <p className="section-eyebrow">Step 3 of 3</p>
               <h2 className="display-xs">Start your <em>first module</em></h2>
-              <p className="section-sub">Paste this in Cursor, then say &quot;Continue my lesson&quot;.</p>
+              <p className="section-sub">Paste this in your AI editor. The instructor must run the CLI before teaching — never invent CONTEXT from memory.</p>
               <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
-              <p className="cursor-hint">Optional CLI: <code>synapsoul start --skill {foundation?.id} --track {track}</code></p>
+              <p className="cursor-hint">Required: <code>synapsoul login</code> then <code>synapsoul start --skill {foundation?.id} --track {track} --json</code></p>
             </>
           )}
         </div>

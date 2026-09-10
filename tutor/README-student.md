@@ -11,7 +11,7 @@ You do **not** need GitHub access. You do **not** unzip this folder as the main 
 1. Paste this in your AI editor:
 
 ```
-Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions. Run synapsoul login then synapsoul start --json before teaching. Never invent CONTEXT from memory.
 ```
 
 2. Install the CLI:

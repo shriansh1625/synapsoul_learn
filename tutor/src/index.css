@@ -1333,10 +1333,10 @@ a.btn-primary, a.btn-secondary {
   flex-direction: column;
 }
 .prompt-code.oneline {
-  white-space: nowrap;
+  white-space: pre-wrap;
   overflow-x: auto;
   max-height: none;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   line-height: 1.5;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -2550,6 +2550,31 @@ img.pp-avatar {
 .profile-setup-hint { margin-bottom: 12px; }
 .auth-oauth { margin-bottom: 18px; }
 .auth-github-btn { width: 100%; justify-content: center; }
+.auth-or {
+  text-align: center;
+  margin: 12px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.auth-cli-hint {
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.auth-cli-complete { padding: 28px; }
+.cli-token-box {
+  margin: 16px 0;
+  padding: 12px;
+  overflow-x: auto;
+  word-break: break-all;
+  white-space: pre-wrap;
+  font-size: 0.78rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+}
 
 .public-app .hiring-profile {
   max-width: 880px;
@@ -3078,6 +3103,41 @@ a.link-btn {
   text-transform: uppercase;
   color: var(--text-dim);
 }
+.admin-student-cli.is-website em {
+  color: var(--text-muted);
+}
+.admin-origin-banner {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.admin-origin-banner.is-website {
+  border: 1px dashed var(--border-strong);
+  background: var(--bg);
+  color: var(--text-muted);
+}
+.admin-origin-banner.is-cli {
+  border: 1px solid var(--border-strong);
+  color: var(--accent-bright);
+}
+.admin-session-note {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  max-width: 52ch;
+  line-height: 1.45;
+}
+.admin-pill.is-website {
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.admin-pill.is-cli {
+  text-transform: none;
+  letter-spacing: 0;
+}
 .admin-dl {
   display: grid;
   gap: 8px;
@@ -3085,7 +3145,7 @@ a.link-btn {
 }
 .admin-dl div {
   display: grid;
-  grid-template-columns: 92px 1fr;
+  grid-template-columns: 118px 1fr;
   gap: 8px;
   font-size: 0.88rem;
 }

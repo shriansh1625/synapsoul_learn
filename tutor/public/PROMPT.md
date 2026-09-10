@@ -3,7 +3,7 @@
 Copy **one** line into your AI editor:
 
 ```
-Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions. Run synapsoul login then synapsoul start --json before teaching. Never invent CONTEXT from memory.
 ```
 
 Works with **Cursor**, **Claude Code**, **VS Code Copilot**, **Codex**, and any agent that can read a URL and run a terminal.
@@ -30,7 +30,9 @@ Then:
 
 ```bash
 synapsoul login
-synapsoul start
+synapsoul start --json
 ```
 
-Sign in at https://synapsoullearn.runs-on.dev/ so progress returns to the cohort API.
+The instructor must run those CLI commands **before teaching**. Never invent CONTEXT from memory. Signing in on the website is not the CLI.
+
+Sign in at https://synapsoullearn.runs-on.dev/ so website last_seen returns to the cohort API.

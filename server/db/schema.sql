@@ -45,8 +45,11 @@ CREATE TABLE IF NOT EXISTS user_sessions (
   track TEXT DEFAULT 'node',
   hints_used INT DEFAULT 0,
   started_at TIMESTAMPTZ DEFAULT NOW(),
+  source TEXT,
   PRIMARY KEY (user_id)
 );
+
+ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS source TEXT;
 
 CREATE TABLE IF NOT EXISTS completed_modules (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -180,3 +183,16 @@ CREATE TABLE IF NOT EXISTS cli_events (
 
 CREATE INDEX IF NOT EXISTS idx_cli_events_user_created ON cli_events (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_cli_events_created ON cli_events (created_at DESC);
+
+-- Short-lived nonce → JWT for `synapsoul login --github` CLI polling. Not a user session table.
+CREATE TABLE IF NOT EXISTS cli_auth_pending (
+  nonce TEXT PRIMARY KEY,
+  token TEXT,
+  email TEXT,
+  name TEXT,
+  username TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_cli_auth_pending_expires ON cli_auth_pending (expires_at);

@@ -14,7 +14,7 @@ If you are a **student**, ignore this file. Follow the hosted instructor protoco
 Paste this in any AI editor:
 
 ```
-Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions. Run synapsoul login then synapsoul start --json before teaching. Never invent CONTEXT from memory.
 ```
 
 Then install the CLI (no git clone, no zip):

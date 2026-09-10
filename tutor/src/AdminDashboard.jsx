@@ -189,9 +189,10 @@ function formatRelative(value) {
   return formatWhen(value)
 }
 
-function commandLabel(type) {
-  if (type === 'module_complete') return 'complete'
-  return type || '—'
+function activityLabel(student) {
+  if (student?.has_cli || student?.activity === 'ide_cli') return 'IDE CLI'
+  if (student?.last_seen || student?.activity === 'website') return 'Website'
+  return 'None'
 }
 
 function matchesQuery(student, query) {
@@ -248,7 +249,9 @@ function AdminDashboard({ overview, onHome }) {
   const session = detail?.progress?.session
   const completed = Object.keys(detail?.progress?.completedModules || {})
   const cliEvents = detail?.cli_events || []
-  const webOnly = Boolean(detail && profile && !cliEvents.length)
+  const hasCli = Boolean(detail?.has_cli) || cliEvents.length > 0
+  const sessionKind = detail?.session_kind || (session ? (hasCli ? 'cli_sync' : 'website') : 'none')
+  const websiteLastSeen = detail?.website_last_seen || profile?.last_seen
 
   return (
     <div className="admin-shell">
@@ -257,8 +260,9 @@ function AdminDashboard({ overview, onHome }) {
           <p className="section-eyebrow">Private · admin</p>
           <h1 className="display-sm">Cohort</h1>
           <p className="admin-sub">
-            Bootcamp CLI activity from logged-in students. Website sign-in alone is not enough — they must run
-            {' '}<code>synapsoul login</code> then tutor commands in the IDE.
+            Two channels, never mixed. <strong>Website session</strong> is site login / dashboard
+            (last_seen). <strong>IDE CLI</strong> is only <code>cli_events</code> from
+            {' '}<code>synapsoul login</code> then tutor commands. Chat without the CLI is invisible here.
           </p>
         </div>
         <button type="button" className="btn-secondary" onClick={onHome}>Back to SynapSoul</button>
@@ -274,11 +278,11 @@ function AdminDashboard({ overview, onHome }) {
           <strong>{stats.modules_completed ?? '—'}</strong>
         </article>
         <article className="admin-stat">
-          <span>Active (7 days)</span>
-          <strong>{stats.active_7d ?? '—'}</strong>
+          <span>Website active (7d)</span>
+          <strong>{stats.website_active_7d ?? stats.active_7d ?? '—'}</strong>
         </article>
         <article className="admin-stat">
-          <span>Last CLI activity</span>
+          <span>Last IDE CLI</span>
           <strong>{formatRelative(stats.last_cli_at) || 'None yet'}</strong>
         </article>
       </div>
@@ -325,9 +329,13 @@ function AdminDashboard({ overview, onHome }) {
                     <strong>{s.name || s.email}</strong>
                     <span>{s.email}</span>
                   </span>
-                  <span className="admin-student-cli">
-                    <em>{s.last_cli_command ? commandLabel(s.last_cli_command) : 'No CLI'}</em>
-                    <span>{s.last_cli_at ? formatRelative(s.last_cli_at) : '—'}</span>
+                  <span className={`admin-student-cli ${s.has_cli ? 'is-cli' : 'is-website'}`}>
+                    <em>{s.has_cli ? commandLabel(s.last_cli_command) : activityLabel(s)}</em>
+                    <span>
+                      {s.has_cli
+                        ? (s.last_cli_at ? formatRelative(s.last_cli_at) : '—')
+                        : (s.last_seen ? formatRelative(s.last_seen) : '—')}
+                    </span>
                   </span>
                 </button>
               </li>
@@ -340,11 +348,16 @@ function AdminDashboard({ overview, onHome }) {
 
         <section className="card elevated admin-inspector">
           <p className="section-eyebrow">Inspector</p>
-          {!selectedId && <p className="admin-inspector-empty">Select a student to inspect profile, session, and IDE activity.</p>}
+          {!selectedId && <p className="admin-inspector-empty">Select a student to inspect website login vs IDE CLI.</p>}
           {loadingDetail && <p>Loading…</p>}
           {detail && profile && (
             <>
               <h2>{profile.name || profile.email}</h2>
+              <p className={`admin-origin-banner ${hasCli ? 'is-cli' : 'is-website'}`}>
+                {hasCli
+                  ? 'IDE CLI is posting events. Website login is tracked separately below.'
+                  : 'Website only — no IDE CLI events. Chat lessons are not tracked. last_seen is website login, not the IDE.'}
+              </p>
               <dl className="admin-dl">
                 <div><dt>Name</dt><dd>{profile.name || '—'}</dd></div>
                 <div><dt>Email</dt><dd>{profile.email}</dd></div>
@@ -352,28 +365,52 @@ function AdminDashboard({ overview, onHome }) {
                 <div><dt>GitHub</dt><dd>{profile.github_username || selected?.github || '—'}</dd></div>
                 <div><dt>Track</dt><dd>{profile.track || '—'}</dd></div>
                 <div><dt>Readiness</dt><dd>{detail.readiness}</dd></div>
-                <div><dt>Last seen</dt><dd>{formatWhen(profile.last_seen)}</dd></div>
-                <div><dt>Last CLI</dt><dd>{selected?.last_cli_at ? `${commandLabel(selected.last_cli_command)} · ${formatWhen(selected.last_cli_at)}` : 'None'}</dd></div>
+                <div>
+                  <dt>Website login</dt>
+                  <dd>{formatWhen(websiteLastSeen)}</dd>
+                </div>
+                <div>
+                  <dt>IDE CLI</dt>
+                  <dd>
+                    {hasCli && (selected?.last_cli_at || cliEvents[0]?.at)
+                      ? `${commandLabel(selected?.last_cli_command || cliEvents[0]?.type)} · ${formatWhen(selected?.last_cli_at || cliEvents[0]?.at)}`
+                      : 'None — instructor never ran synapsoul login + synapsoul start'}
+                  </dd>
+                </div>
               </dl>
 
-              <h3>Current session</h3>
+              <h3>{sessionKind === 'website' ? 'Website session' : sessionKind === 'cli_sync' ? 'Cloud session (last CLI sync)' : 'Website session'}</h3>
               {session ? (
-                <p className="admin-session">
-                  <code>{session.skillId}</code>
-                  <span>/</span>
-                  <code>{session.moduleId}</code>
-                  <span className="admin-pill">{session.step}</span>
-                  <span className="admin-muted">hints {session.hintsUsed || 0}</span>
-                </p>
-              ) : <p className="admin-muted">No active session on the server.</p>}
+                <>
+                  <p className="admin-session">
+                    <span className={`admin-pill ${sessionKind === 'website' ? 'is-website' : 'is-cli'}`}>
+                      {sessionKind === 'website' ? 'Website' : 'CLI sync'}
+                    </span>
+                    <code>{session.skillId}</code>
+                    <span>/</span>
+                    <code>{session.moduleId}</code>
+                    <span className="admin-pill">{session.step}</span>
+                    <span className="admin-muted">hints {session.hintsUsed || 0}</span>
+                  </p>
+                  {sessionKind === 'website' && (
+                    <p className="admin-session-note">
+                      Not IDE tracking. This cloud row is the site default or PUT /api/progress/session
+                      (often system-design-fundamentals / http-basics / CONTEXT). Teaching in chat without
+                      the CLI does not move this.
+                    </p>
+                  )}
+                </>
+              ) : <p className="admin-muted">No website/cloud session row.</p>}
 
               <h3>Modules completed</h3>
               <p>{completed.length ? completed.join(', ') : 'None yet.'}</p>
 
-              <h3>IDE activity</h3>
-              {webOnly ? (
+              <h3>IDE CLI</h3>
+              {!hasCli ? (
                 <p className="admin-empty-cli">
-                  No IDE activity yet. Student must run synapsoul login then synapsoul start.
+                  No IDE CLI events. Do not treat the website session as proof they learned in Antigravity,
+                  Cursor, or any IDE. The student must run <code>synapsoul login</code> then
+                  {' '}<code>synapsoul start</code> so start / next / hint / decide / complete / sync post here.
                 </p>
               ) : (
                 <ol className="admin-timeline">

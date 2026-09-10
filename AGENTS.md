@@ -4,7 +4,7 @@ Students: follow the hosted protocol at https://synapsoullearn.runs-on.dev/skill
 Do not git clone. Do not unzip a kit as the main path.
 
 ```
-Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions
+Read https://synapsoullearn.runs-on.dev/skill.md and follow the instructions. Run synapsoul login then synapsoul start --json before teaching. Never invent CONTEXT from memory.
 ```
 
 Unix: `curl -fsSL https://synapsoullearn.runs-on.dev/install | sh`

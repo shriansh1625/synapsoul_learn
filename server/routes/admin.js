@@ -10,7 +10,7 @@ import {
 } from '../lib/adminAuth.js'
 import { adminOtpError, requestAdminOtp, revokeAdminSession, verifyAdminOtp } from '../lib/adminOtp.js'
 import { ownerUser } from '../lib/userFields.js'
-import { isTestAccount, mapCliEventRow } from '../lib/cliEvents.js'
+import { isTestAccount, mapCliEventRow, classifyLearnerActivity } from '../lib/cliEvents.js'
 
 const router = Router()
 
@@ -85,6 +85,7 @@ router.get('/overview', async (_req, res) => {
         WHERE u.last_seen > NOW() - INTERVAL '7 days'
           AND NOT (${testEmail})
       `),
+      // last_seen is website login / dashboard poll — not IDE CLI.
       pool.query(`
         SELECT
           MAX(e.created_at) AS last_cli_at,
@@ -100,6 +101,7 @@ router.get('/overview', async (_req, res) => {
       label: 'Admin only',
       students: users.rows[0]?.count || 0,
       modules_completed: completed.rows[0]?.count || 0,
+      website_active_7d: recent.rows[0]?.count || 0,
       active_7d: recent.rows[0]?.count || 0,
       last_cli_at: cli.last_cli_at || null,
       cli_events_7d: cli.events_7d || 0,
@@ -144,25 +146,35 @@ router.get('/students', async (_req, res) => {
     `)
     res.json({
       label: 'Admin only',
-      students: rows.map(r => ({
-        id: r.id,
-        name: r.name || '',
-        email: r.email,
-        username: r.username || '',
-        last_seen: r.last_seen || null,
-        last_cli_at: r.last_cli_at || null,
-        last_cli_command: r.last_cli_command || null,
-        last_cli_skill: r.last_cli_skill || null,
-        last_cli_module: r.last_cli_module || null,
-        last_cli_step: r.last_cli_step || null,
-        cli_event_count: r.cli_event_count || 0,
-        is_test: isTestAccount(r.email, r.name),
-        modules_completed: r.modules_completed || 0,
-        track: r.track || 'node',
-        readiness: readinessScore(r.modules_completed, r.avg_score, r.portfolio_count),
-        github: r.github_username || '',
-        profile_public: r.profile_public !== false,
-      })),
+      students: rows.map(r => {
+        const activity = classifyLearnerActivity({
+          cliEventCount: r.cli_event_count,
+          lastCliAt: r.last_cli_at,
+          lastSeen: r.last_seen,
+        })
+        return {
+          id: r.id,
+          name: r.name || '',
+          email: r.email,
+          username: r.username || '',
+          last_seen: r.last_seen || null,
+          website_last_seen: r.last_seen || null,
+          last_cli_at: r.last_cli_at || null,
+          last_cli_command: r.last_cli_command || null,
+          last_cli_skill: r.last_cli_skill || null,
+          last_cli_module: r.last_cli_module || null,
+          last_cli_step: r.last_cli_step || null,
+          cli_event_count: r.cli_event_count || 0,
+          has_cli: activity.has_cli,
+          activity: activity.activity,
+          is_test: isTestAccount(r.email, r.name),
+          modules_completed: r.modules_completed || 0,
+          track: r.track || 'node',
+          readiness: readinessScore(r.modules_completed, r.avg_score, r.portfolio_count),
+          github: r.github_username || '',
+          profile_public: r.profile_public !== false,
+        }
+      }),
     })
   } catch (e) {
     res.status(500).json({ error: 'Could not load students' })
@@ -181,9 +193,12 @@ router.get('/students/:id', async (req, res) => {
     const uid = rows[0].id
     const [session, completed, decisions, scores, portfolio, memory, llmEvents, cliRows] = await Promise.all([
       pool.query(
+        'SELECT skill_id, module_id, step, track, hints_used, started_at, source FROM user_sessions WHERE user_id = $1',
+        [uid]
+      ).catch(() => pool.query(
         'SELECT skill_id, module_id, step, track, hints_used, started_at FROM user_sessions WHERE user_id = $1',
         [uid]
-      ),
+      )),
       pool.query(
         'SELECT skill_id, module_id, score, track, completed_at FROM completed_modules WHERE user_id = $1 ORDER BY completed_at DESC NULLS LAST',
         [uid]
@@ -275,20 +290,32 @@ router.get('/students/:id', async (req, res) => {
     const avgScore = completed.rows.length
       ? completed.rows.reduce((s, r) => s + Number(r.score || 0), 0) / completed.rows.length
       : 0
+    const sessionPayload = sess ? {
+      skillId: sess.skill_id,
+      moduleId: sess.module_id,
+      step: sess.step,
+      track: sess.track,
+      hintsUsed: sess.hints_used,
+      startedAt: sess.started_at,
+      source: sess.source || null,
+    } : null
+    const activity = classifyLearnerActivity({
+      cliEventCount: cliEvents.length,
+      lastCliAt: cliEvents[0]?.at || null,
+      lastSeen: rows[0].last_seen,
+      session: sessionPayload,
+    })
 
     res.json({
       label: 'Admin only',
       profile: studentPublic(rows[0]),
       readiness: readinessScore(modulesCompleted, avgScore, portfolio.rows.length),
+      activity: activity.activity,
+      has_cli: activity.has_cli,
+      session_kind: activity.session_kind,
+      website_last_seen: rows[0].last_seen || null,
       progress: {
-        session: sess ? {
-          skillId: sess.skill_id,
-          moduleId: sess.module_id,
-          step: sess.step,
-          track: sess.track,
-          hintsUsed: sess.hints_used,
-          startedAt: sess.started_at,
-        } : null,
+        session: sessionPayload,
         completedModules,
         decisions: decisionsMap,
         scores: scoresMap,

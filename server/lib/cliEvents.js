@@ -20,6 +20,22 @@ export function isTestAccount(email, name = '') {
   return false
 }
 
+/** IDE proof is cli_events only. A user_sessions row without events is not CLI. */
+export function classifyLearnerActivity({
+  cliEventCount = 0,
+  lastCliAt = null,
+  lastSeen = null,
+  session = null,
+} = {}) {
+  const hasCli = Number(cliEventCount || 0) > 0 || Boolean(lastCliAt)
+  const hasSession = Boolean(session?.skillId || session?.skill_id)
+  return {
+    has_cli: hasCli,
+    activity: hasCli ? 'ide_cli' : (lastSeen || hasSession ? 'website' : 'none'),
+    session_kind: !hasSession ? 'none' : (hasCli ? 'cli_sync' : 'website'),
+  }
+}
+
 function clip(value) {
   if (value == null) return value
   if (typeof value === 'number' || typeof value === 'boolean') return value

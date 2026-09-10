@@ -15,8 +15,10 @@ import {
   readOAuthState,
   exchangeGithubCode,
   exchangeLinkedInCode,
+  frontendOrigin,
 } from '../lib/oauth.js'
 import { touchLastSeen, promoteIfAdminEmail, emailIsAdmin } from '../lib/adminAuth.js'
+import { parseCliNonce, putCliToken, takeCliToken } from '../lib/cliAuth.js'
 
 const router = Router()
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production'
@@ -171,14 +173,24 @@ router.get('/me', auth, async (req, res) => {
   res.json(user)
 })
 
+router.get('/cli-poll', async (req, res) => {
+  const nonce = parseCliNonce(req)
+  if (!nonce) return res.json({ pending: true })
+  const result = await takeCliToken(nonce)
+  if (result.token) return res.json({ pending: false, token: result.token, user: result.user })
+  return res.json({ pending: true })
+})
+
 router.get('/github', (req, res) => {
+  const cliNonce = parseCliNonce(req)
   if (!githubConfigured()) {
     const payload = {
       configured: false,
       provider: 'github',
-      message: 'GitHub OAuth is not configured. Set GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, and GITHUB_CALLBACK_URL on the API host.',
+      message: `GitHub OAuth is not configured. Use the website: ${frontendOrigin()}`,
+      site: frontendOrigin(),
     }
-    if (wantsJson(req)) return res.json(payload)
+    if (wantsJson(req) || req.query.cli === '1' || cliNonce) return res.json(payload)
     return res.redirect(frontendRedirect({ github: 'setup' }))
   }
 
@@ -194,9 +206,10 @@ router.get('/github', (req, res) => {
     provider: 'github',
     mode,
     userId: connectUser?.id || null,
+    cliNonce: cliNonce || null,
   })
   const url = githubAuthorizeUrl(req, state)
-  if (wantsJson(req)) return res.json({ configured: true, url })
+  if (wantsJson(req)) return res.json({ configured: true, url, nonce: cliNonce || undefined })
   res.redirect(url)
 })
 
@@ -237,10 +250,15 @@ router.get('/github/callback', async (req, res) => {
     const token = signToken(user)
     await promoteIfAdminEmail(user)
     await touchLastSeen(user.id)
+    if (state.cliNonce) {
+      await putCliToken(state.cliNonce, { token, user })
+    }
     return res.redirect(frontendRedirect({
       token,
       provider: 'github',
       connected: state.mode === 'connect' ? '1' : '0',
+      cli: state.cliNonce ? '1' : undefined,
+      nonce: state.cliNonce || undefined,
     }))
   } catch (e) {
     const status = e.status || 500

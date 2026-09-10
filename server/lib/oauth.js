@@ -10,7 +10,11 @@ export function frontendOrigin() {
 }
 
 export function frontendRedirect(params) {
-  const query = new URLSearchParams(params)
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value == null || value === '') continue
+    query.set(key, String(value))
+  }
   return `${frontendOrigin()}/#/auth/callback?${query.toString()}`
 }
 
