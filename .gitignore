@@ -6,3 +6,6 @@ node_modules/
 tutor/data/feedback/
 tutor/data/sync/
 dist/
+test-results/
+tutor/e2e/screenshots/
+tutor/e2e/test-output/

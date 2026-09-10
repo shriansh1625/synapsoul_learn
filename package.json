@@ -6,6 +6,9 @@
     "start": "node server/index.js",
     "build": "cd tutor && npm run build",
     "dev:api": "cd server && npm run dev",
-    "dev:web": "cd tutor && npm run dev"
+    "dev:web": "cd tutor && npm run dev",
+    "test:live:api": "cd tutor && npm run test:live:api",
+    "test:live:e2e": "cd tutor && npm run test:live:e2e",
+    "test:live": "cd tutor && npm run test:live"
   }
 }

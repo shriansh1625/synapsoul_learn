@@ -301,6 +301,31 @@ server/lib/llm/       ← API mirror of tutor/lib/llm
 
 ---
 
+## Autonomous live testing
+
+Repeatable audits against **production** (or override URLs with env vars). Simulates a student API journey and a headless browser path through the landing page and dashboard.
+
+| Variable | Default |
+|----------|---------|
+| `LEARNLAB_API_URL` | `https://learnerslab.onrender.com` |
+| `LEARNLAB_FRONTEND_URL` | `https://tutor-alpha-sandy.vercel.app` |
+
+```bash
+cd tutor
+npm install
+npx playwright install chromium   # first time only
+
+npm run test:live:api             # health, auth, brain, coach, learning loop
+npm run test:live:e2e             # Playwright journey on Vercel
+npm run test:live                 # both, in sequence
+```
+
+From repo root: `npm run test:live`.
+
+Reports (gitignored): `test-results/live-audit-latest.json`, plus `live-audit-api.json` and `live-audit-e2e.json`. API audit registers `audit-live-<timestamp>@test.local` users; there is no delete-user endpoint, so those rows remain in the database.
+
+---
+
 ## Git push (if auth fails)
 
 If `git push` fails with authentication errors:
