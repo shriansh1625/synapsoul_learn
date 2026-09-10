@@ -97,7 +97,7 @@ Schema auto-applies on first API boot via `server/db/schema.sql`.
 
 | Table | Purpose |
 |-------|---------|
-| `users` | Registration, login, profile (email, password_hash, name, degree, bio, username, college, track) |
+| `users` | Registration, login, hiring profile (name, bio, headline, degree, college, location, website, GitHub, LinkedIn, public flag) |
 | `user_sessions` | Active tutoring session (skill, module, step, hints) |
 | `completed_modules` | Module completions with scores |
 | `decisions` | DECIDE step choices and reasoning |
@@ -208,6 +208,12 @@ CLI: `npm run tutor -- learning stats --json`
 | `GROQ_MODEL` | No | Groq model ID; default `openai/gpt-oss-120b` |
 | `OPENAI_API_KEY` | No | OpenAI key — used if Groq is not configured |
 | `ANTHROPIC_API_KEY` | No | Anthropic key — used if Groq and OpenAI are not configured |
+| `GITHUB_CLIENT_ID` | No | GitHub OAuth App client ID. If unset, GitHub buttons show a setup state (no 501 crash) |
+| `GITHUB_CLIENT_SECRET` | No | GitHub OAuth App client secret. **Never commit this.** |
+| `GITHUB_CALLBACK_URL` | No | Must match the OAuth App callback, e.g. `https://learnerslab.onrender.com/api/auth/github/callback` |
+| `LINKEDIN_CLIENT_ID` | No | Optional LinkedIn OAuth. Pasted LinkedIn URLs always work without this |
+| `LINKEDIN_CLIENT_SECRET` | No | LinkedIn OAuth secret. **Never commit this.** |
+| `LINKEDIN_CALLBACK_URL` | No | e.g. `https://learnerslab.onrender.com/api/auth/linkedin/callback` |
 
 ### Frontend (Vercel)
 
@@ -219,6 +225,46 @@ CLI: `npm run tutor -- learning stats --json`
 
 ---
 
+## GitHub OAuth setup (hiring profiles)
+
+Public hiring profiles can show a GitHub button and let builders sign in or connect GitHub. LinkedIn works as a pasted URL even when OAuth is off.
+
+1. GitHub → **Settings** → **Developer settings** → **OAuth Apps** → **New OAuth App**
+2. Application name: `LearnLab`
+3. Homepage URL: your Vercel origin, e.g. `https://tutor-alpha-sandy.vercel.app`
+4. Authorization callback URL: `https://learnerslab.onrender.com/api/auth/github/callback` (your Render API origin + `/api/auth/github/callback`)
+5. Copy the Client ID. Generate a Client Secret.
+6. On the Render API service, set:
+
+| Variable | Example |
+|----------|---------|
+| `GITHUB_CLIENT_ID` | from the OAuth App |
+| `GITHUB_CLIENT_SECRET` | from the OAuth App |
+| `GITHUB_CALLBACK_URL` | `https://learnerslab.onrender.com/api/auth/github/callback` |
+| `FRONTEND_URL` | `https://tutor-alpha-sandy.vercel.app` |
+
+7. Redeploy the API. Sign-in shows **Continue with GitHub**. The in-app Profile page shows **Connect GitHub**.
+
+If those env vars are missing, GitHub buttons stay visible in a setup state. They do not return HTTP 501.
+
+### LinkedIn (optional)
+
+Paste a public LinkedIn URL on the Profile editor anytime (`PUT /api/profile` field `linkedin_url`). To also offer LinkedIn OAuth:
+
+1. Create a LinkedIn app with Sign In with LinkedIn using OpenID Connect
+2. Redirect URL: `https://learnerslab.onrender.com/api/auth/linkedin/callback`
+3. Set `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_CALLBACK_URL` on Render
+
+### Public profile URLs
+
+- Canonical: `https://tutor-alpha-sandy.vercel.app/u/{username}` (Vercel rewrite → SPA)
+- Hash fallback: `https://tutor-alpha-sandy.vercel.app/#/u/{username}`
+- Copy link always copies the full origin URL (`origin/u/{username}`)
+
+Owners edit from the in-app **Profile** tab. Recruiters only see the public page.
+
+---
+
 ## API endpoints
 
 | Method | Path | Auth | Description |
@@ -226,7 +272,12 @@ CLI: `npm run tutor -- learning stats --json`
 | POST | `/api/auth/register` | — | Create account |
 | POST | `/api/auth/login` | — | Get JWT token |
 | GET | `/api/auth/me` | JWT | Current user |
-| POST | `/api/auth/github` | — | Stub (501) |
+| GET | `/api/auth/providers` | — | `{ github, linkedin }` configured flags |
+| GET | `/api/auth/github` | optional token | Start GitHub OAuth (login or `?connect=1&token=`) |
+| GET | `/api/auth/github/callback` | — | GitHub OAuth callback |
+| GET | `/api/auth/linkedin` | optional token | Start LinkedIn OAuth if configured |
+| GET | `/api/auth/linkedin/callback` | — | LinkedIn OAuth callback |
+| PUT | `/api/profile` | JWT | Update hiring profile (name, bio, headline, degree, college, username, location, website, LinkedIn, GitHub) |
 | GET | `/api/progress` | JWT | Full user progress |
 | PUT | `/api/progress/session` | JWT | Update active session |
 | POST | `/api/progress/module-complete` | JWT | Record module completion |

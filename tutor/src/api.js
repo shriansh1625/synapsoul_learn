@@ -64,7 +64,34 @@ export function fetchLeaderboard() {
 }
 
 export function fetchPublicProfile(username) {
-  return apiFetch(`/api/profile/${username}`)
+  return apiFetch(`/api/profile/${encodeURIComponent(username)}`)
+}
+
+export function updateProfile(body) {
+  return apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify(body) })
+}
+
+export function fetchAuthProviders() {
+  return apiFetch('/api/auth/providers')
+}
+
+export function publicProfileUrl(username) {
+  const handle = username || 'your-handle'
+  if (typeof window === 'undefined') return `/u/${handle}`
+  return `${window.location.origin}/u/${handle}`
+}
+
+export function oauthStartUrl(provider, { connect = false } = {}) {
+  const params = new URLSearchParams()
+  if (connect) {
+    const token = getToken()
+    if (token) {
+      params.set('connect', '1')
+      params.set('token', token)
+    }
+  }
+  const q = params.toString()
+  return `${API_BASE}/api/auth/${provider}${q ? `?${q}` : ''}`
 }
 
 export function fetchBrain() {

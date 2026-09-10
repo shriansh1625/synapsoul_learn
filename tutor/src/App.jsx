@@ -5,19 +5,46 @@ import leaderboardData from '../data/leaderboard.json'
 import initialProgress from '../data/progress.json'
 import Landing from './Landing.jsx'
 import PublicProfile from './PublicProfile.jsx'
+import ProfileView from './ProfileView.jsx'
 import AuthModal from './AuthModal.jsx'
 import { BrainPanel } from './BrainPanel.jsx'
 import { useBrain } from './brain/useBrain.js'
 import {
   isLoggedIn, setToken, fetchProgress, fetchLeaderboard, register, canSyncProgress,
-  fetchLlmHint, apiEnabled,
+  fetchLlmHint, apiEnabled, fetchMe,
 } from './api.js'
 import { loadModuleJson } from './curriculumModules.js'
 
 function parseRoute() {
-  const hash = window.location.hash.slice(1)
-  if (hash.startsWith('/u/')) return { type: 'public', username: hash.slice(3) }
-  if (hash === '/college') return { type: 'college' }
+  const path = (window.location.pathname || '/').replace(/\/+$/, '') || '/'
+  const search = new URLSearchParams(window.location.search)
+  const hashRaw = window.location.hash.slice(1)
+  const [hashPathOnly, hashQuery] = hashRaw.split('?')
+  const hashPath = hashPathOnly || ''
+  const hashSearch = new URLSearchParams(hashQuery || '')
+
+  const token = search.get('token') || hashSearch.get('token')
+  const github = search.get('github') || hashSearch.get('github')
+  const linkedin = search.get('linkedin') || hashSearch.get('linkedin')
+  const error = search.get('error') || hashSearch.get('error')
+  const provider = search.get('provider') || hashSearch.get('provider')
+  const connected = search.get('connected') || hashSearch.get('connected')
+
+  const pathUser = path.match(/^\/u\/([^/]+)$/)
+  if (pathUser) return { type: 'public', username: decodeURIComponent(pathUser[1]) }
+  const hashUser = hashPath.match(/^\/u\/(.+)$/)
+  if (hashUser) return { type: 'public', username: decodeURIComponent(hashUser[1]) }
+
+  if (
+    path === '/auth/callback' ||
+    hashPath === '/auth/callback' ||
+    hashPath === '/auth' ||
+    token || github === 'setup' || linkedin === 'setup' || error
+  ) {
+    return { type: 'oauth', token, github, linkedin, error, provider, connected }
+  }
+
+  if (hashPath === '/college' || path === '/college') return { type: 'college' }
   return { type: 'app' }
 }
 
@@ -199,26 +226,39 @@ export default function App() {
   }, [authUser])
 
   useEffect(() => {
+    if (!isLoggedIn() || authUser) return
+    fetchMe()
+      .then(user => {
+        if (!user) return
+        setAuthUser(user)
+        setProgress(p => ({ ...p, profile: { ...p.profile, ...user } }))
+      })
+      .catch(() => {})
+  }, [authUser])
+
+  useEffect(() => {
     if (!showLanding && !localStorage.getItem('learnlab-onboarded')) {
       setShowOnboarding(true)
     }
   }, [showLanding])
 
   useEffect(() => {
-    function onHashChange() {
+    function onRouteChange() {
       const r = parseRoute()
       setRoute(r)
-      if (r.type === 'public') {
+      if (r.type === 'public' || r.type === 'oauth') {
         setShowLanding(false)
       } else if (r.type === 'college') {
         setShowLanding(false)
         setView('college')
-      } else {
-        setShowLanding(true)
       }
     }
-    window.addEventListener('hashchange', onHashChange)
-    return () => window.removeEventListener('hashchange', onHashChange)
+    window.addEventListener('hashchange', onRouteChange)
+    window.addEventListener('popstate', onRouteChange)
+    return () => {
+      window.removeEventListener('hashchange', onRouteChange)
+      window.removeEventListener('popstate', onRouteChange)
+    }
   }, [])
 
   useEffect(() => {
@@ -276,7 +316,11 @@ export default function App() {
     setToken(token)
     setAuthUser(user)
     setShowAuth(false)
-    addToast(`Signed in as ${user.name || user.email}`, 'welcome')
+    setShowLanding(false)
+    if (user) {
+      setProgress(p => ({ ...p, profile: { ...p.profile, ...user } }))
+    }
+    addToast(`Signed in as ${user?.name || user?.email || 'LearnLab'}`, 'welcome')
     fetchProgress()
       .then(p => setProgress(p))
       .catch(() => {})
@@ -297,18 +341,52 @@ export default function App() {
 
   function goPublicProfile(username) {
     setShowLanding(false)
-    window.location.hash = `/u/${username}`
+    const path = `/u/${encodeURIComponent(username)}`
+    window.history.pushState({}, '', path)
     setRoute({ type: 'public', username })
   }
 
   function goToLanding() {
     setShowLanding(true)
+    window.history.pushState({}, '', '/')
     window.location.hash = ''
     setRoute({ type: 'app' })
   }
 
   function goHome() {
     goToLanding()
+  }
+
+  if (route.type === 'oauth') {
+    return (
+      <div className="app public-app">
+        <OAuthCatch
+          route={route}
+          onSuccess={result => {
+            handleAuthSuccess(result)
+            setView('profile')
+            setRoute({ type: 'app' })
+          }}
+          onSetup={r => {
+            setShowLanding(false)
+            setShowAuth(true)
+            setRoute({ type: 'app' })
+            addToast(
+              r.github === 'setup'
+                ? 'GitHub OAuth is not configured on the API host yet'
+                : 'LinkedIn OAuth is not configured — paste a LinkedIn URL on your profile',
+              'welcome'
+            )
+          }}
+          onError={message => {
+            setShowLanding(false)
+            setShowAuth(true)
+            setRoute({ type: 'app' })
+            addToast(message, 'welcome')
+          }}
+        />
+      </div>
+    )
   }
 
   if (route.type === 'public') {
@@ -426,7 +504,18 @@ export default function App() {
           />
         )}
         {view === 'portfolio' && <PortfolioView portfolio={portfolio} />}
-        {view === 'profile' && <ProfileView progress={progress} catalog={catalog} />}
+        {view === 'profile' && (
+          <ProfileView
+            progress={progress}
+            catalog={catalog}
+            authUser={authUser}
+            onSaveLocal={saveProfilePartial}
+            onAuthUser={setAuthUser}
+            onNeedAuth={() => setShowAuth(true)}
+            onOpenPublic={goPublicProfile}
+            addToast={addToast}
+          />
+        )}
         {view === 'leaderboard' && (
           <LeaderboardView
             progress={progress}
@@ -809,96 +898,49 @@ function computeReadiness(progress) {
   return Math.round(completion + avg + port)
 }
 
-function ProfileView({ progress, catalog }) {
-  const readiness = computeReadiness(progress)
-  const completed = Object.keys(progress.completedModules || {}).length
-  const profile = progress.profile || {}
-  const badges = catalog.skills.filter(s => {
-    const count = Object.keys(progress.completedModules || {}).filter(k => k.startsWith(`${s.id}:`)).length
-    return count >= (s.moduleCount || 1)
-  })
+function oauthErrorMessage(code) {
+  const map = {
+    github_taken: 'That GitHub account is already connected to another LearnLab user',
+    github_oauth_failed: 'GitHub sign-in failed. Try email, or check API OAuth env vars.',
+    linkedin_oauth_failed: 'LinkedIn sign-in failed. You can still paste a LinkedIn URL on your profile.',
+    linkedin_email_required: 'LinkedIn did not share an email. Paste your LinkedIn URL on your profile instead.',
+    signin_required: 'Sign in before connecting a social account',
+    missing_code: 'Sign-in was cancelled',
+    access_denied: 'Sign-in was cancelled',
+  }
+  return map[code] || 'Sign-in did not complete'
+}
+
+function OAuthCatch({ route, onSuccess, onSetup, onError }) {
+  useEffect(() => {
+    let cancelled = false
+    async function finish() {
+      try {
+        if (route.token) {
+          setToken(route.token)
+          const user = await fetchMe()
+          if (cancelled) return
+          window.history.replaceState({}, '', '/')
+          if (window.location.hash) window.location.hash = ''
+          onSuccess({ token: route.token, user })
+          return
+        }
+        window.history.replaceState({}, '', '/')
+        if (window.location.hash) window.location.hash = ''
+        if (route.github === 'setup' || route.linkedin === 'setup') onSetup(route)
+        else onError(oauthErrorMessage(route.error))
+      } catch (e) {
+        if (!cancelled) onError(e.message || 'Sign-in did not complete')
+      }
+    }
+    finish()
+    return () => { cancelled = true }
+  }, [])
 
   return (
-    <>
-      <div className="page-header">
-        <p className="section-eyebrow">Hiring-facing</p>
-        <h2 className="display-sm">Public <em>Profile</em></h2>
-        <p className="section-sub">Evidence-backed builder profile · Share with recruiters</p>
-      </div>
-
-      <section className="profile-hero card elevated">
-        <div className="profile-header">
-          <div className="profile-identity">
-            <div className="profile-avatar">{profile.name?.[0]?.toUpperCase() || '?'}</div>
-            <div>
-              <h3 className="profile-name">{profile.name || 'Your Name'}</h3>
-              <p className="profile-degree">{profile.degree || 'Degree'} · {profile.college_name || 'College'}</p>
-              <p className="profile-track">Track: <strong>{profile.track || 'node'}</strong></p>
-            </div>
-          </div>
-          <div className="readiness-ring">
-            <span className="readiness-value">{readiness}</span>
-            <span className="readiness-label">Readiness</span>
-          </div>
-        </div>
-        <p className="profile-bio">{profile.bio || 'Complete your profile via: tutor profile update'}</p>
-        <div className="profile-stats-row">
-          <div className="profile-stat">
-            <span className="profile-stat-value">{completed}</span>
-            <span className="profile-stat-label">Modules</span>
-          </div>
-          <div className="profile-stat">
-            <span className="profile-stat-value">{badges.length}/{catalog.skills.length}</span>
-            <span className="profile-stat-label">Skills</span>
-          </div>
-          <div className="profile-stat">
-            <span className="profile-stat-value">{progress.portfolio?.length || 0}</span>
-            <span className="profile-stat-label">Evidence</span>
-          </div>
-        </div>
-        <code className="cli-block profile-cli">tutor profile update --name "..." --bio "..." --degree "..."</code>
-        {profile.username && (
-          <p className="profile-url">
-            Public URL: <code>/#/u/{profile.username}</code> · Run <code>tutor sync --publish</code>
-          </p>
-        )}
-        <button
-          type="button"
-          className="btn-secondary share-profile-btn"
-          onClick={() => {
-            const url = `${window.location.origin}/#/u/${profile.username || 'your-handle'}`
-            navigator.clipboard.writeText(url)
-          }}
-        >
-          Copy profile link
-        </button>
-      </section>
-
-      {progress.portfolio?.length > 0 && (
-        <section className="card elevated profile-evidence">
-          <h3 className="display-xs">Built-work <em>evidence</em></h3>
-          {progress.portfolio.slice(0, 3).map((item, i) => (
-            <blockquote key={i} className="evidence-quote">
-              "{item.proof || item.student_action}"
-              <cite>— {item.artifact}</cite>
-            </blockquote>
-          ))}
-        </section>
-      )}
-
-      {badges.length > 0 && (
-        <section className="card elevated">
-          <h3 className="display-xs">Skill <em>badges</em></h3>
-          <div className="badge-wall">
-            {badges.map(b => (
-              <span key={b.id} className="skill-badge" style={{ '--skill-color': b.color }}>
-                {b.title} ✓
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-    </>
+    <section className="card empty-state" style={{ margin: '48px auto', maxWidth: 480 }}>
+      <p className="loading-text">Finishing sign-in…</p>
+    </section>
   )
 }
 

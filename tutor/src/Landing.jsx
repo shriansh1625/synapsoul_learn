@@ -34,7 +34,7 @@ const VALUE_PROPS = [
   },
   {
     title: 'Your repo, your progress',
-    desc: 'Local-first. No cloud lock-in, no GitHub login. Your curriculum, portfolio, and session history live in your project.',
+    desc: 'Local-first. Progress lives in your repo. Connect GitHub when you want a recruiter-facing hiring profile.',
   },
   {
     title: 'One prompt, full bootcamp',

@@ -81,12 +81,45 @@ export async function checkDbHealth() {
   }
 }
 
+const PROFILE_COLUMNS = [
+  ['github_id', 'TEXT'],
+  ['github_username', 'TEXT'],
+  ['github_avatar', 'TEXT'],
+  ['linkedin_url', 'TEXT'],
+  ['headline', 'TEXT'],
+  ['location', 'TEXT'],
+  ['website', 'TEXT'],
+  ['avatar_url', 'TEXT'],
+  ['profile_public', 'BOOLEAN DEFAULT true'],
+]
+
+export async function ensureProfileColumns() {
+  if (!process.env.DATABASE_URL) return false
+  for (const [name, type] of PROFILE_COLUMNS) {
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS ${name} ${type}`)
+  }
+  try {
+    await pool.query('ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL')
+  } catch (e) {
+    console.warn('password_hash nullability:', e.message)
+  }
+  await pool.query(
+    'CREATE UNIQUE INDEX IF NOT EXISTS idx_users_github_id ON users (github_id) WHERE github_id IS NOT NULL'
+  )
+  return true
+}
+
 export async function initDb() {
   const schema = readFileSync(join(__dirname, 'schema.sql'), 'utf8')
   try {
     await pool.query(schema)
   } catch (e) {
     console.warn('Full schema apply warning:', e.message)
+  }
+  try {
+    await ensureProfileColumns()
+  } catch (e) {
+    console.warn('Profile column migration warning:', e.message)
   }
   try {
     await ensureLlmTables()

@@ -8,7 +8,13 @@ const router = Router()
 router.get('/', auth, async (req, res) => {
   const uid = req.user.id
   const [user, session, completed, decisions, scores, portfolio, memory] = await Promise.all([
-    pool.query('SELECT id, email, name, degree, bio, username, college_name, track, profile_confirmed FROM users WHERE id = $1', [uid]),
+    pool.query(
+      `SELECT id, email, name, degree, bio, username, college_name, track, profile_confirmed,
+              github_id, github_username, github_avatar, linkedin_url, headline, location,
+              website, avatar_url, profile_public
+       FROM users WHERE id = $1`,
+      [uid]
+    ),
     pool.query('SELECT skill_id, module_id, step, track, hints_used, started_at FROM user_sessions WHERE user_id = $1', [uid]),
     pool.query('SELECT skill_id, module_id, score, track, completed_at FROM completed_modules WHERE user_id = $1', [uid]),
     pool.query('SELECT skill_id, module_id, choice, reasoning FROM decisions WHERE user_id = $1', [uid]),

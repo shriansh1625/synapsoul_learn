@@ -57,6 +57,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tutorDataPlugin(env)],
+    appType: 'spa',
     server: {
       port: 5173,
       proxy: env.VITE_API_URL ? undefined : {

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT,
   name TEXT,
   degree TEXT,
   bio TEXT,
@@ -9,8 +9,29 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT UNIQUE,
   track TEXT DEFAULT 'node',
   profile_confirmed BOOLEAN DEFAULT false,
+  github_id TEXT,
+  github_username TEXT,
+  github_avatar TEXT,
+  linkedin_url TEXT,
+  headline TEXT,
+  location TEXT,
+  website TEXT,
+  avatar_url TEXT,
+  profile_public BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS github_id TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS github_username TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS github_avatar TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS headline TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_public BOOLEAN DEFAULT true;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_github_id ON users (github_id) WHERE github_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS user_sessions (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
