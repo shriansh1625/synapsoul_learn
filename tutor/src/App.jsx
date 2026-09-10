@@ -14,7 +14,15 @@ import {
   fetchLlmHint, apiEnabled, fetchMe,
 } from './api.js'
 import { loadModuleJson } from './curriculumModules.js'
-import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError } from './siteUtils.js'
+import { copyText, setPageMeta, UNIVERSAL_PROMPT, humanizeApiError, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
+
+function publicRouteUsername(raw) {
+  try {
+    return slugifyUsername(decodeURIComponent(String(raw || '')))
+  } catch {
+    return slugifyUsername(raw)
+  }
+}
 
 function parseRoute() {
   const path = (window.location.pathname || '/').replace(/\/+$/, '') || '/'
@@ -32,9 +40,9 @@ function parseRoute() {
   const connected = search.get('connected') || hashSearch.get('connected')
 
   const pathUser = path.match(/^\/u\/([^/]+)$/)
-  if (pathUser) return { type: 'public', username: decodeURIComponent(pathUser[1]) }
+  if (pathUser) return { type: 'public', username: publicRouteUsername(pathUser[1]) }
   const hashUser = hashPath.match(/^\/u\/(.+)$/)
-  if (hashUser) return { type: 'public', username: decodeURIComponent(hashUser[1]) }
+  if (hashUser) return { type: 'public', username: publicRouteUsername(hashUser[1]) }
 
   if (
     path === '/auth/callback' ||
@@ -379,10 +387,12 @@ export default function App() {
   }
 
   function goPublicProfile(username) {
+    const slug = slugifyUsername(username)
+    if (!isValidPublicUsername(slug)) return
     setShowLanding(false)
-    const path = `/u/${encodeURIComponent(username)}`
+    const path = `/u/${encodeURIComponent(slug)}`
     window.history.pushState({}, '', path)
-    setRoute({ type: 'public', username })
+    setRoute({ type: 'public', username: slug })
   }
 
   function goToLanding() {

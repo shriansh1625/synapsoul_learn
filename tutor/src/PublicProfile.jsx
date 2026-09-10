@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import catalog from '../data/catalog.json'
 import { fetchPublicProfile, publicProfileUrl } from './api.js'
-import { copyText, setPageMeta, humanizeApiError } from './siteUtils.js'
+import { copyText, setPageMeta, humanizeApiError, slugifyUsername } from './siteUtils.js'
 
 const EMPTY_BIO = 'Engineering learner in the LearnLab bootcamp — collecting evidence of how they design, debug, and ship.'
 
@@ -44,10 +44,17 @@ export default function PublicProfile({ username, onBack }) {
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState('')
 
-  const profileUrl = publicProfileUrl(username)
+  const routeSlug = slugifyUsername(username)
+  const profileUrl = publicProfileUrl(profile?.username || routeSlug)
 
   async function copyLink() {
+    setCopyError('')
+    if (!profileUrl) {
+      setCopyError('This profile link is not valid.')
+      return
+    }
     const ok = await copyText(profileUrl)
     if (!ok) {
       setCopied(false)
@@ -59,9 +66,14 @@ export default function PublicProfile({ username, onBack }) {
 
   useEffect(() => {
     let cancelled = false
+    if (!routeSlug || routeSlug.length < 2) {
+      setError('Profile not found')
+      setProfile(null)
+      return () => { cancelled = true }
+    }
     async function load() {
       try {
-        const data = await fetchPublicProfile(username)
+        const data = await fetchPublicProfile(routeSlug)
         if (!cancelled) setProfile(data)
       } catch (e) {
         if (!cancelled) setError(humanizeApiError(e, 'Profile not found'))
@@ -69,25 +81,25 @@ export default function PublicProfile({ username, onBack }) {
     }
     load()
     return () => { cancelled = true }
-  }, [username])
+  }, [routeSlug])
 
   useEffect(() => {
     if (error) {
       setPageMeta({
         title: 'Profile not found · LearnLab',
-        description: `No public LearnLab hiring profile for ${username}.`,
+        description: `No public LearnLab hiring profile for ${routeSlug || username}.`,
       })
       return
     }
     if (!profile) {
-      setPageMeta({ title: `${username} · LearnLab` })
+      setPageMeta({ title: `${routeSlug || username} · LearnLab` })
       return
     }
     setPageMeta({
-      title: `${profile.name || username} · LearnLab`,
-      description: profile.headline || profile.bio || `${profile.name || username} on LearnLab — evidence from built work, not certificates.`,
+      title: `${profile.name || profile.username} · LearnLab`,
+      description: profile.headline || profile.bio || `${profile.name || profile.username} on LearnLab — evidence from built work, not certificates.`,
     })
-  }, [error, profile, username])
+  }, [error, profile, routeSlug, username])
 
   if (error) {
     return (
@@ -98,7 +110,7 @@ export default function PublicProfile({ username, onBack }) {
         <section className="card empty-state">
           <p className="section-eyebrow">Hiring profile</p>
           <h2 className="display-xs">Profile not found</h2>
-          <p>No public LearnLab profile for <code>{username}</code>. Ask the builder to set a username and make the profile public.</p>
+          <p>No public LearnLab profile for <code>{routeSlug || username}</code>. Ask the builder to set a username and make the profile public.</p>
           <button type="button" className="btn-secondary" onClick={onBack}>Back to LearnLab</button>
         </section>
       </div>
@@ -128,7 +140,8 @@ export default function PublicProfile({ username, onBack }) {
     profile.location || null,
     profile.track ? `${profile.track} track` : null,
   ].filter(Boolean)
-  const initial = (profile.name || username || '?')[0].toUpperCase()
+  const displayHandle = profile.username || routeSlug
+  const initial = (profile.name || displayHandle || '?')[0].toUpperCase()
   const readiness = Number(profile.readiness_score) || 0
 
   return (
@@ -136,7 +149,8 @@ export default function PublicProfile({ username, onBack }) {
       <header className="public-header">
         <button type="button" className="link-btn back-btn" onClick={onBack}>← LearnLab</button>
         <div className="public-header-actions">
-          <button type="button" className="btn-secondary copy-link-btn" onClick={copyLink}>
+          {copyError && <span className="field-hint">{copyError}</span>}
+          <button type="button" className="btn-secondary copy-link-btn" onClick={copyLink} disabled={!profileUrl}>
             {copied ? 'Link copied' : 'Copy link'}
           </button>
           <span className="public-badge">Hiring profile</span>
@@ -153,7 +167,7 @@ export default function PublicProfile({ username, onBack }) {
             )}
             <div className="pp-identity-copy">
               <p className="section-eyebrow">LearnLab builder</p>
-              <h1 className="pp-name">{profile.name || username}</h1>
+              <h1 className="pp-name">{profile.name || displayHandle}</h1>
               {headline && <p className="pp-headline">{headline}</p>}
               <p className="pp-bio">{bio}</p>
               <p className="pp-meta">

@@ -1,4 +1,4 @@
-import { humanizeApiError, statusFallback } from './siteUtils.js'
+import { humanizeApiError, statusFallback, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
 
 const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const TOKEN_KEY = 'learnlab-token'
@@ -73,7 +73,11 @@ export function fetchLeaderboard() {
 }
 
 export function fetchPublicProfile(username) {
-  return apiFetch(`/api/profile/${encodeURIComponent(username)}`)
+  const slug = slugifyUsername(username)
+  if (!isValidPublicUsername(slug)) {
+    return Promise.reject(new Error('Profile not found'))
+  }
+  return apiFetch(`/api/profile/${encodeURIComponent(slug)}`)
 }
 
 export function updateProfile(body) {
@@ -84,10 +88,13 @@ export function fetchAuthProviders() {
   return apiFetch('/api/auth/providers')
 }
 
+/** Full public profile URL, or null if username is missing or not a valid slug. */
 export function publicProfileUrl(username) {
-  const handle = username || 'your-handle'
-  if (typeof window === 'undefined') return `/u/${handle}`
-  return `${window.location.origin}/u/${handle}`
+  const slug = slugifyUsername(username)
+  if (!isValidPublicUsername(slug)) return null
+  const path = `/u/${encodeURIComponent(slug)}`
+  if (typeof window === 'undefined') return path
+  return `${window.location.origin}${path}`
 }
 
 export function oauthStartUrl(provider, { connect = false } = {}) {

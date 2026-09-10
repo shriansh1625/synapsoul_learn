@@ -152,9 +152,11 @@ router.put('/', auth, async (req, res) => {
 })
 
 router.get('/:username', async (req, res) => {
+  const slug = sanitizeHandle(decodeURIComponent(req.params.username || ''))
+  if (!slug || slug.length < 2) return res.status(404).json({ error: 'Not found' })
   const { rows } = await pool.query(
-    `SELECT ${OWNER_COLUMNS} FROM users WHERE username = $1`,
-    [req.params.username]
+    `SELECT ${OWNER_COLUMNS} FROM users WHERE lower(username) = lower($1)`,
+    [slug]
   )
   if (!rows[0]) return res.status(404).json({ error: 'Not found' })
   if (rows[0].profile_public === false) return res.status(404).json({ error: 'Not found' })

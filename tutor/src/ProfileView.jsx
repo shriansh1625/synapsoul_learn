@@ -3,7 +3,7 @@ import {
   isLoggedIn, fetchMe, updateProfile, fetchAuthProviders,
   publicProfileUrl, oauthStartUrl,
 } from './api.js'
-import { copyText } from './siteUtils.js'
+import { copyText, slugifyUsername, isValidPublicUsername } from './siteUtils.js'
 
 function computeReadiness(progress, catalog) {
   const completed = Object.keys(progress.completedModules || {}).length
@@ -64,7 +64,8 @@ export default function ProfileView({
     const count = Object.keys(progress.completedModules || {}).filter(k => k.startsWith(`${s.id}:`)).length
     return count >= (s.moduleCount || 1)
   })
-  const handle = form.username || cloud?.username || profile.username
+  const handle = slugifyUsername(form.username || cloud?.username || profile.username)
+  const publicUrl = handle && isValidPublicUsername(handle) ? publicProfileUrl(handle) : null
   const avatar = cloud?.avatar_url || cloud?.github_avatar || profile.avatar_url
   const githubConnected = Boolean(cloud?.github_id || cloud?.github_username)
 
@@ -96,19 +97,26 @@ export default function ProfileView({
   async function handleSave(e) {
     e.preventDefault()
     setError('')
+    const username = form.username.trim() ? slugifyUsername(form.username) : ''
+    if (form.username.trim() && !isValidPublicUsername(username)) {
+      setError('Username must be 2–32 letters, numbers, hyphens, or underscores.')
+      addToast?.('Choose a valid username (e.g. shriansh-singh), then save.', 'error')
+      return
+    }
     const partial = {
       name: form.name,
       headline: form.headline,
       bio: form.bio,
       degree: form.degree,
       college_name: form.college_name,
-      username: form.username,
+      username,
       location: form.location,
       website: form.website,
       linkedin_url: form.linkedin_url,
       github_username: form.github_username,
     }
     onSaveLocal(partial)
+    setForm(f => ({ ...f, ...partial }))
     if (!loggedIn) {
       addToast?.('Saved on this device. Sign in to publish your hiring profile.', 'success')
       onNeedAuth?.()
@@ -123,6 +131,7 @@ export default function ProfileView({
       setCloud(user)
       onAuthUser?.(user)
       onSaveLocal(user)
+      setForm(f => formFrom({ ...f, ...user }, user))
       addToast?.('Hiring profile saved', 'success')
     } catch (err) {
       setError(err.message || 'Could not save your profile. Try again.')
@@ -133,7 +142,11 @@ export default function ProfileView({
   }
 
   async function copyLink() {
-    const ok = await copyText(publicProfileUrl(handle || 'your-handle'))
+    if (!publicUrl) {
+      addToast?.('Set a username in the profile editor below, save, then copy your link.', 'error')
+      return
+    }
+    const ok = await copyText(publicUrl)
     if (!ok) {
       addToast?.('Could not copy the link. Copy it from the address bar.', 'error')
       return
@@ -198,16 +211,16 @@ export default function ProfileView({
             <span className="profile-stat-label">Evidence</span>
           </div>
         </div>
-        {handle && (
+        {publicUrl && (
           <p className="profile-url">
-            Public URL: <code>{publicProfileUrl(handle)}</code>
+            Public URL: <code>{publicUrl}</code>
           </p>
         )}
         <div className="profile-preview-actions">
           <button type="button" className="btn-secondary share-profile-btn" onClick={copyLink}>
             {copied ? 'Link copied' : 'Copy profile link'}
           </button>
-          {handle && (
+          {publicUrl && (
             <button type="button" className="btn-secondary" onClick={() => onOpenPublic?.(handle)}>
               View public page
             </button>
@@ -259,7 +272,15 @@ export default function ProfileView({
             </label>
             <label className="onboard-field">
               Username
-              <input value={form.username} onChange={e => setField('username', e.target.value)} placeholder="your-handle" />
+              <input
+                value={form.username}
+                onChange={e => setField('username', e.target.value)}
+                onBlur={() => {
+                  const slug = slugifyUsername(form.username)
+                  if (slug && slug !== form.username) setField('username', slug)
+                }}
+                placeholder="shriansh-singh"
+              />
             </label>
             <label className="onboard-field profile-form-span">
               Headline

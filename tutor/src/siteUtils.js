@@ -16,6 +16,23 @@ export function setPageMeta({ title, description } = {}) {
   el.setAttribute('content', content)
 }
 
+/** Match server `sanitizeHandle` — lowercase slug for public /u/:username URLs. */
+export function slugifyUsername(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^@/, '')
+    .replace(/[^a-z0-9_-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 32)
+}
+
+export function isValidPublicUsername(slug) {
+  if (!slug || slug.length < 2 || slug.length > 32) return false
+  return /^[a-z0-9_-]+$/.test(slug)
+}
+
 export async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text)
