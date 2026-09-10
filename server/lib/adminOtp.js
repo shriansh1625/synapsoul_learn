@@ -80,7 +80,7 @@ export async function requestAdminOtp() {
   }
 
   if (!gmailConfigured()) {
-    const err = new Error('Gmail App Password is not configured. Set GMAIL_APP_PASSWORD on the API host (Google Account → Security → 2-Step Verification → App passwords).')
+    const err = new Error('Gmail App Password is not configured. Set GMAIL_APP_PASSWORD on the Render API service (Google Account → Security → 2-Step Verification → App passwords).')
     err.status = 503
     err.code = 'GMAIL_NOT_CONFIGURED'
     throw err
@@ -113,8 +113,8 @@ export async function requestAdminOtp() {
   try {
     await sendAdminOtpEmail(code)
   } catch (e) {
-    if (e.code === 'GMAIL_NOT_CONFIGURED') throw e
-    const err = new Error('Could not send the admin code to Gmail. Check GMAIL_USER and GMAIL_APP_PASSWORD.')
+    if (e.code === 'GMAIL_NOT_CONFIGURED' || e.code === 'GMAIL_SEND_FAILED') throw e
+    const err = new Error('Could not send the admin code to Gmail. Check GMAIL_USER and GMAIL_APP_PASSWORD on Render.')
     err.status = 503
     err.code = 'GMAIL_SEND_FAILED'
     throw err

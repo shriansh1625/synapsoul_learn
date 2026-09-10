@@ -71,6 +71,25 @@ export default function AdminGate({ onHome }) {
   return <NotFoundAdmin onHome={onHome} />
 }
 
+function otpRequestErrorMessage(err) {
+  const code = err?.code
+  const text = err?.apiError || err?.message || ''
+  if (code === 'OTP_RATE_LIMITED') return text || 'Wait 60 seconds before requesting another code.'
+  if (code === 'GMAIL_NOT_CONFIGURED') {
+    return text || 'Gmail is not configured. Set GMAIL_APP_PASSWORD on the Render API service.'
+  }
+  if (code === 'GMAIL_SEND_FAILED') {
+    return text || 'Could not send the code. Check GMAIL_APP_PASSWORD on Render, or Gmail SMTP may be blocked.'
+  }
+  if (code === 'TIMEOUT' || /timed out|aborted/i.test(text)) {
+    return 'Sending timed out. Gmail SMTP may be hanging on Render. Set GMAIL_APP_PASSWORD, or smtp.gmail.com:587 may be blocked.'
+  }
+  if (!text || /failed to fetch|network|could not reach/i.test(text)) {
+    return 'Could not reach LearnLab. Check your connection and try again.'
+  }
+  return text || 'Could not send the code.'
+}
+
 function AdminOtpChallenge({ onVerified, onHome }) {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -96,10 +115,8 @@ function AdminOtpChallenge({ onVerified, onHome }) {
       if (err?.code === 'OTP_RATE_LIMITED') {
         setSent(true)
         setCooldown(Number(err.retryAfter) || 60)
-        setError(err.apiError || err.message)
-      } else {
-        setError(err.apiError || err.message || 'Could not send the code.')
       }
+      setError(otpRequestErrorMessage(err))
     } finally {
       setSending(false)
     }

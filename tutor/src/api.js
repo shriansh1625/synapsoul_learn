@@ -45,16 +45,35 @@ async function apiFetch(path, options = {}) {
   if (import.meta.env.PROD && !API_BASE) {
     throw new Error('Cloud sync is not configured yet. You can keep working locally.')
   }
-  const headers = { 'Content-Type': 'application/json', ...options.headers }
+  const { timeoutMs, signal, headers: extraHeaders, ...rest } = options
+  const headers = { 'Content-Type': 'application/json', ...extraHeaders }
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
   const adminOtp = getAdminOtp()
   if (adminOtp) headers['X-Admin-Session'] = adminOtp
+  const controller = new AbortController()
+  let timer
+  if (timeoutMs > 0) {
+    timer = setTimeout(() => controller.abort(), timeoutMs)
+  }
+  if (signal) {
+    if (signal.aborted) controller.abort()
+    else signal.addEventListener('abort', () => controller.abort(), { once: true })
+  }
   let res
   try {
-    res = await fetch(`${API_BASE}${path}`, { ...options, headers })
+    res = await fetch(`${API_BASE}${path}`, { ...rest, headers, signal: controller.signal })
   } catch (err) {
-    throw new Error(humanizeApiError(err))
+    const aborted = err?.name === 'AbortError'
+    const wrapped = new Error(
+      aborted
+        ? 'The request timed out. Check your connection and try again.'
+        : humanizeApiError(err)
+    )
+    if (aborted) wrapped.code = 'TIMEOUT'
+    throw wrapped
+  } finally {
+    if (timer) clearTimeout(timer)
   }
   const data = await res.json().catch(() => ({}))
   if (!res.ok) {
@@ -187,7 +206,11 @@ export function fetchAdminStudent(id) {
 }
 
 export function requestAdminOtp() {
-  return apiFetch('/api/admin/otp/request', { method: 'POST', body: JSON.stringify({}) })
+  return apiFetch('/api/admin/otp/request', {
+    method: 'POST',
+    body: JSON.stringify({}),
+    timeoutMs: 20_000,
+  })
 }
 
 export function verifyAdminOtp(code) {
