@@ -177,7 +177,7 @@ code {
 
 .header-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px 16px;
   width: min(1200px, calc(100% - 32px));
@@ -197,17 +197,23 @@ code {
 
 .header .app-burger {
   grid-column: 2;
+  grid-row: 1;
   justify-self: end;
 }
 
 .header .nav {
   grid-column: 2;
+  grid-row: 1;
   justify-self: center;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .header .header-actions {
   grid-column: 3;
+  grid-row: 1;
   justify-self: end;
+  flex-shrink: 0;
 }
 
 .logo { display: flex; align-items: center; gap: 6px; }
@@ -2058,7 +2064,7 @@ a.btn-primary, a.btn-secondary {
 /* CTA legacy block removed - see landing-cta above */
 
 /* Responsive */
-@media (min-width: 1101px) {
+@media (min-width: 1401px) {
   .header .nav-btn {
     padding: 7px 8px;
     font-size: 0.76rem;
@@ -2078,7 +2084,7 @@ a.btn-primary, a.btn-secondary {
   .header .logo-text { font-size: 1.1rem; }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1400px) {
   .nav-burger { display: flex; }
   .glass-nav-pill {
     grid-template-columns: 1fr auto auto;
