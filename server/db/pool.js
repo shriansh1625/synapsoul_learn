@@ -9,9 +9,16 @@ dotenv.config()
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export const pool = new pg.Pool({
+  connectionTimeoutMillis: 8000,
+  idleTimeoutMillis: 30000,
+  query_timeout: 10000,
+  max: 5,
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false },
 })
+
+// Idle database disconnects must not terminate the web process.
+pool.on('error', () => console.warn('Database pool connection interrupted'))
 
 const LLM_SCHEMA = `
 CREATE TABLE IF NOT EXISTS llm_interactions (
@@ -83,7 +90,7 @@ export async function checkDbHealth() {
       cliEventsTable: row.cli_events ? 'ok' : 'missing',
     }
   } catch (e) {
-    return { db: 'error', dbError: e.message, llmTables: 'unknown' }
+    return { db: 'error', dbError: 'Database temporarily unavailable', llmTables: 'unknown' }
   }
 }
 
@@ -96,7 +103,7 @@ const PROFILE_COLUMNS = [
   ['location', 'TEXT'],
   ['website', 'TEXT'],
   ['avatar_url', 'TEXT'],
-  ['profile_public', 'BOOLEAN DEFAULT true'],
+  ['profile_public', 'BOOLEAN DEFAULT false'],
   ['is_admin', 'BOOLEAN DEFAULT false'],
   ['last_seen', 'TIMESTAMPTZ'],
 ]

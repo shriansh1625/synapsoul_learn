@@ -3467,3 +3467,4 @@ a.link-btn {
     max-width: none;
   }
 }
+.profile-visibility-choice { display:flex; gap:12px; align-items:flex-start; margin:20px 0; font-size:13px; color:var(--text-muted); } .profile-visibility-choice input { margin-top:4px; width:16px; height:16px; flex-shrink:0; accent-color:var(--accent); }

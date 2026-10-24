@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import { healthResponse } from './lib/health.js'
 import { pool, initDb, checkDbHealth } from './db/pool.js'
 import authRoutes from './routes/auth.js'
 import progressRoutes from './routes/progress.js'
@@ -40,9 +41,7 @@ function isAllowedOrigin(origin) {
   if (normalized === DEFAULT_FRONTEND) return true
   // Keep the old Vercel alias until DNS is exclusive
   if (normalized === LEGACY_FRONTEND) return true
-  // Vercel production + preview deployments (trailing slash normalized above)
-  if (/^https:\/\/tutor-alpha-sandy[\w-]*\.vercel\.app$/.test(normalized)) return true
-  if (/^https:\/\/[\w-]+\.vercel\.app$/.test(normalized)) return true
+  // Add trusted preview origins explicitly through FRONTEND_URL.
   return false
 }
 
@@ -56,8 +55,9 @@ app.use(cors({
 app.use(express.json())
 
 app.get('/api/health', async (_, res) => {
-  const health = { status: 'ok', ...(await checkDbHealth()) }
-  res.json(health)
+  const response = healthResponse(await checkDbHealth())
+  res.set('Cache-Control', 'no-store')
+  res.status(response.statusCode).json(response.body)
 })
 app.use('/api/auth', authRoutes)
 app.use('/api/progress', progressRoutes)

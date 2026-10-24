@@ -110,6 +110,7 @@ export default function AuthModal({ onClose, onSuccess, initialMode = 'login' })
             {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
+        {mode === 'register' && <p className="field-hint">New profiles are private. You can choose to publish your profile and learning evidence in profile settings.</p>}
         <p className="auth-cli-hint">
           IDE: <code>synapsoul register --email … --password … --name …</code> or <code>synapsoul login --github</code>.
           Or register here, then <code>synapsoul login --email …</code>

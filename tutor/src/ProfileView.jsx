@@ -37,6 +37,7 @@ function formFrom(profile = {}, cloud = null) {
     website: src.website || '',
     linkedin_url: src.linkedin_url || '',
     github_username: src.github_username || '',
+    profile_public: src.profile_public === true,
   }
 }
 
@@ -69,7 +70,7 @@ export default function ProfileView({
   const savedHandle = slugifyUsername(loggedIn ? (cloud?.username || '') : (cloud?.username || profile.username || ''))
   const draftHandle = slugifyUsername(form.username)
   const handle = isValidPublicUsername(savedHandle) ? savedHandle : null
-  const publicUrl = handle ? publicProfileUrl(handle) : null
+  const publicUrl = handle && cloud?.profile_public === true ? publicProfileUrl(handle) : null
   const usernamePending = loggedIn && isValidPublicUsername(draftHandle) && draftHandle !== savedHandle
   const avatar = cloud?.avatar_url || cloud?.github_avatar || profile.avatar_url
   const githubConnected = Boolean(cloud?.github_id || cloud?.github_username)
@@ -105,7 +106,7 @@ export default function ProfileView({
     const username = slugifyUsername(form.username)
     if (!isValidPublicUsername(username)) {
       setError('Username must be 2–32 letters, numbers, hyphens, or underscores.')
-      addToast?.('Choose a public username (e.g. shriansh-singh), then click Save public profile.', 'error')
+      addToast?.('Choose a username, then click Save profile.', 'error')
       return
     }
     const partial = {
@@ -132,14 +133,14 @@ export default function ProfileView({
       const { user } = await updateProfile({
         ...partial,
         college: form.college_name,
-        profile_public: true,
+        profile_public: form.profile_public,
       })
       setCloud(user)
       onAuthUser?.(user)
       onSaveLocal(user)
       setForm(f => formFrom({ ...f, ...user }, user))
       notifyProfileUpdate({ profile: user })
-      addToast?.('Hiring profile saved — your public link is live', 'success')
+      addToast?.(user.profile_public ? 'Profile saved — your public link is live' : 'Profile saved privately', 'success')
     } catch (err) {
       setError(err.message || 'Could not save your profile. Try again.')
       addToast?.('Could not save your profile. Try again.', 'error')
@@ -225,16 +226,16 @@ export default function ProfileView({
         )}
         {usernamePending && (
           <p className="field-hint profile-setup-hint">
-            You typed <code>/u/{draftHandle}</code> but it is not live yet — click <strong>Save public profile</strong> to publish that username.
+            You typed <code>/u/{draftHandle}</code> but it is not live yet — click <strong>Save profile</strong> to save that username.
           </p>
         )}
         {loggedIn && !publicUrl && isValidPublicUsername(draftHandle) && (
           <p className="field-hint profile-setup-hint">
-            Save your profile to activate <code>/u/{draftHandle}</code>.
+            Enable public visibility and save your profile to activate <code>/u/{draftHandle}</code>.
           </p>
         )}
         <div className="profile-preview-actions">
-          <button type="button" className="btn-secondary share-profile-btn" onClick={copyLink}>
+          <button type="button" className="btn-secondary share-profile-btn" onClick={copyLink} disabled={!publicUrl}>
             {copied ? 'Link copied' : 'Copy profile link'}
           </button>
           {publicUrl && (
@@ -250,7 +251,7 @@ export default function ProfileView({
         <h3 className="display-xs">Edit your <em>hiring profile</em></h3>
         <p className="section-sub">
           {loggedIn
-            ? 'Recruiters see your page only after you click Save public profile. GitHub and LinkedIn are optional.'
+            ? 'Choose whether your profile and learning evidence are public. GitHub and LinkedIn are optional.'
             : 'Sign in to publish. Until then, edits stay on this device.'}
         </p>
 
@@ -332,10 +333,14 @@ export default function ProfileView({
               <input value={form.github_username} onChange={e => setField('github_username', e.target.value)} placeholder="your-github" />
             </label>
           </div>
+          <label className="profile-visibility-choice">
+            <input type="checkbox" checked={form.profile_public} onChange={e => setField('profile_public', e.target.checked)} />
+            <span>Make my profile and learning evidence public. Anyone with the link can view them.</span>
+          </label>
           {error && <p className="auth-error">{error}</p>}
           <div className="onboard-actions profile-form-actions">
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : loggedIn ? 'Save public profile' : 'Save and sign in to publish'}
+              {saving ? 'Saving…' : loggedIn ? 'Save profile' : 'Save and sign in'}
             </button>
           </div>
         </form>

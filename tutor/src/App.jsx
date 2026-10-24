@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import catalog from '../data/catalog.json'
 import glossary from '../data/glossary.json'
 import leaderboardData from '../data/leaderboard.json'
-import initialProgress from '../data/progress.json'
+import { freshProgress } from './freshProgress.js'
 import Landing from './Landing.jsx'
 import PublicProfile from './PublicProfile.jsx'
 import ProfileView from './ProfileView.jsx'
@@ -126,9 +126,9 @@ function loadProgress() {
     if (saved) return JSON.parse(saved)
     const cli = localStorage.getItem('ai-tutor-cli-sync')
     if (cli) return JSON.parse(cli)
-    return initialProgress
+    return freshProgress()
   } catch {
-    return initialProgress
+    return freshProgress()
   }
 }
 
@@ -299,7 +299,7 @@ export default function App() {
       .then(user => {
         if (!user) return
         setAuthUser(user)
-        setProgress(p => ({ ...p, profile: { ...p.profile, ...user } }))
+        setProgress(p => p.profile?.id === user.id ? { ...p, profile: { ...p.profile, ...user } } : { ...freshProgress(), profile: { ...freshProgress().profile, ...user } })
       })
       .catch(() => {})
   }, [authUser])
@@ -386,12 +386,13 @@ export default function App() {
       })
       setToken(token)
       setAuthUser(user)
+      setProgress({ ...freshProgress(), profile: { ...freshProgress().profile, ...user } })
       syncFailuresRef.current = 0
       resetLearnerActivitySession()
       seedWebsiteSessionStart({ profile: user })
       addToast('Account created — you can sign in on any device', 'success')
     } catch {
-      addToast('Account saved on this device — cloud sync unavailable', 'error')
+      addToast('Account creation failed. Your learning preferences are saved locally; try signing up again.', 'error')
     }
   }
 
@@ -415,7 +416,7 @@ export default function App() {
     setShowAuth(false)
     setShowLanding(false)
     if (user) {
-      setProgress(p => ({ ...p, profile: { ...p.profile, ...user } }))
+      setProgress({ ...freshProgress(), profile: { ...freshProgress().profile, ...user } })
     }
     resetLearnerActivitySession()
     seedWebsiteSessionStart(user ? { profile: user } : progress)
@@ -436,8 +437,11 @@ export default function App() {
     }
     setToken(null)
     setAuthUser(null)
+    setProgress(freshProgress())
+    setLiveLeaderboard(null)
+    localStorage.removeItem('ai-tutor-cli-sync')
     resetLearnerActivitySession()
-    addToast('Signed out — progress stays on this device', 'success')
+    addToast('Signed out — this device’s learning view has been cleared', 'success')
   }
 
   function goCollege() {
@@ -665,7 +669,7 @@ export default function App() {
         {view === 'leaderboard' && (
           <LeaderboardView
             progress={progress}
-            demo={liveLeaderboard || leaderboardData}
+            demo={liveLeaderboard || []}
             onProfile={goPublicProfile}
           />
         )}
@@ -1199,7 +1203,7 @@ function CollegeView({ demo }) {
       <div className="page-header">
         <p className="section-eyebrow">College analytics</p>
         <h2 className="display-sm">Student <em>insights</em></h2>
-        <p className="section-sub">Cohort readiness from published hiring profiles.</p>
+        <p className="section-sub">Illustrative cohort preview — sample learners, not current usage.</p>
       </div>
       <div className="stats-row">
         <div className="stat-card">
@@ -1217,7 +1221,7 @@ function CollegeView({ demo }) {
       </div>
       <section className="card elevated">
         <h3>Cohort overview</h3>
-        <p className="section-sub">Live data appears as students publish profiles.</p>
+        <p className="section-sub">Sample data demonstrates the cohort layout. These are not live learner results.</p>
         <div className="leaderboard-list">
           {entries.map(e => (
             <div key={e.username} className="leaderboard-row card elevated">
@@ -1251,7 +1255,7 @@ function LeaderboardView({ progress, demo, onProfile }) {
         </div>
         <section className="card empty-state elevated">
           <h2 className="display-xs">No published rankings yet</h2>
-          <p>Readiness scores appear as learners complete modules and publish hiring profiles. Your local progress stays private until you sign in.</p>
+          <p>Readiness scores appear as learners complete modules and publish hiring profiles. Only profiles their owners choose to publish appear here.</p>
         </section>
       </>
     )

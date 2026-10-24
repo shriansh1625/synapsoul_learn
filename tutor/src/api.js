@@ -61,7 +61,7 @@ async function apiFetch(path, options = {}) {
   if (import.meta.env.PROD && !API_BASE) {
     throw new Error('Cloud sync is not configured yet. You can keep working locally.')
   }
-  const { timeoutMs, signal, headers: extraHeaders, ...rest } = options
+  const { timeoutMs = 20000, signal, headers: extraHeaders, ...rest } = options
   const headers = { 'Content-Type': 'application/json', ...extraHeaders }
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
