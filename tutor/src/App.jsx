@@ -4,6 +4,7 @@ import glossary from '../data/glossary.json'
 import leaderboardData from '../data/leaderboard.json'
 import { freshProgress } from './freshProgress.js'
 import Landing from './Landing.jsx'
+import NemotronCoach from './NemotronCoach.jsx'
 import PublicProfile from './PublicProfile.jsx'
 import ProfileView from './ProfileView.jsx'
 import AuthModal from './AuthModal.jsx'
@@ -643,6 +644,8 @@ export default function App() {
             dimensionScores={dimensionScores}
             recommendedSkill={recommendedSkill}
             brainSnapshot={brainSnapshot}
+            authUser={authUser}
+            onNeedAuth={() => setShowAuth(true)}
           />
         )}
         {view === 'skills' && (
@@ -701,7 +704,7 @@ export default function App() {
   )
 }
 
-function DashboardView({ progress, session, completedCount, totalModules, portfolioCount, dimensionScores, recommendedSkill, brainSnapshot }) {
+function DashboardView({ progress, session, completedCount, totalModules, portfolioCount, dimensionScores, recommendedSkill, brainSnapshot, authUser, onNeedAuth }) {
   const stepIndex = session ? STEPS.indexOf(session.step) : -1
   const topDimensions = Object.entries(dimensionScores)
     .sort((a, b) => b[1] - a[1])
@@ -796,6 +799,8 @@ function DashboardView({ progress, session, completedCount, totalModules, portfo
           </div>
         </div>
       </section>
+
+      <NemotronCoach user={authUser} session={session} onNeedAuth={onNeedAuth} />
 
       {brainSnapshot?.graph && <CognitiveGraph graph={brainSnapshot.graph} />}
 

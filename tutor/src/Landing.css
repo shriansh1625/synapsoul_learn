@@ -1910,3 +1910,142 @@
     transform: none;
   }
 }
+.ll-nemotron {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 90px;
+  align-items: center;
+  border-top: 1px solid #292432;
+}
+.ll-nemotron .ll-eyebrow {
+  color: #b6cf8a;
+}
+.ll-nemotron h2 {
+  margin-top: 16px;
+}
+.ll-nemotron h2 em {
+  color: #bfd78f;
+}
+.ll-nemotron > div > p:not(.ll-eyebrow) {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #a6ab9d;
+  margin-top: 23px;
+  max-width: 460px;
+}
+.ll-nemotron-cta {
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  border: 1px solid #97b55e;
+  background: #a5bf75;
+  color: #10160a;
+  border-radius: 9px;
+  padding: 13px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 26px;
+}
+.ll-nemotron-cta:hover {
+  background: #bfd98f;
+  box-shadow: 0 5px 30px #91bb391c;
+}
+.ll-nemotron small {
+  display: block;
+  margin-top: 14px;
+  font-size: 9px;
+  color: #8c967f;
+}
+.ll-nemotron-object {
+  border: 1px solid #495835;
+  background:
+    radial-gradient(ellipse at top right, #41622328, transparent 70%), #11150f;
+  border-radius: 13px;
+  padding: 27px;
+  box-shadow: 0 15px 50px #0003;
+}
+.ll-nemotron-object-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid #36422a;
+  padding-bottom: 21px;
+  font:
+    500 8px 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.8px;
+  color: #b8ce95;
+}
+.ll-nemotron-object-head > span:last-child {
+  color: #8c9e77;
+  font-size: 7px;
+}
+.ll-nemotron-line {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 19px 0;
+  border-bottom: 1px solid #2a3422;
+}
+.ll-nemotron-line > span {
+  font:
+    400 10px 'JetBrains Mono',
+    monospace;
+  color: #93aa73;
+}
+.ll-nemotron-line > span:last-child {
+  margin-left: auto;
+  font-size: 15px;
+}
+.ll-nemotron-line strong {
+  font:
+    400 19px 'Space Grotesk',
+    sans-serif;
+  letter-spacing: -0.3px;
+  color: #d6e0c8;
+}
+.ll-nemotron-object > p {
+  font:
+    italic 16px 'Instrument Serif',
+    serif;
+  color: #99ac81;
+  margin-top: 23px !important;
+}
+@media (max-width: 850px) {
+  .ll-nemotron {
+    gap: 35px;
+  }
+  .ll-nemotron-object {
+    padding: 20px;
+  }
+  .ll-nemotron-line strong {
+    font-size: 17px;
+  }
+  .ll-nemotron-object-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+@media (max-width: 600px) {
+  .ll-nemotron {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .ll-nemotron > div > p:not(.ll-eyebrow) {
+    font-size: 12px;
+  }
+  .ll-nemotron small {
+    font-size: 9px;
+    line-height: 1.7;
+  }
+  .ll-nemotron-object {
+    padding: 23px;
+  }
+  .ll-nemotron-line {
+    gap: 15px;
+  }
+  .ll-nemotron-line strong {
+    font-size: 18px;
+  }
+}

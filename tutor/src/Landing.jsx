@@ -153,6 +153,12 @@ export default function Landing({ onEnterApp, onCollege }) {
     })
   }, [])
   useEffect(() => {
+    const section = window.location.hash.slice(1)
+    if (!['experience', 'nemotron', 'curriculum', 'start', 'questions', 'learn-main'].includes(section)) return
+    const frame = requestAnimationFrame(() => document.getElementById(section)?.scrollIntoView({ behavior: 'instant' }))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+  useEffect(() => {
     if (!copy) return
     const timer = setTimeout(() => setCopy(''), 2500)
     return () => clearTimeout(timer)
@@ -432,6 +438,51 @@ export default function Landing({ onEnterApp, onCollege }) {
                 <span>REFLECTION</span>
               </div>
             </article>
+          </div>
+        </section>
+        <section id="nemotron" className="ll-nemotron ll-wrap ll-section">
+          <div>
+            <p className="ll-eyebrow">NVIDIA NEMOTRON / DECISION COACH</p>
+            <h2>
+              Defend your decision.
+              <br />
+              <em>Deepen your judgment.</em>
+            </h2>
+            <p>
+              Give your engineering reasoning a second perspective. NVIDIA
+              Nemotron reviews the choice from your current CLI exercise,
+              challenges an assumption, and suggests a small test.
+            </p>
+            <button
+              type="button"
+              className="ll-nemotron-cta"
+              onClick={onEnterApp}
+            >
+              Open the decision coach <Arrow />
+            </button>
+            <small>
+              Limited pilot · Sign-in and an active CLI decision exercise
+              required
+            </small>
+          </div>
+          <div className="ll-nemotron-object">
+            <div className="ll-nemotron-object-head">
+              <span>NVIDIA NEMOTRON</span>
+              <span>YOUR THINKING, UNDER REVIEW</span>
+            </div>
+            {[
+              ['01', 'Build on a strength'],
+              ['02', 'Challenge an assumption'],
+              ['03', 'Design a small test'],
+              ['04', 'Answer a better question'],
+            ].map(([n, label]) => (
+              <div className="ll-nemotron-line" key={n}>
+                <span>{n}</span>
+                <strong>{label}</strong>
+                <span aria-hidden="true">↗</span>
+              </div>
+            ))}
+            <p>Feedback for practice. You make the decision.</p>
           </div>
         </section>
         <section id="curriculum" className="ll-curriculum ll-section">

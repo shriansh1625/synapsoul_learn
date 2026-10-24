@@ -253,3 +253,9 @@ export function logoutAdminOtp() {
     body: JSON.stringify({ token }),
   }).finally(() => clearAdminOtp())
 }
+export function fetchNemotronStatus(options = {}) {
+  return apiFetch('/api/nvidia/status', options)
+}
+export function requestNemotronReview(body, options = {}) {
+  return apiFetch('/api/nvidia/decision-review', { ...options, timeoutMs: 30000, method: 'POST', body: JSON.stringify(body) })
+}

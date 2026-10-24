@@ -13,6 +13,7 @@ import learningRoutes from './routes/learning.js'
 import learnerRoutes from './routes/learner.js'
 import adminRoutes from './routes/admin.js'
 import curriculumRoutes from './routes/curriculum.js'
+import nvidiaRoutes from './routes/nvidia.js'
 
 dotenv.config()
 
@@ -69,6 +70,7 @@ app.use('/api/learning', learningRoutes)
 app.use('/api/learner', learnerRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/curriculum', curriculumRoutes)
+app.use('/api/nvidia', nvidiaRoutes)
 
 async function start() {
   if (process.env.DATABASE_URL) {

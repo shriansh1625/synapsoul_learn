@@ -1,0 +1,296 @@
+.nemotron-coach {
+  border: 1px solid #91c84735;
+  background:
+    radial-gradient(ellipse at 95% 0, #6e9c2120, transparent 50%), #101218;
+  padding: 32px;
+  margin: 28px 0;
+  border-radius: 18px;
+}
+.nemotron-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: start;
+}
+.nemotron-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #b6d37c;
+  font:
+    500 10px 'JetBrains Mono',
+    monospace;
+  letter-spacing: 1.5px;
+}
+.nemotron-label > span {
+  width: 6px;
+  height: 6px;
+  background: #a2c45e;
+  border-radius: 50%;
+  box-shadow: 0 0 14px #a2c45e50;
+}
+.nemotron-head h2 {
+  font:
+    500 30px/1.15 'Space Grotesk',
+    sans-serif;
+  letter-spacing: -0.8px;
+  margin: 17px 0;
+}
+.nemotron-head h2 em {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  color: #b9d68b;
+}
+.nemotron-head p {
+  max-width: 630px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #a8acb7;
+}
+.nemotron-pilot {
+  font:
+    500 8px 'JetBrains Mono',
+    monospace;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: #b1c98a;
+  border: 1px solid #62754666;
+  padding: 8px 11px;
+  border-radius: 25px;
+}
+.nemotron-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  flex-wrap: wrap;
+  margin-top: 25px;
+  padding: 21px;
+  border: 1px solid #343c2b;
+  border-radius: 10px;
+  background: #151a1280;
+}
+.nemotron-empty h3 {
+  font-size: 17px;
+  width: 100%;
+}
+.nemotron-empty p {
+  font-size: 13px;
+  color: #aab19e;
+  line-height: 1.8;
+  max-width: 680px;
+}
+.nemotron-empty code {
+  font:
+    400 11px 'JetBrains Mono',
+    monospace;
+  color: #c6d5ae;
+}
+.nemotron-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  border: 1px solid #a8c775;
+  background: #a2bd6b;
+  color: #11170b;
+  border-radius: 8px;
+  padding: 13px 18px;
+  font:
+    600 12px 'DM Sans',
+    sans-serif;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+.nemotron-button:hover {
+  background: #b7d582;
+  transform: translateY(-1px);
+}
+.nemotron-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+.nemotron-coach button:focus-visible,
+.nemotron-coach textarea:focus-visible,
+.nemotron-coach input:focus-visible,
+.nemotron-coach a:focus-visible {
+  outline: 3px solid #bdd98f;
+  outline-offset: 4px;
+}
+.nemotron-form {
+  margin-top: 27px;
+}
+.nemotron-form > label:first-child {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: #dce3d3;
+}
+.nemotron-form textarea {
+  display: block;
+  width: 100%;
+  font:
+    400 14px/1.7 'DM Sans',
+    sans-serif;
+  resize: vertical;
+  min-height: 140px;
+  background: #0c0e13;
+  border: 1px solid #39432e;
+  border-radius: 8px;
+  color: #e0e6d8;
+  padding: 16px;
+}
+.nemotron-form textarea::placeholder {
+  color: #7e857b;
+}
+.nemotron-input-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  font:
+    400 9px 'JetBrains Mono',
+    monospace;
+  color: #949e88;
+}
+.nemotron-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-block: 20px;
+  font-size: 11px;
+  line-height: 1.8;
+  color: #9ea993;
+  max-width: 770px;
+}
+.nemotron-consent input {
+  width: 15px;
+  height: 15px;
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: #a2bd6b;
+}
+.nemotron-error,
+.nemotron-status {
+  font-size: 12px;
+  padding: 14px 0 0;
+  color: #d8b782;
+}
+.nemotron-error {
+  color: #f0b1a4;
+}
+.nemotron-result {
+  padding-top: 25px;
+  margin-top: 25px;
+  border-top: 1px solid #343b2c;
+}
+.nemotron-result-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font:
+    400 8px 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.7px;
+  color: #a9bb94;
+  margin-bottom: 19px;
+}
+.nemotron-review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.nemotron-review-grid article {
+  background: #121810;
+  border: 1px solid #343d2a;
+  border-radius: 9px;
+  padding: 21px;
+}
+.nemotron-review-grid article > span {
+  font:
+    500 10px 'JetBrains Mono',
+    monospace;
+  color: #b7ce92;
+}
+.nemotron-review-grid article p {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #c1c7ba;
+  margin-top: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.nemotron-result-note {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #929d87;
+  margin-top: 17px;
+}
+.nemotron-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 25px;
+  padding-top: 17px;
+  border-top: 1px solid #2d3526;
+  font-size: 10px;
+  color: #8e9c80;
+}
+.nemotron-foot a {
+  color: #b5ca96;
+  text-decoration: none;
+}
+@media (max-width: 600px) {
+  .nemotron-coach {
+    padding: 23px;
+  }
+  .nemotron-head {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .nemotron-head h2 {
+    font-size: 27px;
+  }
+  .nemotron-head p {
+    font-size: 12px;
+  }
+  .nemotron-empty {
+    padding: 17px;
+  }
+  .nemotron-empty p {
+    font-size: 12px;
+  }
+  .nemotron-review-grid {
+    grid-template-columns: 1fr;
+  }
+  .nemotron-input-meta {
+    font-size: 8px;
+  }
+  .nemotron-review-grid article {
+    padding: 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nemotron-button {
+    transition: none;
+  }
+  .nemotron-button:hover {
+    transform: none;
+  }
+}
+.nemotron-retry {
+  border: 0;
+  background: none;
+  padding: 8px 0;
+  color: #b6cf8a;
+  text-decoration: underline;
+  font:
+    500 11px 'DM Sans',
+    sans-serif;
+  cursor: pointer;
+}
