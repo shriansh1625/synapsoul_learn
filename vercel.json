@@ -41,6 +41,6 @@
     { "source": "/auth/callback", "destination": "/index.html" },
     { "source": "/college", "destination": "/index.html" },
     { "source": "/admin", "destination": "/index.html" },
-    { "source": "/((?!assets/|cli/|learnlab-kit\\.zip|skill\\.md|PROMPT\\.md|install$|install\\.ps1|favicon).*)", "destination": "/index.html" }
+    { "source": "/((?!privacy(?:/|$)|policy\\.css$|assets/|cli/|learnlab-kit\\.zip|skill\\.md|PROMPT\\.md|install$|install\\.ps1|favicon).*)", "destination": "/index.html" }
   ]
 }
