@@ -190,7 +190,11 @@ If `RESEND_API_KEY` is missing, `/api/admin/otp/request` returns **503** with th
 
 ---
 
-## Owner: private GitHub repo
+## Project status
+
+SynapSoul Learn is currently in active public development.
+
+The project is being developed as an open engineering-learning platform and early-access beta. Interfaces, APIs, curriculum structure, and implementation details may change as feedback is incorporated.
 
 The development repo (`https://github.com/shriansh1625/learnerslab`) holds the full product: API (`server/`), admin dashboard, env examples, Render/Vercel config, and live-test scripts. **Students never need that repo.**
 
