@@ -751,7 +751,7 @@ export default function Landing({ onEnterApp, onCollege }) {
             Meet SynapSoul Labs <Arrow />
           </a>
         </div>
-        <span>SynapSoul Learn · Early access</span>
+        <span>SynapSoul is a registered trademark of Shriansh Vikram Singh, Classes 9 and 42. SynapSoul Learn · Early access</span>
       </footer>
     </div>
   )
