@@ -694,7 +694,8 @@ export default function App() {
 
       <footer className="footer">
         <p>
-          SynapSoul ·{' '}
+          <a href="https://synapsoul.in">SynapSoul</a>
+          {' · '}
           <button type="button" className="link-btn" onClick={goToLanding}>Home</button>
           {' · '}
           <a className="link-btn" href="/skill.md">Instructor protocol</a>

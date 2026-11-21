@@ -744,6 +744,9 @@ export default function Landing({ onEnterApp, onCollege }) {
           <button type="button" onClick={onCollege}>
             For cohorts <Arrow />
           </button>
+          <a href="https://synapsoul.in">
+            SynapSoul <Arrow />
+          </a>
           <a href="https://synapsoulai.me/">
             Meet SynapSoul Labs <Arrow />
           </a>
