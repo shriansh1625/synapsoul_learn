@@ -534,7 +534,15 @@ export function hydrateFromProgress(engine, progress) {
   if (!progress) return engine
   const { session, completedModules, decisions, scores, pretest, profile } = progress
 
-  if (profile?.track || profile?.level) {
+  const hasPractice = Boolean(
+    (completedModules && Object.keys(completedModules).length)
+    || (decisions && Object.keys(decisions).length)
+    || pretest?.submittedAt
+    || pretest?.score != null
+    || session?.skillId
+  )
+  // Default track and level exist on a blank profile. They are not a session.
+  if ((progress.profile_ready || hasPractice) && (profile?.track || profile?.level)) {
     engine.observe({
       type: 'onboarding',
       payload: { track: profile.track, level: profile.level },

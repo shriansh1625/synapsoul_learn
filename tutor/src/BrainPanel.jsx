@@ -74,8 +74,9 @@ export function BrainPanel({ snapshot, session, profile }) {
         <p className="section-eyebrow">SynapSoul Brain</p>
         <h2 className="display-xs">Adaptive <em>engine</em></h2>
         <p className="section-sub">
-          Knowledge tracing + spaced review + the Cognitive Graph · {snapshot.eventCount || 0} learning events
-          {snapshot.preferredPace ? ` · ${snapshot.preferredPace} pace` : ''}
+          {snapshot.eventCount
+            ? `Knowledge tracing + spaced review + the Cognitive Graph · ${snapshot.eventCount} learning event${snapshot.eventCount === 1 ? '' : 's'}${snapshot.preferredPace ? ` · ${snapshot.preferredPace} pace` : ''}`
+            : 'No practice recorded yet. Scores appear after your first module in the editor.'}
         </p>
         {canSyncProgress() && learningStats && (
           <p className="learning-indicator" title="SynapSoul improves from reactions and outcomes">
@@ -138,21 +139,30 @@ export function BrainPanel({ snapshot, session, profile }) {
       {rec && (
         <div className="card elevated brain-next">
           <div className="brain-next-top">
-            <span className="card-badge">Recommended next</span>
-            <span className={`diff-pill diff-${snapshot.predictedDifficulty || 'medium'}`}>
-              {snapshot.predictedDifficulty || 'medium'}
-            </span>
+            <span className="card-badge">{snapshot.eventCount ? 'Recommended next' : 'Start here'}</span>
+            {snapshot.eventCount > 0 && (
+              <span className={`diff-pill diff-${snapshot.predictedDifficulty || 'medium'}`}>
+                {snapshot.predictedDifficulty || 'medium'}
+              </span>
+            )}
           </div>
           <h3 className="display-xs">{rec.moduleTitle}</h3>
           <p className="brain-skill-line">{rec.skillTitle}</p>
-          <p className="brain-why">{snapshot.why}</p>
-          <code className="cli-block">npm run tutor -- start --skill {rec.skillId}</code>
+          <p className="brain-why">
+            {snapshot.eventCount
+              ? snapshot.why
+              : `${rec.moduleTitle} is the first module. Your mastery score appears after you finish it in the editor.`}
+          </p>
+          <code className="cli-block">synapsoul start --skill {rec.skillId} --track {profile?.track || 'node'} --json</code>
         </div>
       )}
 
       <div className="brain-grid">
         <div className="card elevated brain-mastery">
           <h3>Mastery by skill</h3>
+          {!snapshot.eventCount ? (
+            <p className="brain-empty">Skill scores appear after your first completed module.</p>
+          ) : (
           <div className="brain-bars">
             {mastery.map(s => (
               <div key={s.id} className="brain-bar-row">
@@ -169,6 +179,7 @@ export function BrainPanel({ snapshot, session, profile }) {
               </div>
             ))}
           </div>
+          )}
         </div>
 
         <div className="card elevated brain-side">

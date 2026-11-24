@@ -392,14 +392,17 @@ export default function App() {
       resetLearnerActivitySession()
       seedWebsiteSessionStart({ profile: user })
       addToast('Account created — you can sign in on any device', 'success')
-    } catch {
-      addToast('Account creation failed. Your learning preferences are saved locally; try signing up again.', 'error')
+      return true
+    } catch (error) {
+      addToast(humanizeApiError(error, 'Account creation failed. Check the email and password, then try again.'), 'error')
+      return false
     }
   }
 
   async function completeOnboarding(profileData) {
     setProgress(p => ({
       ...p,
+      profile_ready: true,
       profile: { ...p.profile, ...profileData },
     }))
     observeBrainEvent({
@@ -1385,29 +1388,56 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
   const [college, setCollege] = useState(progress.profile?.college_name || '')
   const [track, setTrack] = useState(progress.profile?.track || 'node')
   const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [copied, setCopied] = useState('')
   const foundation = catalog.skills.find(s => s.startHere) || catalog.skills[0]
+  const startCommand = `synapsoul start --skill ${foundation?.id || 'system-design-fundamentals'} --track ${track} --json`
+
+  function accountError() {
+    const hasEmail = email.trim().length > 0
+    const hasPassword = password.length > 0
+    if (!hasEmail && !hasPassword) return ''
+    if (!hasEmail || !hasPassword) return 'Add both an email and a password to create an account, or leave both empty to practice on this device only.'
+    if (!email.includes('@') || !email.includes('.')) return 'Enter a valid email address.'
+    if (password.length < 6) return 'Use a password of at least 6 characters.'
+    return ''
+  }
 
   async function handleStep1Next() {
+    const problem = accountError()
+    if (problem) {
+      setFormError(problem)
+      return
+    }
+    setFormError('')
     const profilePartial = {
-      name,
+      name: name.trim(),
       degree,
       bio,
-      email: email || undefined,
-      username: username || (email ? email.split('@')[0] : undefined),
+      email: email.trim() || undefined,
+      username: username.trim() || (email.trim() ? email.trim().split('@')[0] : undefined),
       college_name: college,
     }
     onSaveProfile(profilePartial)
-    if (email && password) {
+    if (email.trim() && password) {
       setSubmitting(true)
-      await onTryRegister({
+      const created = await onTryRegister({
         ...profilePartial,
         password,
         college,
         track,
       })
       setSubmitting(false)
+      if (!created) {
+        setFormError('Account was not created. Check the email and password, then try again.')
+        return
+      }
     }
     setStep(2)
+  }
+
+  async function copySetup(value, label) {
+    if (await copyText(value)) setCopied(label)
   }
 
   return (
@@ -1423,36 +1453,37 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
           {step === 1 && (
             <>
               <p className="section-eyebrow">Step 1 of 3</p>
-              <h2 className="display-xs">Your <em>profile</em></h2>
-              <p className="section-sub">This unlocks your bootcamp and public hiring profile.</p>
+              <h2 className="display-xs">Start with your <em>name</em></h2>
+              <p className="section-sub">A name is enough to begin. Add an email and password if you want the same account in your terminal. Degree, bio, and college can wait until your profile.</p>
               <label className="onboard-field">
                 Name
                 <input value={name} onChange={e => setName(e.target.value)} placeholder="Full name" />
               </label>
               <label className="onboard-field">
-                Degree
+                Email <span className="field-hint">(optional — creates your account)</span>
+                <input type="email" value={email} onChange={e => { setEmail(e.target.value); setFormError('') }} placeholder="you@college.edu" autoComplete="email" />
+              </label>
+              <label className="onboard-field">
+                Password <span className="field-hint">(required only if you add an email)</span>
+                <input type="password" value={password} onChange={e => { setPassword(e.target.value); setFormError('') }} placeholder="At least 6 characters" minLength={6} autoComplete="new-password" />
+              </label>
+              <label className="onboard-field">
+                Degree <span className="field-hint">(optional)</span>
                 <input value={degree} onChange={e => setDegree(e.target.value)} placeholder="B.Tech CSE" />
               </label>
               <label className="onboard-field">
-                Bio
-                <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="What you want to build..." rows={3} />
+                Bio <span className="field-hint">(optional)</span>
+                <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="What you want to build..." rows={2} />
               </label>
               <label className="onboard-field">
-                Email <span className="field-hint">(optional — enables cloud sync)</span>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@college.edu" />
-              </label>
-              <label className="onboard-field">
-                Password
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min 6 characters" minLength={6} />
-              </label>
-              <label className="onboard-field">
-                Username
+                Username <span className="field-hint">(optional)</span>
                 <input value={username} onChange={e => setUsername(e.target.value)} placeholder="your-handle" />
               </label>
               <label className="onboard-field">
-                College
+                College <span className="field-hint">(optional)</span>
                 <input value={college} onChange={e => setCollege(e.target.value)} placeholder="Your college name" />
               </label>
+              {formError && <p className="form-error" role="alert">{formError}</p>}
             </>
           )}
 
@@ -1483,7 +1514,13 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
               <h2 className="display-xs">Start your <em>first module</em></h2>
               <p className="section-sub">Paste this in your AI editor. The instructor must run the CLI before teaching — never invent CONTEXT from memory.</p>
               <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
-              <p className="cursor-hint">Required: <code>synapsoul login</code> then <code>synapsoul start --skill {foundation?.id} --track {track} --json</code></p>
+              <button type="button" className="btn-secondary" onClick={() => copySetup(UNIVERSAL_PROMPT, 'prompt')}>
+                {copied === 'prompt' ? 'Prompt copied' : 'Copy setup prompt'}
+              </button>
+              <p className="cursor-hint">Then, in the terminal: <code>{startCommand}</code></p>
+              <button type="button" className="btn-secondary" onClick={() => copySetup(startCommand, 'command')}>
+                {copied === 'command' ? 'Command copied' : 'Copy start command'}
+              </button>
             </>
           )}
         </div>
@@ -1495,7 +1532,7 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
               <button
                 type="button"
                 className="btn-primary"
-                disabled={!name || !degree || !bio || submitting}
+                disabled={!name.trim() || submitting}
                 onClick={handleStep1Next}
               >
                 {submitting ? 'Saving…' : 'Next →'}

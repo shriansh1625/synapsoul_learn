@@ -75,6 +75,17 @@ function testHintsHurt() {
   assert(engine.snapshot().hintDependency > 0, 'hint dependency rises')
 }
 
+function testBlankProfileIsNotPractice() {
+  const engine = createEngine({
+    progress: {
+      profile: { name: '', level: 'beginner', track: 'node' },
+      completedModules: {},
+      decisions: {},
+    },
+  })
+  assert(engine.state.eventCount === 0, 'default track and level are not a learning event')
+}
+
 function testHydrateIdempotent() {
   const progress = {
     profile: { track: 'node', level: 'beginner' },
@@ -170,6 +181,7 @@ function run() {
   testRecommend()
   testObserveLearn()
   testHintsHurt()
+  testBlankProfileIsNotPractice()
   testHydrateIdempotent()
   testGraph()
   testCognitiveGraph()

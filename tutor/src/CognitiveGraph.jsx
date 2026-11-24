@@ -204,9 +204,17 @@ export function CognitiveGraph({ graph, compact = false, overlayEvents = [], tit
       {!compact && (
         <div className="cog-meta-grid">
           <article className="card cog-meta">
-            <h3>Frontier</h3>
-            <p>{rec ? `${rec.moduleTitle} · p(know) ${rec.pKnow}` : 'Calibrating'}</p>
-            <p className="cog-why">{graph?.why}</p>
+            <h3>{graph?.eventCount ? 'Frontier' : 'First module'}</h3>
+            <p>
+              {graph?.eventCount
+                ? (rec ? `${rec.moduleTitle} · p(know) ${rec.pKnow}` : 'Calibrating')
+                : (rec ? rec.moduleTitle : 'System Design Fundamentals')}
+            </p>
+            <p className="cog-why">
+              {graph?.eventCount
+                ? graph?.why
+                : 'This is where practice starts. Mastery and gaps are recorded after you decide, verify, and break something — not before.'}
+            </p>
           </article>
           <article className="card cog-meta">
             <h3>How they decide</h3>
@@ -214,7 +222,7 @@ export function CognitiveGraph({ graph, compact = false, overlayEvents = [], tit
           </article>
           <article className="card cog-meta">
             <h3>Blocking gaps</h3>
-            {(graph?.blockers || []).slice(0, 3).length ? (
+            {graph?.eventCount && (graph?.blockers || []).slice(0, 3).length ? (
               <ul>
                 {(graph.blockers || []).slice(0, 3).map(b => (
                   <li key={b.id}>{b.title} · p(know) {b.pKnow}</li>

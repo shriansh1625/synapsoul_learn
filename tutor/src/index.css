@@ -2933,6 +2933,7 @@ a.pp-social-btn:hover {
 .form-feedback.is-success { color: var(--success); }
 .profile-name.is-empty { color: var(--text-muted); font-style: italic; }
 .toast-error { border-color: #f87171; }
+.form-error { margin: 8px 0 0; color: #b42318; font-size: 0.875rem; }
 .toast-success { border-color: var(--success); }
 .onboard-field input,
 .onboard-field textarea {
