@@ -1467,22 +1467,25 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
                 Password <span className="field-hint">(required only if you add an email)</span>
                 <input type="password" value={password} onChange={e => { setPassword(e.target.value); setFormError('') }} placeholder="At least 6 characters" minLength={6} autoComplete="new-password" />
               </label>
-              <label className="onboard-field">
-                Degree <span className="field-hint">(optional)</span>
-                <input value={degree} onChange={e => setDegree(e.target.value)} placeholder="B.Tech CSE" />
-              </label>
-              <label className="onboard-field">
-                Bio <span className="field-hint">(optional)</span>
-                <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="What you want to build..." rows={2} />
-              </label>
-              <label className="onboard-field">
-                Username <span className="field-hint">(optional)</span>
-                <input value={username} onChange={e => setUsername(e.target.value)} placeholder="your-handle" />
-              </label>
-              <label className="onboard-field">
-                College <span className="field-hint">(optional)</span>
-                <input value={college} onChange={e => setCollege(e.target.value)} placeholder="Your college name" />
-              </label>
+              <details className="onboard-optional">
+                <summary>Profile details, optional</summary>
+                <label className="onboard-field">
+                  Degree
+                  <input value={degree} onChange={e => setDegree(e.target.value)} placeholder="B.Tech CSE" />
+                </label>
+                <label className="onboard-field">
+                  Bio
+                  <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="What you want to build..." rows={2} />
+                </label>
+                <label className="onboard-field">
+                  Username
+                  <input value={username} onChange={e => setUsername(e.target.value)} placeholder="your-handle" />
+                </label>
+                <label className="onboard-field">
+                  College
+                  <input value={college} onChange={e => setCollege(e.target.value)} placeholder="Your college name" />
+                </label>
+              </details>
               {formError && <p className="form-error" role="alert">{formError}</p>}
             </>
           )}
@@ -1514,13 +1517,15 @@ function OnboardingWizard({ progress, catalog, onSaveProfile, onTryRegister, onC
               <h2 className="display-xs">Start your <em>first module</em></h2>
               <p className="section-sub">Paste this in your AI editor. The instructor must run the CLI before teaching — never invent CONTEXT from memory.</p>
               <pre className="prompt-code oneline">{UNIVERSAL_PROMPT}</pre>
-              <button type="button" className="btn-secondary" onClick={() => copySetup(UNIVERSAL_PROMPT, 'prompt')}>
-                {copied === 'prompt' ? 'Prompt copied' : 'Copy setup prompt'}
-              </button>
               <p className="cursor-hint">Then, in the terminal: <code>{startCommand}</code></p>
-              <button type="button" className="btn-secondary" onClick={() => copySetup(startCommand, 'command')}>
-                {copied === 'command' ? 'Command copied' : 'Copy start command'}
-              </button>
+              <div className="onboard-copy">
+                <button type="button" className="btn-secondary" onClick={() => copySetup(UNIVERSAL_PROMPT, 'prompt')}>
+                  {copied === 'prompt' ? 'Prompt copied' : 'Copy setup prompt'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => copySetup(startCommand, 'command')}>
+                  {copied === 'command' ? 'Command copied' : 'Copy start command'}
+                </button>
+              </div>
             </>
           )}
         </div>

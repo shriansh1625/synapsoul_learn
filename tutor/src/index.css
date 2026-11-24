@@ -2253,16 +2253,18 @@ a.btn-primary, a.btn-secondary {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
-.onboarding-wizard {
+.onboarding-wizard.card {
   max-width: 480px;
   width: 100%;
-  max-height: min(90vh, calc(100dvh - 32px));
-  padding: 32px;
+  max-height: calc(100dvh - 24px);
+  padding: 20px 24px 16px;
   margin: auto;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: #12121a;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
 }
 .onboarding-wizard-body {
   flex: 1 1 auto;
@@ -2274,7 +2276,10 @@ a.btn-primary, a.btn-secondary {
 .onboarding-steps {
   display: flex;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
+}
+.onboarding-wizard .section-sub {
+  margin-bottom: 14px;
 }
 .onboarding-dot {
   width: 28px;
@@ -2316,11 +2321,33 @@ a.btn-primary, a.btn-secondary {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: 8px;
   flex-shrink: 0;
   padding-top: 16px;
   border-top: 1px solid var(--border);
-  background: var(--bg-card);
+  background: #12121a;
+}
+.onboard-optional {
+  margin: 4px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.onboard-optional summary {
+  cursor: pointer;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.onboard-optional[open] summary {
+  margin-bottom: 12px;
+}
+.onboard-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
 }
 .track-picker {
   display: grid;
@@ -3344,7 +3371,29 @@ a.link-btn {
   overflow: hidden;
   min-height: 320px;
 }
+.cog-graph:not(.is-compact) .cog-graph-canvas {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 231, 220, 0.35) transparent;
+}
+.cog-graph:not(.is-compact) .cog-graph-canvas::-webkit-scrollbar {
+  height: 8px;
+}
+.cog-graph:not(.is-compact) .cog-graph-canvas::-webkit-scrollbar-thumb {
+  background: rgba(236, 231, 220, 0.35);
+  border-radius: 8px;
+}
+.cog-graph:not(.is-compact) .cog-graph-canvas::-webkit-scrollbar-track {
+  background: transparent;
+}
 .cog-svg { display: block; width: 100%; height: auto; min-height: 320px; }
+.cog-graph:not(.is-compact) .cog-svg {
+  width: auto;
+  min-width: 100%;
+  max-width: none;
+}
 .cog-label {
   fill: #ece7dc;
   font-size: 10px;
@@ -3457,15 +3506,5 @@ a.link-btn {
   color: #c8c4b8;
   font-size: 1.05rem;
   line-height: 1.65;
-}
-@media (max-width: 700px) {
-  /* Keep the full dashboard graph legible on phones: scroll sideways at
-     natural scale instead of shrinking labels below readability. */
-  .cog-graph-canvas { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .cog-graph:not(.is-compact) .cog-svg {
-    width: auto;
-    min-width: 100%;
-    max-width: none;
-  }
 }
 .profile-visibility-choice { display:flex; gap:12px; align-items:flex-start; margin:20px 0; font-size:13px; color:var(--text-muted); } .profile-visibility-choice input { margin-top:4px; width:16px; height:16px; flex-shrink:0; accent-color:var(--accent); }

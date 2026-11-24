@@ -2,6 +2,7 @@ import { createBkt, updateBkt } from './bkt.js'
 import { createCard, review, isDue } from './sm2.js'
 import { buildCurriculum } from './graph.js'
 import { AdaptiveEngine, hydrateFromProgress, createEngine } from './AdaptiveEngine.js'
+import { createState } from './memory.js'
 import { loadBundledCurriculum } from './curriculumData.js'
 import { pageRank } from './cognitiveGraph.js'
 
@@ -84,6 +85,33 @@ function testBlankProfileIsNotPractice() {
     },
   })
   assert(engine.state.eventCount === 0, 'default track and level are not a learning event')
+}
+
+function testSetupIsNotPractice() {
+  const engine = createEngine({
+    progress: {
+      profile_ready: true,
+      profile: { name: 'Asha Rao', level: 'beginner', track: 'python' },
+      completedModules: {},
+      decisions: {},
+    },
+  })
+  assert(engine.state.eventCount === 0, 'finishing setup is not a learning event')
+  assert(engine.snapshot().eventCount === 0, 'the dashboard does not count setup as practice')
+  assert(engine.state.memory.preferredTrack === 'python', 'the chosen track is still stored')
+  assert((engine.state.signals || []).length === 0, 'setup does not write a score signal')
+
+  const saved = new AdaptiveEngine({
+    state: createState({
+      eventCount: 1,
+      processedEvidence: ['onboarding:node:beginner'],
+      signals: [{ kind: 'gain', label: 'Calibrated to beginner · node' }],
+      memory: { ...createState().memory, preferredTrack: 'node', effectiveLevel: 'beginner' },
+    }),
+  })
+  assert(saved.state.eventCount === 0, 'an older setup-only brain is not practice')
+  assert(saved.snapshot().graph.eventCount === 0, 'setup does not turn priors into blocking gaps')
+  assert((saved.state.signals || []).length === 0, 'a saved calibration line is dropped when there is no practice')
 }
 
 function testHydrateIdempotent() {
@@ -182,6 +210,7 @@ function run() {
   testObserveLearn()
   testHintsHurt()
   testBlankProfileIsNotPractice()
+  testSetupIsNotPractice()
   testHydrateIdempotent()
   testGraph()
   testCognitiveGraph()

@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
 
+function laneColumnWidth(title) {
+  // Uppercase 9px labels with tracking. Keep a gap so neighboring titles do not collide.
+  return Math.ceil(String(title || '').length * 6.6) + 36
+}
+
 function layout(nodes) {
   const lanes = []
   const laneIndex = {}
@@ -11,7 +16,7 @@ function layout(nodes) {
     }
     lanes[laneIndex[n.lane]].modules.push(n)
   }
-  const colW = 168
+  const colW = Math.max(210, ...lanes.map((lane) => laneColumnWidth(lane.title)))
   const rowH = 78
   const left = 36
   const top = 48
@@ -39,7 +44,7 @@ function layout(nodes) {
   }
   const width = Math.max(640, left + lanes.length * colW + 110)
   const height = Math.max(320, top + Math.max(0, ...lanes.map(l => l.modules.length)) * rowH + 36)
-  return { pos, lanes, width, height }
+  return { pos, lanes, width, height, colW, left }
 }
 
 function nodeFill(n) {
@@ -63,7 +68,7 @@ export function CognitiveGraph({ graph, compact = false, overlayEvents = [], tit
   const [hover, setHover] = useState(null)
   const [openHow, setOpenHow] = useState(false)
 
-  const { pos, lanes, width, height } = useMemo(() => layout(nodes), [nodes])
+  const { pos, lanes, width, height, colW, left } = useMemo(() => layout(nodes), [nodes])
 
   const overlayKeys = useMemo(() => {
     const set = new Set()
@@ -174,7 +179,8 @@ export function CognitiveGraph({ graph, compact = false, overlayEvents = [], tit
             )
           })}
           {lanes.map((lane, i) => (
-            <text key={lane.id} x={36 + i * 168} y={22} className="cog-lane">
+            <text key={lane.id} x={left + i * colW} y={22} className="cog-lane">
+              <title>{lane.title}</title>
               {lane.title}
             </text>
           ))}

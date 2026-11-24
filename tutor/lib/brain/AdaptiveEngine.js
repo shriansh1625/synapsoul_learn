@@ -89,6 +89,30 @@ function defaultPL0(state) {
   return 0.2
 }
 
+function practiceEvidence(state) {
+  return (state.processedEvidence || []).filter(key => key && !String(key).startsWith('onboarding:'))
+}
+
+// Choosing a name and track is setup. It must not become a score, a learning
+// event, or a blocking gap. Older saved brains counted that step; drop it
+// when nothing else has been practiced.
+function withoutSetupOnlyPractice(state) {
+  const practice = practiceEvidence(state)
+  const hadSetup = (state.processedEvidence || []).some(key => String(key).startsWith('onboarding:'))
+  if (!hadSetup) return state
+  if (practice.length > 0) {
+    if ((state.eventCount || 0) > practice.length) {
+      return { ...state, eventCount: practice.length }
+    }
+    return state
+  }
+  return {
+    ...state,
+    eventCount: 0,
+    signals: (state.signals || []).filter(signal => !String(signal.label || '').startsWith('Calibrated to ')),
+  }
+}
+
 /**
  * SynapSoul Brain — adaptive engine.
  * Algorithms are the default intelligence. Optional LLM is coach-only.
@@ -96,7 +120,7 @@ function defaultPL0(state) {
 export class AdaptiveEngine {
   constructor({ curriculum, state } = {}) {
     this.curriculum = curriculum || loadBundledCurriculum()
-    this.state = cloneState(state || createState())
+    this.state = withoutSetupOnlyPractice(cloneState(state || createState()))
     if (!this.state.memory) this.state = { ...createState(), ...this.state }
   }
 
@@ -108,7 +132,9 @@ export class AdaptiveEngine {
     }
 
     this.state = markProcessed(this.state, key)
-    this.state.eventCount = (this.state.eventCount || 0) + 1
+    if (event.type !== 'onboarding') {
+      this.state.eventCount = (this.state.eventCount || 0) + 1
+    }
     this.state.updatedAt = new Date().toISOString()
 
     const pL0 = defaultPL0(this.state)
@@ -160,10 +186,6 @@ export class AdaptiveEngine {
     this.state.memory.preferredTrack = track
     this.state.memory.effectiveLevel = level
     if (payload.confidence) this.state.memory.confidence = payload.confidence
-    this.state = pushSignal(this.state, {
-      kind: 'gain',
-      label: `Calibrated to ${level} · ${track}`,
-    })
   }
 
   _pretest(payload) {
